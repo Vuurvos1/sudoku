@@ -9,25 +9,58 @@
 		[0, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0],
+		[0, 0, 0, 0, 7, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0],
 		[0, 0, 0, 0, 0, 0, 0, 0, 0]
 	]);
 
-	const notes = $state([
+	const notes = $state<number[][][]>([
+		[[4], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []],
+		[[], [], [], [], [], [], [5], [], []],
 		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []]
 	]);
 
-	// const selectedCell = $state({ row: 0, col: 0 });
+	const selectedCell = $state({ row: -1, col: -1 });
+
+	function handleCellClick(col: number, row: number) {
+		console.info({ col, row });
+		selectedCell.row = row;
+		selectedCell.col = col;
+	}
+
+	function handleCellKeydown(ev: KeyboardEvent, col: number, row: number) {
+		console.info(ev.key, 'down on', { col, row });
+	}
+
+	function setSudokuCell(num: number) {
+		console.log('setting', selectedCell, 'to', num);
+
+		const { col, row } = selectedCell;
+
+		if (col < 0 || row < 0) return;
+
+		if (mode === 'fill') {
+			sudokuGrid[row][col] = num;
+		} else if (mode === 'note') {
+			// add or remove if needed
+			if (notes[row][col].includes(num)) {
+				notes[row][col] = notes[row][col].filter((i) => i === num);
+			} else {
+				notes[row][col].push(num);
+			}
+		}
+	}
+
+	function clearCell(col: number, row: number) {
+		sudokuGrid[row][col] = 0;
+	}
 </script>
 
 <main class="container">
@@ -45,40 +78,70 @@
 			{#each sudokuGrid as row, i}
 				{#each row as cell, j}
 					<div class="cell border border-black">
-						{#if mode === 'note'}
-							{#each notes[i][j] as note}
-								<span>{note}</span>
-							{/each}
-						{:else}
-							<input
-								type="text"
-								class="w-10 h-10 text-center"
-								bind:value={sudokuGrid[i][j]}
-								placeholder="0"
-							/>
-						{/if}
+						<button
+							onkeydown={(ev) => handleCellKeydown(ev, j, i)}
+							onclick={() => handleCellClick(j, i)}
+							class="w-12 h-12 grid place-items-center"
+						>
+							{#if cell > 0}
+								<span class="text-xl font-medium">{cell}</span>
+							{:else}
+								<!-- notes -->
+								<div
+									class="grid grid-cols-3 grid-rows-3 text-xs leading-none place-items-center w-full h-full"
+								>
+									{#each { length: 9 } as _, x}
+										{#if notes[i][j].length > 0 && notes[i][j].includes(x + 1)}
+											<div class="text-xs">{x + 1}</div>
+										{:else}
+											<div></div>
+										{/if}
+									{/each}
+								</div>
+							{/if}
+						</button>
 					</div>
 				{/each}
 			{/each}
 		</div>
 	</div>
 
-	<div>
-		<!-- modes -->
-	</div>
-
 	<div class="grid grid-cols-5">
-		<button>1</button>
-		<button>2</button>
-		<button>3</button>
-		<button>4</button>
-		<button>5</button>
-		<button>6</button>
-		<button>7</button>
-		<button>8</button>
-		<button>9</button>
+		{#each { length: 9 } as _, i}
+			<button
+				onclick={() => {
+					setSudokuCell(i + 1);
+				}}
+			>
+				{i + 1}
+			</button>
+		{/each}
 
 		<button>x</button>
+	</div>
+
+	<div>
+		<!-- modes -->
+		<p>Mode: {mode}</p>
+
+		<button>Undo</button>
+		<button>Redo</button>
+
+		<button
+			onclick={() => {
+				mode = 'fill';
+			}}
+		>
+			Fill
+		</button>
+		<button
+			onclick={() => {
+				mode = 'note';
+			}}
+		>
+			Pencil
+		</button>
+		<button>Color</button>
 	</div>
 </main>
 
