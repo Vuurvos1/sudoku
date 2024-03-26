@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { hexToHSL } from '$lib/color';
+	import { theme, hslTheme } from '$lib/stores/theme';
 	import {
 		UndoIcon,
 		RedoIcon,
@@ -12,9 +12,6 @@
 	} from 'lucide-svelte';
 
 	let mode = $state<'fill' | 'note' | 'color'>('note');
-
-	let backgroundColor = $state('#f0f0f0');
-	let accentColor = $state('#ff0000');
 
 	const sudokuGrid = $state([
 		[0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -97,15 +94,17 @@
 	</nav>
 </header>
 
-<main class="py-4">
+<main
+	class="py-4"
+	style={`--color-background: ${$theme.background}; --color-accent: ${$theme.accent}`}
+>
 	<!-- Base color scheme dark, light, adapt to system -->
 	<!-- Accent color -->
 
-	<input type="color" bind:value={backgroundColor} />
-	<p>{JSON.stringify(hexToHSL(backgroundColor))}</p>
+	<input type="color" bind:value={$theme.background} />
+	<input type="color" bind:value={$theme.accent} />
 
-	<input type="color" bind:value={accentColor} />
-	<p>{JSON.stringify(hexToHSL(accentColor))}</p>
+	<p>{JSON.stringify($hslTheme)}</p>
 
 	<div class="container">
 		<div class="sudoku mb-8">
@@ -202,10 +201,23 @@
 </main>
 
 <style lang="postcss">
+	:global(:root) {
+		--color-accent: var(--accent-h), var(--accent-s), var(--accent-l);
+		--color-background: var(--background-h), var(--background-s), var(--background-l);
+	}
+
 	/* --color-accent-hsl: var(--accent-h), var(--accent-s), var(--accent-l);
     --color-accent: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
     --color-accent-1: hsl(calc(var(--accent-h) - 3), calc(var(--accent-s) * 1.02), calc(var(--accent-l) * 1.15));
     --color-accent-2: hsl(calc(var(--accent-h) - 5), calc(var(--accent-s) * 1.05), calc(var(--accent-l) * 1.29)); */
+
+	/* --color-background */
+
+	main {
+		/* @apply bg-background text-accent; */
+		background-color: var(--color-background);
+		color: var(--color-accent);
+	}
 
 	.options {
 		grid-template-columns: repeat(5, min-content);
