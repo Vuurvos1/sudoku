@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { theme, hslTheme } from '$lib/stores/theme';
+	import { theme, hslTheme } from '$lib/stores/theme.svelte.ts';
 	import {
 		UndoIcon,
 		RedoIcon,
@@ -96,15 +96,15 @@
 
 <main
 	class="py-4"
-	style={`--color-background: ${$theme.background}; --color-accent: ${$theme.accent}`}
+	style={`--color-background: ${theme.background}; --color-accent: ${theme.accent}`}
 >
 	<!-- Base color scheme dark, light, adapt to system -->
 	<!-- Accent color -->
 
-	<input type="color" bind:value={$theme.background} />
-	<input type="color" bind:value={$theme.accent} />
+	<input type="color" bind:value={theme.background} />
+	<input type="color" bind:value={theme.accent} />
 
-	<p>{JSON.stringify($hslTheme)}</p>
+	<p>{JSON.stringify(hslTheme())}</p>
 
 	<div class="container">
 		<div class="sudoku mb-8">
