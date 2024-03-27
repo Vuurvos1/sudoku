@@ -11,6 +11,12 @@ export default {
 				xl: '5rem',
 				'2xl': '6rem'
 			}
+		},
+		extend: {
+			colors: {
+				background: 'hsl(var(--color-background-hsl) / <alpha-value>)',
+				accent: 'hsl(var(--color-accent-hsl) / <alpha-value>)'
+			}
 		}
 	},
 	plugins: []
