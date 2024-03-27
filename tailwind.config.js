@@ -15,7 +15,11 @@ export default {
 		extend: {
 			colors: {
 				background: 'hsl(var(--color-background-hsl) / <alpha-value>)',
-				accent: 'hsl(var(--color-accent-hsl) / <alpha-value>)'
+				accent: {
+					DEFAULT: 'hsl(var(--color-accent-hsl) / <alpha-value>)',
+					1: 'var(--color-accent-1)',
+					2: 'var(--color-accent-2)'
+				}
 			}
 		}
 	},

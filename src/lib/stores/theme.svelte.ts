@@ -1,9 +1,25 @@
 import { hexToHSL } from '$lib/color';
 
-export const theme = $state({
-	background: '#1E1E1E',
-	accent: '#F7B155'
-});
+export type Theme = {
+	id: number;
+	background: string;
+	accent: string;
+};
+
+export const themes: Record<string, Theme> = {
+	light: {
+		id: 1,
+		background: '#FFFFFF',
+		accent: '#F7B155'
+	},
+	dark: {
+		id: 2,
+		background: '#1E1E1E',
+		accent: '#F7B155'
+	}
+};
+
+export const theme = $state<Theme>({ ...themes.dark });
 
 const hslThemeStore = $derived.by(() => {
 	return {

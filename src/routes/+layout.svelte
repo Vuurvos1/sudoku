@@ -25,5 +25,6 @@
 
 	:global(body) {
 		background-color: var(--color-background);
+		transition: background 0.1s linear;
 	}
 </style>

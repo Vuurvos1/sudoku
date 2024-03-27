@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { theme } from '$lib/stores/theme.svelte.ts';
+	import Switch from '$lib/components/Switch.svelte';
+	import { theme, themes } from '$lib/stores/theme.svelte.ts';
 	import {
 		UndoIcon,
 		RedoIcon,
@@ -11,7 +12,7 @@
 		LightbulbIcon
 	} from 'lucide-svelte';
 
-	let mode = $state<'fill' | 'note' | 'color'>('note');
+	let mode = $state<'fill' | 'note' | 'color' | ''>('');
 
 	const sudokuGrid = $state([
 		[0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -97,8 +98,35 @@
 <main class="py-4 text-accent">
 	<!-- Base color scheme dark, light, adapt to system -->
 
-	<input type="color" bind:value={theme.background} />
-	<input type="color" bind:value={theme.accent} />
+	<Switch />
+
+	<!-- <input type="color" bind:value={theme.background} />
+	<input type="color" bind:value={theme.accent} /> -->
+
+	<div class="container my-8 flex flex-row gap-4">
+		{#each Object.entries(themes) as [key, value]}
+			<button
+				class:active={theme.id === value.id}
+				style="background:{value.background}"
+				class="grid h-8 w-8 place-items-center rounded-full transition duration-200"
+				onclick={() => {
+					theme.background = value.background;
+					theme.accent = value.accent;
+					theme.id = value.id;
+				}}
+			>
+				<div
+					style="background:{value.accent}"
+					class="grid h-4 w-4 place-items-center rounded-full outline-0 transition duration-200"
+				>
+					<div
+						style="background:{value.background}"
+						class="h-4 w-4 scale-0 rounded-full transition duration-200"
+					></div>
+				</div>
+			</button>
+		{/each}
+	</div>
 
 	<div class="container">
 		<div class="sudoku mb-8">
@@ -155,46 +183,99 @@
 		<button>x</button>
 	</div>
 
-	<p>Mode: {mode}</p>
-	<div class="flex flex-row justify-center gap-6">
+	<div class="container flex flex-row justify-center gap-6">
 		<button
+			class="grid w-full place-items-center rounded-full border border-transparent py-1 transition"
 			aria-label="erase"
 			onclick={() => {
 				// mode = 'erase';
+				mode = '';
 			}}
 		>
 			<EraserIcon />
 		</button>
 
 		<button
+			class="grid w-full place-items-center rounded-full border border-transparent py-1 transition"
+			class:bg-accent={mode === 'color'}
+			class:border-accent={mode === 'color'}
+			class:text-background={mode === 'color'}
 			aria-label="coloring"
 			onclick={() => {
-				mode = 'color';
+				if (mode === 'color') {
+					mode = '';
+				} else {
+					mode = 'color';
+				}
 			}}
 		>
-			<PaintBucketIcon />
+			<PaintBucketIcon class="transition" />
 		</button>
 
 		<button
+			class="grid w-full place-items-center rounded-full border border-transparent py-1 transition"
+			class:bg-accent={mode === 'note'}
+			class:border-accent={mode === 'note'}
+			class:text-background={mode === 'note'}
 			aria-label="note"
 			onclick={() => {
-				mode = 'note';
+				if (mode === 'note') {
+					mode = '';
+				} else {
+					mode = 'note';
+				}
 			}}
 		>
-			<PencilIcon />
+			<PencilIcon class="transition" />
 		</button>
 
-		<button aria-label="undo">
+		<button
+			class="grid w-full place-items-center rounded-full py-1 transition"
+			aria-label="undo"
+			onclick={() => {
+				mode = '';
+			}}
+		>
 			<UndoIcon />
 		</button>
 
-		<button aria-label="redo">
+		<button
+			class="grid w-full place-items-center rounded-full py-1 transition"
+			aria-label="redo"
+			onclick={() => {
+				mode = '';
+			}}
+		>
 			<RedoIcon />
 		</button>
 	</div>
 </main>
 
 <style lang="postcss">
+	.d1 {
+		background-color: var(--color-accent);
+	}
+
+	.d2 {
+		background-color: var(--color-accent-1);
+	}
+
+	.d3 {
+		background-color: var(--color-accent-2);
+	}
+
+	button.active > div {
+		box-shadow: 0 0 0 12px var(--color-accent);
+	}
+
+	button.active > div > div {
+		transform: scale(1);
+		transition-delay: 0.075s;
+		/* width: 4px;
+		height: 4px; */
+		/* box-shadow: 0 0 0 4px var(--color-background); */
+	}
+
 	.options {
 		grid-template-columns: repeat(5, min-content);
 	}

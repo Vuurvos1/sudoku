@@ -1,3 +1,7 @@
+function round(num: number) {
+	return Math.round(num * 100) / 100;
+}
+
 export function hexToHSL(hex: string) {
 	const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 
@@ -40,9 +44,9 @@ export function hexToHSL(hex: string) {
 	// TODO: round h, s, l to 2 decimal places
 	const HSL = {
 		// @ts-expect-error - h will always be assigned
-		h: h * 360,
-		s: s * 100,
-		l: l * 100
+		h: round(h * 360),
+		s: round(s * 100),
+		l: round(l * 100)
 	};
 	return HSL;
 }
