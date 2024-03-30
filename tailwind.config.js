@@ -19,7 +19,8 @@ export default {
 					DEFAULT: 'hsl(var(--color-accent-hsl) / <alpha-value>)',
 					1: 'var(--color-accent-1)',
 					2: 'var(--color-accent-2)'
-				}
+				},
+				text: 'hsl(var(--color-text-hsl) / <alpha-value>)'
 			}
 		}
 	},

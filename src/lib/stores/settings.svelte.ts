@@ -5,5 +5,6 @@ export enum NoteStyles {
 
 export const settings = $state({
 	noteStyle: NoteStyles.Grid,
-	showTimer: false
+	showTimer: false,
+	showRemainingDigits: true
 });

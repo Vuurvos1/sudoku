@@ -21,10 +21,14 @@
 
 		--color-background-hsl: var(--background-h) var(--background-s) var(--background-l);
 		--color-background: hsl(var(--background-h), var(--background-s), var(--background-l));
+
+		--color-text-hsl: var(--text-h) var(--text-s) var(--text-l);
+		--color-text: hsl(var(--text-h), var(--text-s), var(--text-l));
 	}
 
 	:global(body) {
 		background-color: var(--color-background);
+		color: var(--color-text);
 		transition: background 0.1s linear;
 	}
 </style>

@@ -1,13 +1,14 @@
 <svelte:options runes={true} />
 
 <script lang="ts">
-	let { checked = $bindable(false) }: { checked?: boolean } = $props();
+	let { checked = $bindable(false), label = '' }: { checked?: boolean; label?: string } = $props();
 </script>
 
 <div class="flex items-center">
-	<label class="pr-4 leading-none text-accent" for="airplane-mode" id="airplane-mode-label">
-		Airplane mode
+	<label class="pr-4 leading-none text-text" for="airplane-mode" id="airplane-mode-label">
+		{label}
 	</label>
+
 	<button
 		onclick={() => {
 			checked = !checked;

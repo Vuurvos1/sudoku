@@ -1,6 +1,8 @@
 <script lang="ts">
+	import Dialog from '$lib/components/Dialog.svelte';
 	import Switch from '$lib/components/Switch.svelte';
-	import { theme, themes } from '$lib/stores/theme.svelte.ts';
+	import ThemeSelect from '$lib/components/ThemeSelect.svelte';
+	import { settings } from '$lib/stores/settings.svelte';
 	import {
 		UndoIcon,
 		RedoIcon,
@@ -12,7 +14,7 @@
 		LightbulbIcon
 	} from 'lucide-svelte';
 
-	let mode = $state<'fill' | 'note' | 'color' | ''>('');
+	let mode = $state<'fill' | 'note' | 'color'>('fill');
 
 	const sudokuGrid = $state([
 		[0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -40,8 +42,11 @@
 
 	const selectedCell = $state({ row: -1, col: -1 });
 
+	let selectedNumber = $state(0);
+	let settingsOpen = $state(false);
+
 	function handleCellClick(col: number, row: number) {
-		console.info({ col, row });
+		// console.info({ col, row });
 		selectedCell.row = row;
 		selectedCell.col = col;
 	}
@@ -51,8 +56,6 @@
 	}
 
 	function setSudokuCell(num: number) {
-		console.log('setting', selectedCell, 'to', num);
-
 		const { col, row } = selectedCell;
 
 		if (col < 0 || row < 0) return;
@@ -62,7 +65,7 @@
 		} else if (mode === 'note') {
 			// add or remove if needed
 			if (notes[row][col].includes(num)) {
-				notes[row][col] = notes[row][col].filter((i) => i === num);
+				notes[row][col] = notes[row][col].filter((i) => i !== num);
 			} else {
 				notes[row][col].push(num);
 			}
@@ -83,63 +86,50 @@
 				</button>
 			</div>
 
-			<h1 class="font-bold">2m 12s</h1>
+			{#if settings.showTimer}
+				<h3 class="font-bold">2m 12s</h3>
+			{/if}
 
 			<div class="flex w-32 flex-row items-center justify-end gap-4">
 				<button aria-label="toggle dark mode">
 					<LightbulbIcon />
 				</button>
-				<button aria-label="settings">
+				<button
+					onclick={() => {
+						settingsOpen = true;
+					}}
+					aria-label="settings"
+				>
 					<SettingsIcon />
 				</button>
 			</div>
 		</nav>
 	</header>
 
-	<main class="flex h-auto flex-1 flex-col overflow-hidden py-4 text-accent">
+	<main class="flex h-auto flex-1 flex-col overflow-hidden py-4">
 		<!-- Base color scheme dark, light, adapt to system -->
-
-		<!-- <Switch /> -->
 
 		<!-- <input type="color" bind:value={theme.background} />
 	<input type="color" bind:value={theme.accent} /> -->
 
-		<div class="container my-8 flex flex-row gap-4">
-			{#each Object.entries(themes) as [key, value]}
-				<button
-					class:active={theme.id === value.id}
-					style="background:{value.background}"
-					class="grid h-8 w-8 place-items-center rounded-full transition duration-200"
-					onclick={() => {
-						theme.background = value.background;
-						theme.accent = value.accent;
-						theme.id = value.id;
-					}}
-				>
-					<div
-						style="background:{value.accent}"
-						class="grid h-4 w-4 place-items-center rounded-full outline-0 transition duration-200"
-					>
-						<div
-							style="background:{value.background}"
-							class="h-4 w-4 scale-0 rounded-full transition duration-200"
-						></div>
-					</div>
-				</button>
-			{/each}
-		</div>
-
 		<!-- flex items-center justify-center -->
 		<div
-			class="sudoku mx-auto h-full max-h-full w-full max-w-screen-lg flex-1 overflow-hidden px-6 py-12 md:px-8"
+			class="sudoku mx-auto h-full max-h-full w-full max-w-screen-lg flex-1 overflow-hidden px-4 py-12 md:px-8"
 		>
 			<div class="mx-auto flex aspect-square max-h-full">
 				<div class="row mx-auto grid h-full max-h-full w-full max-w-full grid-cols-9 grid-rows-9">
 					{#each sudokuGrid as row, i}
 						{#each row as cell, j}
 							<div
-								class="cell border border-black"
+								class="cell border border-accent/40"
 								class:selected={selectedCell.col === j && selectedCell.row === i}
+								class:bg-accent={selectedCell.row > 0 &&
+									selectedCell.col > 0 &&
+									cell !== 0 &&
+									sudokuGrid[selectedCell.row][selectedCell.col] === cell}
+								class:bg-blue-400={selectedCell.row > 0 &&
+									selectedCell.col > 0 &&
+									notes[i][j].includes(sudokuGrid[selectedCell.row][selectedCell.col])}
 							>
 								<button
 									onkeydown={(ev) => handleCellKeydown(ev, j, i)}
@@ -155,7 +145,7 @@
 										>
 											{#each { length: 9 } as _, x}
 												{#if notes[i][j].length > 0 && notes[i][j].includes(x + 1)}
-													<div class="text-xs">{x + 1}</div>
+													<div class="text-xs leading-none">{x + 1}</div>
 												{:else}
 													<div></div>
 												{/if}
@@ -171,17 +161,29 @@
 		</div>
 
 		<div>
-			<div class="options mx-auto grid w-min gap-4">
+			<div class="options mx-auto mb-8 grid w-min gap-4">
 				{#each { length: 9 } as _, i}
 					<button
 						onclick={() => {
+							// if (selectedNumber === i + 1) {
+							// 	selectedNumber = 0;
+							// } else {
+							// 	selectedNumber = i + 1;
+							// 	if (selectedCell.row >= 0 && selectedCell.col >= 0) {
+							// 		setSudokuCell(i + 1);
+							// 	}
+							// }
 							setSudokuCell(i + 1);
 						}}
-						class="grid h-12 w-12 place-items-center rounded-full border border-gray-800"
+						class="grid h-12 w-12 place-items-center rounded-full border border-text"
+						class:bg-accent={selectedNumber === i + 1}
 					>
-						<p>
-							{i + 1}<sup>2</sup>
-						</p>
+						<span class="relative">
+							{i + 1}
+							{#if settings.showRemainingDigits}
+								<sup class="absolute -right-[7px] top-1">2</sup>
+							{/if}
+						</span>
 					</button>
 				{/each}
 
@@ -192,10 +194,7 @@
 				<button
 					class="grid w-full place-items-center rounded-full border border-transparent py-1 transition"
 					aria-label="erase"
-					onclick={() => {
-						// mode = 'erase';
-						mode = '';
-					}}
+					onclick={() => {}}
 				>
 					<EraserIcon />
 				</button>
@@ -208,7 +207,7 @@
 					aria-label="coloring"
 					onclick={() => {
 						if (mode === 'color') {
-							mode = '';
+							mode = 'fill';
 						} else {
 							mode = 'color';
 						}
@@ -218,14 +217,14 @@
 				</button>
 
 				<button
-					class="grid w-full place-items-center rounded-full border border-transparent py-1 transition"
+					class="grid w-full place-items-center rounded-full border border-transparent py-1 transition hover:border-accent"
 					class:bg-accent={mode === 'note'}
 					class:border-accent={mode === 'note'}
 					class:text-background={mode === 'note'}
 					aria-label="note"
 					onclick={() => {
 						if (mode === 'note') {
-							mode = '';
+							mode = 'fill';
 						} else {
 							mode = 'note';
 						}
@@ -237,9 +236,7 @@
 				<button
 					class="grid w-full place-items-center rounded-full py-1 transition"
 					aria-label="undo"
-					onclick={() => {
-						mode = '';
-					}}
+					onclick={() => {}}
 				>
 					<UndoIcon />
 				</button>
@@ -247,58 +244,49 @@
 				<button
 					class="grid w-full place-items-center rounded-full py-1 transition"
 					aria-label="redo"
-					onclick={() => {
-						mode = '';
-					}}
+					onclick={() => {}}
 				>
 					<RedoIcon />
 				</button>
 			</div>
 		</div>
 	</main>
+
+	<Dialog bind:open={settingsOpen}>
+		<h2 class="mb-3 text-2xl font-semibold">Settings</h2>
+
+		<h3 class="mb-2 text-xl font-semibold">Themes</h3>
+
+		<ThemeSelect />
+
+		<h3 class="mb-2 text-xl font-semibold">Gameplay</h3>
+
+		<Switch label="Show timer" bind:checked={settings.showTimer} />
+
+		<Switch label="Show remaining digits" bind:checked={settings.showRemainingDigits} />
+	</Dialog>
 </div>
 
 <style lang="postcss">
-	.d1 {
-		background-color: var(--color-accent);
-	}
-
-	.d2 {
-		background-color: var(--color-accent-1);
-	}
-
-	.d3 {
-		background-color: var(--color-accent-2);
-	}
-
-	button.active > div {
-		box-shadow: 0 0 0 12px var(--color-accent);
-	}
-
-	button.active > div > div {
-		transform: scale(1);
-		transition-delay: 0.075s;
-	}
-
 	.options {
 		grid-template-columns: repeat(5, min-content);
 	}
 
 	/* thiccc borders */
 	.cell:nth-child(n + 10):nth-child(-n + 9) {
-		border-top-width: 4px;
+		@apply border-t-4 border-t-accent/75;
 	}
 
 	.cell:nth-child(n + 19):nth-child(-n + 27) {
-		border-bottom-width: 4px;
+		@apply border-b-4 border-b-accent/75;
 	}
 
 	.cell:nth-child(n + 46):nth-child(-n + 54) {
-		border-bottom-width: 4px;
+		@apply border-b-4 border-b-accent/75;
 	}
 
 	.cell:nth-child(3n):not(:nth-child(9n)) {
-		border-right-width: 4px;
+		@apply border-r-4 border-r-accent/75;
 	}
 
 	/* remove outer borders */
