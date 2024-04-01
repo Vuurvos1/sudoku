@@ -13,27 +13,22 @@
 		ChevronLeftIcon,
 		LightbulbIcon
 	} from 'lucide-svelte';
+	import { generateSudokuPuzzle } from '$lib/sudoku';
+
+	// max 57
+	let difficulty = $state(55);
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
 
-	const sudokuGrid = $state([
-		[0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 7, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0],
-		[0, 0, 0, 0, 0, 0, 0, 0, 0]
-	]);
+	let sudokuGrid = $state(generateSudokuPuzzle(difficulty));
+	console.info(sudokuGrid.map((el) => el).join('\n'));
 
-	const notes = $state<number[][][]>([
-		[[4], [], [], [], [], [], [], [], []],
+	let notes = $state<number[][][]>([
 		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [5], [], []],
+		[[], [], [], [], [], [], [], [], []],
+		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
 		[[], [], [], [], [], [], [], [], []],
@@ -102,6 +97,14 @@
 				>
 					<SettingsIcon />
 				</button>
+
+				<button
+					onclick={() => {
+						sudokuGrid = generateSudokuPuzzle(difficulty);
+					}}
+				>
+					reset
+				</button>
 			</div>
 		</nav>
 	</header>
@@ -123,12 +126,12 @@
 							<div
 								class="cell border border-accent/40"
 								class:selected={selectedCell.col === j && selectedCell.row === i}
-								class:bg-accent={selectedCell.row > 0 &&
-									selectedCell.col > 0 &&
+								class:bg-accent={selectedCell.row >= 0 &&
+									selectedCell.col >= 0 &&
 									cell !== 0 &&
 									sudokuGrid[selectedCell.row][selectedCell.col] === cell}
-								class:bg-blue-400={selectedCell.row > 0 &&
-									selectedCell.col > 0 &&
+								class:bg-blue-400={selectedCell.row >= 0 &&
+									selectedCell.col >= 0 &&
 									notes[i][j].includes(sudokuGrid[selectedCell.row][selectedCell.col])}
 							>
 								<button
