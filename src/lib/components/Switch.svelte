@@ -1,5 +1,3 @@
-<svelte:options runes={true} />
-
 <script lang="ts">
 	let { checked = $bindable(false), label = '' }: { checked?: boolean; label?: string } = $props();
 </script>
