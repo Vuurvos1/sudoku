@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { theme, themes } from '$lib/stores/theme.svelte.ts';
+	import { theme, themes } from '$lib/stores';
 </script>
 
 <div class="my-4 flex flex-row flex-wrap gap-4">

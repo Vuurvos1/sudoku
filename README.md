@@ -1,26 +1,15 @@
-# Tauri + Svelte + Typescript
+<p align="center">
+  <img width="120" height="120" src="assets/icon.png" alt="Logo">
+</p>
 
-This template should help get you started developing with Tauri, Svelte and TypeScript in Vite.
+<h1 align="center"><b>One Sudoku</b></h1>
+<p align="center">A minimalistic sudoku app.</p>
+
+Build with Tauri 2, Svelte 5 and Typescript
 
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
-
-# create-svelte
-
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
-
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
-```
 
 ## Developing
 

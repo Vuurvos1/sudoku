@@ -2,15 +2,27 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Switch from '$lib/components/Switch.svelte';
 	import ThemeSelect from '$lib/components/ThemeSelect.svelte';
-	import { settings } from '$lib/stores/settings.svelte';
+	import { settings } from '$lib/stores';
 
 	let { open = $bindable(true) }: { open?: boolean } = $props();
 </script>
+
+<!-- Base color scheme dark, light, adapt to system -->
 
 <Dialog bind:open>
 	<h2 class="mb-3 text-2xl font-semibold">Settings</h2>
 
 	<h3 class="mb-2 text-xl font-semibold">Themes</h3>
+
+	<ThemeSelect />
+
+	<h3 class="mb-2 text-xl font-semibold">Gameplay</h3>
+
+	<Switch label="Show timer" bind:checked={settings.showTimer} />
+
+	<Switch label="Show remaining digits" bind:checked={settings.showRemainingDigits} />
+
+	<h4 class="text-lg font-semibold">Note style</h4>
 
 	<svg
 		width="24"
@@ -49,12 +61,4 @@
 		<path d="M12 12H12.01" />
 		<path d="M8 12H8.01" />
 	</svg>
-
-	<ThemeSelect />
-
-	<h3 class="mb-2 text-xl font-semibold">Gameplay</h3>
-
-	<Switch label="Show timer" bind:checked={settings.showTimer} />
-
-	<Switch label="Show remaining digits" bind:checked={settings.showRemainingDigits} />
 </Dialog>

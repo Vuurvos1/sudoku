@@ -1,8 +1,12 @@
 <script lang="ts">
+	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
+	import { dialogState } from '$lib/stores';
 	import '../main.css';
 </script>
 
 <slot />
+
+<SettingsDialog bind:open={dialogState.settingsOpen} />
 
 <style lang="postcss">
 	:global(:root) {

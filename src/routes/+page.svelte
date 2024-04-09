@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { invoke } from '@tauri-apps/api/core';
 	import { InfoIcon, SettingsIcon } from 'lucide-svelte';
+	import { dialogState } from '$lib/stores';
+
+	import logo from '$lib/assets/logo.svg';
 
 	const difficulties = {
 		beginner: 10,
@@ -26,37 +29,44 @@
 			<InfoIcon />
 		</button>
 
-		<button>
+		<button
+			onclick={() => {
+				dialogState.settingsOpen = true;
+			}}
+		>
 			<SettingsIcon />
 		</button>
 	</div>
 </header>
 
-<main class="py-20">
+<main class="py-4">
 	<section class="container">
-		<h1 class="text-center text-3xl font-semibold">One Sudoku</h1>
+		<!-- TODO: change to inline svg for better animating -->
+		<img src={logo} alt="One Sudoku" class="mx-auto h-auto w-40 max-w-full" />
+
+		<h1 class="my-4 text-center text-3xl font-semibold">One Sudoku</h1>
 	</section>
 
-	<section class="container">
+	<section class="container flex flex-col items-center justify-center">
 		<!-- TODO: game modes? standard, killer, x... -->
 
-		<h2>Difficulty</h2>
+		<div>
+			<h2>Difficulty</h2>
 
-		<select bind:value={selectedDifficulty}>
-			{#each Object.entries(difficulties) as [key, value]}
-				<option {value}>{key}</option>
-			{/each}
-		</select>
+			<select bind:value={selectedDifficulty}>
+				{#each Object.entries(difficulties) as [key, value]}
+					<option {value}>{key}</option>
+				{/each}
+			</select>
 
-		<p>selected: {selectedDifficulty}</p>
+			<!-- <p>selected: {selectedDifficulty}</p> -->
+		</div>
 
-		<pre>
-			res
-			{JSON.stringify(res, null, 2)}
-		</pre>
+		<div>
+			<pre>res: {JSON.stringify(res, null, 2)}</pre>
+			<button onclick={generateSudoku}>generate</button>
+		</div>
 
-		<button onclick={generateSudoku}>generate</button>
-
-		<a href="/game" class="rounded-full border px-6 py-2">New game</a>
+		<a href="/game" class="inline-block rounded-full border px-6 py-2">New game</a>
 	</section>
 </main>

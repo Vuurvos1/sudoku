@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { settings } from '$lib/stores/settings.svelte';
+	import { settings, dialogState } from '$lib/stores';
 	import {
 		UndoIcon,
 		RedoIcon,
@@ -11,7 +11,6 @@
 		LightbulbIcon
 	} from 'lucide-svelte';
 	import { generateSudokuPuzzle } from '$lib/sudoku';
-	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
 
 	// max 57
 	let difficulty = $state(55);
@@ -97,7 +96,7 @@
 				</button>
 				<button
 					onclick={() => {
-						settingsOpen = true;
+						dialogState.settingsOpen = true;
 					}}
 					aria-label="settings"
 				>
@@ -108,12 +107,6 @@
 	</header>
 
 	<main class="flex h-auto flex-1 flex-col overflow-hidden py-4">
-		<!-- Base color scheme dark, light, adapt to system -->
-
-		<!-- <input type="color" bind:value={theme.background} />
-	<input type="color" bind:value={theme.accent} /> -->
-
-		<!-- flex items-center justify-center -->
 		<div
 			class="sudoku mx-auto h-full max-h-full w-full max-w-screen-lg flex-1 overflow-hidden px-4 py-12 md:px-8"
 		>
@@ -162,7 +155,7 @@
 		</div>
 
 		<div>
-			<div class="options mx-auto mb-8 grid w-min gap-4">
+			<div class="digits mx-auto mb-8 grid w-min gap-4">
 				{#each { length: 9 } as _, i}
 					<button
 						onclick={() => {
@@ -176,7 +169,7 @@
 							// }
 							setSudokuCell(i + 1);
 						}}
-						class="grid h-12 w-12 place-items-center rounded-full border border-text"
+						class="digit-btn"
 						class:bg-accent={selectedNumber === i + 1}
 					>
 						<span class="relative">
@@ -189,23 +182,18 @@
 				{/each}
 
 				<button
+					class="digit-btn"
 					onclick={() => {
 						setSudokuCell(0);
-					}}>x</button
+					}}
 				>
+					<EraserIcon size="24" />
+				</button>
 			</div>
 
 			<div class="container flex max-w-3xl flex-row justify-center gap-6">
 				<button
-					class="grid w-full place-items-center rounded-full border border-transparent py-1 transition"
-					aria-label="erase"
-					onclick={() => {}}
-				>
-					<EraserIcon />
-				</button>
-
-				<button
-					class="grid w-full place-items-center rounded-full border border-transparent py-1 transition"
+					class="option-btn"
 					class:bg-accent={mode === 'color'}
 					class:border-accent={mode === 'color'}
 					class:text-background={mode === 'color'}
@@ -222,7 +210,7 @@
 				</button>
 
 				<button
-					class="grid w-full place-items-center rounded-full border border-transparent py-1 transition hover:border-accent"
+					class="option-btn"
 					class:bg-accent={mode === 'note'}
 					class:border-accent={mode === 'note'}
 					class:text-background={mode === 'note'}
@@ -238,31 +226,29 @@
 					<PencilIcon class="transition" />
 				</button>
 
-				<button
-					class="grid w-full place-items-center rounded-full py-1 transition"
-					aria-label="undo"
-					onclick={() => {}}
-				>
+				<button class="option-btn" aria-label="undo" onclick={() => {}}>
 					<UndoIcon />
 				</button>
 
-				<button
-					class="grid w-full place-items-center rounded-full py-1 transition"
-					aria-label="redo"
-					onclick={() => {}}
-				>
+				<button class="option-btn" aria-label="redo" onclick={() => {}}>
 					<RedoIcon />
 				</button>
 			</div>
 		</div>
 	</main>
-
-	<SettingsDialog bind:open={settingsOpen} />
 </div>
 
 <style lang="postcss">
-	.options {
+	.digits {
 		grid-template-columns: repeat(5, min-content);
+	}
+
+	.digit-btn {
+		@apply grid h-12 w-12 place-items-center rounded-full border border-text;
+	}
+
+	.option-btn {
+		@apply grid w-full place-items-center rounded-full border border-transparent py-1 transition hover:border-accent;
 	}
 
 	/* thiccc borders */

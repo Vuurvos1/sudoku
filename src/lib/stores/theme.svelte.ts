@@ -5,6 +5,7 @@ export type Theme = {
 	background: string;
 	accent: string;
 	text: string;
+	colorScheme: 'light' | 'dark';
 };
 
 export const themes: Record<string, Theme> = {
@@ -12,32 +13,35 @@ export const themes: Record<string, Theme> = {
 		id: 1,
 		background: '#FFFFFF',
 		accent: '#F7B155',
-		text: '#000000'
+		text: '#000000',
+		colorScheme: 'light'
 	},
 	dark: {
 		id: 2,
 		background: '#1E1E1E',
 		accent: '#F7B155',
-		text: '#FFFFFF'
+		text: '#FFFFFF',
+		colorScheme: 'dark'
 	},
 	blue: {
 		id: 3,
 		background: '#FFFFFF',
 		accent: '#38BDF8',
-		text: '#111827'
+		text: '#111827',
+		colorScheme: 'light'
 	},
 	purple: {
 		id: 4,
 		background: '#FFFFFF',
 		accent: '#4F46E5',
-		text: '#111827'
+		text: '#111827',
+		colorScheme: 'light'
 	}
 };
 
 export const theme = $state<Theme>({ ...themes.dark });
 
 const hslThemeStore = $derived.by(() => {
-	console.log('hslThemeStore', theme, hexToHSL(theme.text));
 	return {
 		background: hexToHSL(theme.background),
 		accent: hexToHSL(theme.accent),
@@ -52,6 +56,8 @@ $effect.root(() => {
 		const doc = document.documentElement;
 
 		if (!doc || !hslThemeStore.accent || !hslThemeStore.background || !hslThemeStore.text) return;
+
+		doc.style.colorScheme = theme?.colorScheme ?? 'light';
 
 		doc.style.setProperty('--accent-h', String(hslThemeStore.accent.h));
 		doc.style.setProperty('--accent-s', String(hslThemeStore.accent.s) + '%');
