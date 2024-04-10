@@ -3,7 +3,7 @@ const GRID_SIZE = 9;
 const BOX_SIZE = 3;
 
 // Helper function to create an empty Sudoku grid
-function createEmptyGrid(): number[][] {
+export function createEmptyGrid(): number[][] {
 	return Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
 }
 

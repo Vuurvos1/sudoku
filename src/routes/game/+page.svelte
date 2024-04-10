@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { settings, dialogState } from '$lib/stores';
+	import { settings, dialogState, sudokuStore } from '$lib/stores';
 	import {
 		UndoIcon,
 		RedoIcon,
@@ -10,34 +10,16 @@
 		ChevronLeftIcon,
 		LightbulbIcon
 	} from 'lucide-svelte';
-	import { generateSudokuPuzzle } from '$lib/sudoku';
+	import HintDialog from '$lib/components/HintDialog.svelte';
 
-	// max 57
-	let difficulty = $state(55);
+	// max 57?
+	// let difficulty = $state(55);
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
-
-	// let solvedGrid = $state(generateSudokuPuzzle(difficulty));
-	// let initialGrid = $state(generateSudokuPuzzle(difficulty));
-	// let coloringGrid
-	let sudokuGrid = $state(generateSudokuPuzzle(difficulty));
-
-	let notes = $state<number[][][]>([
-		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []],
-		[[], [], [], [], [], [], [], [], []]
-	]);
 
 	const selectedCell = $state({ row: -1, col: -1 });
 
 	let selectedNumber = $state(0);
-	let settingsOpen = $state(false);
 
 	function handleCellClick(col: number, row: number) {
 		if (selectedCell.row === row && selectedCell.col === col) {
@@ -54,24 +36,32 @@
 	}
 
 	function setSudokuCell(num: number) {
+		if (!sudokuStore.sudoku) return;
+
 		const { col, row } = selectedCell;
 
 		if (col < 0 || row < 0) return;
 
 		if (mode === 'fill') {
-			sudokuGrid[row][col] = num;
+			sudokuStore.sudoku[row][col].value = num;
 		} else if (mode === 'note') {
 			// add or remove if needed
-			if (notes[row][col].includes(num)) {
-				notes[row][col] = notes[row][col].filter((i) => i !== num);
+			if (sudokuStore.sudoku[row][col].notes.includes(num)) {
+				sudokuStore.sudoku[row][col].notes = sudokuStore.sudoku[row][col].notes.filter(
+					(i) => i !== num
+				);
 			} else {
-				notes[row][col].push(num);
+				sudokuStore.sudoku[row][col].notes.push(num);
 			}
 		}
+
+		sudokuStore.save();
 	}
 
 	function clearCell(col: number, row: number) {
-		sudokuGrid[row][col] = 0;
+		if (!sudokuStore.sudoku) return;
+
+		sudokuStore.sudoku[row][col].value = 0;
 	}
 </script>
 
@@ -79,11 +69,9 @@
 	<header class="py-3">
 		<nav class="container flex flex-row items-center justify-between">
 			<div class="flex w-32 flex-row items-center gap-4">
-				<!-- <button aria-label="back"> -->
-				<a href="/">
+				<a href="/" aria-label="back">
 					<ChevronLeftIcon />
 				</a>
-				<!-- </button> -->
 			</div>
 
 			{#if settings.showTimer}
@@ -91,7 +79,12 @@
 			{/if}
 
 			<div class="flex w-32 flex-row items-center justify-end gap-4">
-				<button aria-label="toggle dark mode">
+				<button
+					onclick={() => {
+						sudokuStore.generate(0);
+					}}
+					aria-label="hint"
+				>
 					<LightbulbIcon />
 				</button>
 				<button
@@ -112,44 +105,48 @@
 		>
 			<div class="mx-auto flex aspect-square max-h-full">
 				<div class="row mx-auto grid h-full max-h-full w-full max-w-full grid-cols-9 grid-rows-9">
-					{#each sudokuGrid as row, i}
-						{#each row as cell, j}
-							<div
-								class="cell border border-accent/40"
-								class:selected={selectedCell.col === j && selectedCell.row === i}
-								class:bg-accent={selectedCell.row >= 0 &&
-									selectedCell.col >= 0 &&
-									cell !== 0 &&
-									sudokuGrid[selectedCell.row][selectedCell.col] === cell}
-								class:bg-blue-400={selectedCell.row >= 0 &&
-									selectedCell.col >= 0 &&
-									notes[i][j].includes(sudokuGrid[selectedCell.row][selectedCell.col])}
-							>
-								<button
-									onkeydown={(ev) => handleCellKeydown(ev, j, i)}
-									onclick={() => handleCellClick(j, i)}
-									class="grid h-full w-full place-items-center"
+					{#if sudokuStore.sudoku}
+						{#each sudokuStore.sudoku as row, i}
+							{#each row as cell, j}
+								<div
+									class="cell border border-accent/40"
+									class:selected={selectedCell.col === j && selectedCell.row === i}
+									class:bg-accent={selectedCell.row >= 0 &&
+										selectedCell.col >= 0 &&
+										cell.value !== 0 &&
+										sudokuStore.sudoku[selectedCell.row][selectedCell.col] === cell}
+									class:bg-blue-400={selectedCell.row >= 0 &&
+										selectedCell.col >= 0 &&
+										cell.notes.includes(
+											sudokuStore.sudoku[selectedCell.row][selectedCell.col].value
+										)}
 								>
-									{#if cell > 0}
-										<span class="text-xl font-medium">{cell}</span>
-									{:else}
-										<!-- notes -->
-										<div
-											class="grid h-full w-full grid-cols-3 grid-rows-3 place-items-center text-xs leading-none"
-										>
-											{#each { length: 9 } as _, x}
-												{#if notes[i][j].length > 0 && notes[i][j].includes(x + 1)}
-													<div class="text-xs leading-none">{x + 1}</div>
-												{:else}
-													<div></div>
-												{/if}
-											{/each}
-										</div>
-									{/if}
-								</button>
-							</div>
+									<button
+										onkeydown={(ev) => handleCellKeydown(ev, j, i)}
+										onclick={() => handleCellClick(j, i)}
+										class="grid h-full w-full place-items-center"
+									>
+										{#if cell.value > 0}
+											<span class="text-xl font-medium">{cell.value}</span>
+										{:else}
+											<!-- notes -->
+											<div
+												class="grid h-full w-full grid-cols-3 grid-rows-3 place-items-center text-xs leading-none"
+											>
+												{#each { length: 9 } as _, x}
+													{#if cell.notes.length > 0 && cell.notes.includes(x + 1)}
+														<div class="text-xs leading-none">{x + 1}</div>
+													{:else}
+														<div></div>
+													{/if}
+												{/each}
+											</div>
+										{/if}
+									</button>
+								</div>
+							{/each}
 						{/each}
-					{/each}
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -187,7 +184,7 @@
 						setSudokuCell(0);
 					}}
 				>
-					<EraserIcon size="24" />
+					<EraserIcon size="22" />
 				</button>
 			</div>
 
@@ -238,7 +235,13 @@
 	</main>
 </div>
 
+<HintDialog bind:open={dialogState.hintOpen} />
+
 <style lang="postcss">
+	/* .sudoku * * {
+		box-sizing: content-box;
+	} */
+
 	.digits {
 		grid-template-columns: repeat(5, min-content);
 	}

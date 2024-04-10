@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Dialog from '$lib/components/Dialog.svelte';
 
-	let { open = $bindable(true) }: { open?: boolean } = $props();
+	let { open = $bindable(false) }: { open?: boolean } = $props();
 </script>
 
 <Dialog bind:open>

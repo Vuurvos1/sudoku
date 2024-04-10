@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { invoke } from '@tauri-apps/api/core';
 	import { InfoIcon, SettingsIcon } from 'lucide-svelte';
-	import { dialogState } from '$lib/stores';
-
+	import { dialogState, sudokuStore } from '$lib/stores';
+	import InfoDialog from '$lib/components/InfoDialog.svelte';
 	import logo from '$lib/assets/logo.svg';
+	import { goto } from '$app/navigation';
 
 	const difficulties = {
 		beginner: 10,
@@ -14,18 +14,15 @@
 	};
 
 	let selectedDifficulty = $state(difficulties.medium);
-
-	let res = $state<any>();
-
-	async function generateSudoku() {
-		// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-		res = await invoke('generate_sudoku');
-	}
 </script>
 
 <header class="px-4 py-4 sm:px-6">
 	<div class="flex flex-row justify-end gap-4">
-		<button>
+		<button
+			onclick={() => {
+				dialogState.infoOpen = true;
+			}}
+		>
 			<InfoIcon />
 		</button>
 
@@ -50,7 +47,7 @@
 	<section class="container flex flex-col items-center justify-center">
 		<!-- TODO: game modes? standard, killer, x... -->
 
-		<div>
+		<div class="mb-6">
 			<h2>Difficulty</h2>
 
 			<select bind:value={selectedDifficulty}>
@@ -62,11 +59,27 @@
 			<!-- <p>selected: {selectedDifficulty}</p> -->
 		</div>
 
-		<div>
-			<pre>res: {JSON.stringify(res, null, 2)}</pre>
-			<button onclick={generateSudoku}>generate</button>
-		</div>
+		<button
+			onclick={() => {
+				sudokuStore.generate(selectedDifficulty);
+				goto('/game');
+			}}
+			class="inline-block rounded-full border-2 px-6 py-2"
+		>
+			New game
+		</button>
 
-		<a href="/game" class="inline-block rounded-full border px-6 py-2">New game</a>
+		{#if sudokuStore.sudoku}
+			<button
+				onclick={() => {
+					goto('/game');
+				}}
+				class="mt-4 inline-block rounded-full border-2 px-6 py-2"
+			>
+				Continue
+			</button>
+		{/if}
 	</section>
 </main>
+
+<InfoDialog bind:open={dialogState.infoOpen} />
