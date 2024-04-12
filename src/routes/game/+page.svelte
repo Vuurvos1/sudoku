@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { settings, dialogState, sudokuStore } from '$lib/stores';
+	import { settingsStore, dialogState, sudokuStore } from '$lib/stores';
 	import {
 		UndoIcon,
 		RedoIcon,
@@ -11,9 +11,7 @@
 		LightbulbIcon
 	} from 'lucide-svelte';
 	import HintDialog from '$lib/components/HintDialog.svelte';
-
-	// max 57?
-	// let difficulty = $state(55);
+	import { invoke } from '@tauri-apps/api/core';
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
 
@@ -41,6 +39,8 @@
 		const { col, row } = selectedCell;
 
 		if (col < 0 || row < 0) return;
+
+		if (sudokuStore.sudoku[row][col].fixed) return;
 
 		if (mode === 'fill') {
 			sudokuStore.sudoku[row][col].value = num;
@@ -74,14 +74,24 @@
 				</a>
 			</div>
 
-			{#if settings.showTimer}
+			{#if settingsStore.settings.showTimer}
 				<h3 class="font-bold">2m 12s</h3>
 			{/if}
 
 			<div class="flex w-32 flex-row items-center justify-end gap-4">
 				<button
-					onclick={() => {
-						sudokuStore.generate(0);
+					onclick={async () => {
+						if (!sudokuStore.sudoku) return;
+
+						const sudokuString = sudokuStore.sudoku
+							.map((row) => row.map((cell) => cell.value).join(''))
+							.join('')
+							.replace(/0/g, '.');
+
+						console.log(sudokuString);
+
+						const res = await invoke('hint_sudoku', { sudokuLine: sudokuString });
+						console.log(res);
 					}}
 					aria-label="hint"
 				>
@@ -171,7 +181,7 @@
 					>
 						<span class="relative">
 							{i + 1}
-							{#if settings.showRemainingDigits}
+							{#if settingsStore.settings.showRemainingDigits}
 								<sup class="absolute -right-[7px] top-1">2</sup>
 							{/if}
 						</span>

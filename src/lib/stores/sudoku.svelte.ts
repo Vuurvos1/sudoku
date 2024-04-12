@@ -1,16 +1,11 @@
-// import { createEmptyGrid } from '$lib/sudoku';
 import { invoke } from '@tauri-apps/api/core';
 import { Store } from '@tauri-apps/plugin-store';
-
-// TODO: change sudoku where each cell has an object with value and notes?
-// [[{value: 0, notes: [], color: [], filled, false}]]
-// static, filled, base, fixed??
 
 export type Cell = {
 	value: number;
 	notes: number[];
 	color: string[]; // TODO: enumify?
-	fixed: boolean; // one of the original numbers
+	fixed: boolean; // one of the original/base digits
 };
 
 export type Sudoku = Cell[][];
@@ -18,12 +13,17 @@ export type Sudoku = Cell[][];
 function createSudokuStore() {
 	const store = new Store('oneSudoku.bin');
 	let sudoku = $state<Sudoku | null>(null);
+	let solved = $state<number[][] | null>(null);
 
 	async function generate(difficulty: number) {
-		console.log('generate', difficulty);
+		console.info('generate', difficulty);
 
-		const sudokuString: string = await invoke('generate_sudoku');
-		console.log('sudokuString', sudokuString);
+		const sudokuString = await invoke<string>('generate_sudoku');
+		console.info('sudokuString', sudokuString);
+
+		const solvedRes = await invoke<number[]>('solve_sudoku', { sudokuLine: sudokuString });
+		solved = Array.from({ length: 9 }, (_, i) => solvedRes.slice(i * 9, i * 9 + 9));
+		console.info('solved', solved);
 
 		const grid: Sudoku = Array.from({ length: 9 }, () =>
 			Array(9)
@@ -81,6 +81,9 @@ function createSudokuStore() {
 	return {
 		get sudoku() {
 			return sudoku;
+		},
+		get solved() {
+			return solved;
 		},
 		generate,
 		save,
