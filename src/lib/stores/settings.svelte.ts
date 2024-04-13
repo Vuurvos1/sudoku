@@ -1,4 +1,5 @@
 import { Store } from '@tauri-apps/plugin-store';
+import { themeStore, themes } from '$lib/stores/theme.svelte';
 
 export enum NoteStyles {
 	Grid,
@@ -9,6 +10,7 @@ export type Settings = {
 	noteStyle: NoteStyles;
 	showTimer: boolean;
 	showRemainingDigits: boolean;
+	theme: keyof typeof themes;
 };
 
 function createSettingsStore() {
@@ -18,7 +20,8 @@ function createSettingsStore() {
 	const settings = $state<Settings>({
 		noteStyle: NoteStyles.Grid,
 		showTimer: false,
-		showRemainingDigits: true
+		showRemainingDigits: true,
+		theme: 'dark'
 	});
 
 	store.get<Settings>('settings').then((val) => {
@@ -28,6 +31,8 @@ function createSettingsStore() {
 				// @ts-expect-error - this is fine
 				settings[key] = val[key];
 			}
+
+			themeStore.setTheme(val.theme);
 		}
 	});
 

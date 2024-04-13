@@ -1,18 +1,15 @@
 <script lang="ts">
-	import { theme, themes } from '$lib/stores';
+	import { themeStore, themes } from '$lib/stores';
 </script>
 
 <div class="my-4 flex flex-row flex-wrap gap-4">
 	{#each Object.entries(themes) as [key, value]}
 		<button
-			class:active={theme.id === value.id}
+			class:active={themeStore.get().id === value.id}
 			style="background:{value.background}"
 			class="grid h-8 w-8 place-items-center rounded-full transition duration-200"
 			onclick={() => {
-				for (const key in value) {
-					// @ts-ignore - this is fine
-					theme[key] = value[key];
-				}
+				themeStore.setTheme(key);
 			}}
 		>
 			<div

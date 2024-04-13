@@ -1,4 +1,5 @@
 import { hexToHSL } from '$lib/color';
+import { settingsStore } from '$lib/stores';
 
 export type Theme = {
 	id: number;
@@ -8,6 +9,7 @@ export type Theme = {
 	colorScheme: 'light' | 'dark';
 };
 
+// save theme key to settings
 export const themes: Record<string, Theme> = {
 	light: {
 		id: 1,
@@ -39,17 +41,35 @@ export const themes: Record<string, Theme> = {
 	}
 };
 
-export const theme = $state<Theme>({ ...themes.dark });
+function createThemeStore() {
+	let theme = $state<Theme>({ ...themes.dark });
+
+	function setTheme(key: string) {
+		if (themes[key]) {
+			theme = { ...themes[key] };
+			settingsStore.settings.theme = key;
+		} else {
+			console.error(`Theme key ${key} not found`);
+		}
+	}
+
+	return {
+		get() {
+			return theme;
+		},
+		setTheme
+	};
+}
+
+export const themeStore = createThemeStore();
 
 const hslThemeStore = $derived.by(() => {
 	return {
-		background: hexToHSL(theme.background),
-		accent: hexToHSL(theme.accent),
-		text: hexToHSL(theme.text)
+		background: hexToHSL(themeStore.get().background),
+		accent: hexToHSL(themeStore.get().accent),
+		text: hexToHSL(themeStore.get().text)
 	};
 });
-
-// export const hslTheme = () => hslThemeStore;
 
 $effect.root(() => {
 	$effect(() => {
@@ -57,7 +77,7 @@ $effect.root(() => {
 
 		if (!doc || !hslThemeStore.accent || !hslThemeStore.background || !hslThemeStore.text) return;
 
-		doc.style.colorScheme = theme?.colorScheme ?? 'light';
+		doc.style.colorScheme = themeStore.get()?.colorScheme ?? 'light';
 
 		doc.style.setProperty('--accent-h', String(hslThemeStore.accent.h));
 		doc.style.setProperty('--accent-s', String(hslThemeStore.accent.s) + '%');
