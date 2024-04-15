@@ -30,7 +30,12 @@
 	}
 
 	function handleCellKeydown(ev: KeyboardEvent, col: number, row: number) {
-		console.info(ev.key, 'down on', { col, row });
+		const parsed = parseInt(ev.key);
+		if (parsed > 0 && parsed <= 9) {
+			setSudokuCell(parsed);
+		} else if (ev.key === 'Backspace' || ev.key === 'Delete') {
+			clearCell(col, row);
+		}
 	}
 
 	function setSudokuCell(num: number) {
@@ -39,7 +44,6 @@
 		const { col, row } = selectedCell;
 
 		if (col < 0 || row < 0) return;
-
 		if (sudokuStore.sudoku[row][col].fixed) return;
 
 		if (mode === 'fill') {
@@ -137,7 +141,13 @@
 										class="grid h-full w-full place-items-center"
 									>
 										{#if cell.value > 0}
-											<span class="text-xl font-medium">{cell.value}</span>
+											<span
+												class:text-red-400={sudokuStore.solved &&
+													cell.value !== sudokuStore.solved[i][j]}
+												class="text-xl font-medium"
+											>
+												{cell.value}
+											</span>
 										{:else}
 											<!-- notes -->
 											<div
