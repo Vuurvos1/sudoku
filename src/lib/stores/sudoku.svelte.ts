@@ -56,8 +56,6 @@ function createSudokuStore() {
 
 	async function save() {
 		await store.set('sudoku', sudoku);
-		// TODO: maybe generate on load instead of storing the solved sudoku
-		await store.set('solved', solved);
 
 		// You can manually save the store after making changes.
 		// Otherwise, it will save upon graceful exit.
@@ -66,7 +64,9 @@ function createSudokuStore() {
 
 	async function load() {
 		sudoku = await store.get<Sudoku>('sudoku');
-		solved = await store.get<number[][]>('solved');
+
+		const solvedRes = await invoke<number[]>('solve_sudoku', { sudokuLine: sudoku });
+		solved = Array.from({ length: 9 }, (_, i) => solvedRes.slice(i * 9, i * 9 + 9));
 	}
 
 	function clear() {
