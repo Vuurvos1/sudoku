@@ -1,3 +1,6 @@
+
+
+
 use std::fmt::format;
 use serde_json::json;
 
@@ -42,9 +45,13 @@ fn hint_sudoku(sudoku_line: String) -> String  {
 
     println!("{:?}", res.1);
 
-    
+    // stingify first hint item and return
+    // if let Some(hint) = res.1.len() {
+    //     return hint.to_string();
+    // }
 
     // return format!("{:?}", json!(res.1));
+    return format!("{:?}", res.1);
 
 
     // let strategies = [strategy::Strategy::HiddenSingles, strategy::Strategy::HiddenPairs, strategy::Strategy::HiddenTriples, strategy::Strategy::HiddenQuads, strategy::Strategy::NakedSingles, strategy::Strategy::NakedPairs, strategy::Strategy::NakedTriples, strategy::Strategy::NakedQuads, strategy::Strategy::PointingPairs, strategy::Strategy::PointingTriples, strategy::Strategy::BoxLineReduction, strategy::Strategy::XWing, strategy::Strategy::Swordfish, strategy::Strategy::Jellyfish, strategy::Strategy::XYWing, strategy::Strategy::XYZWing, strategy::Strategy::WXYZWing, strategy::Strategy::SueDeCoq, strategy::Strategy::GroupedXWing, strategy::Strategy::GroupedSueDeCoq, strategy::Strategy::GroupedJellyfish, strategy::Strategy::GroupedSwordfish, strategy::Strategy::GroupedXYZWing, strategy::Strategy::GroupedWXYZWing];
@@ -58,7 +65,7 @@ fn hint_sudoku(sudoku_line: String) -> String  {
     //     return hint.to_string();
     // }
 
-    return "No hint found".to_string();
+    // return "No hint found".to_string();
 
     // let hint = strategy::deduction::Deduction::from(&sudoku);
     
@@ -78,7 +85,7 @@ fn hint_sudoku(sudoku_line: String) -> String  {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_store::Builder::new().build())
+    .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![generate_sudoku, solve_sudoku, hint_sudoku])
         .run(tauri::generate_context!())
