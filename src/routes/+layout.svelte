@@ -1,10 +1,17 @@
 <script lang="ts">
 	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
 	import { dialogState } from '$lib/stores';
+	import type { Snippet } from 'svelte';
 	import '../main.css';
+
+	interface Props {
+		children?: Snippet;
+	}
+
+	let { children }: Props = $props();
 </script>
 
-<slot />
+{@render children?.()}
 
 <SettingsDialog bind:open={dialogState.settingsOpen} />
 

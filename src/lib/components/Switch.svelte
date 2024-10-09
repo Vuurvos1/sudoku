@@ -16,7 +16,7 @@
 		id="airplane-mode"
 		aria-labelledby="airplane-mode-label"
 	>
-		<span class="thumb block rounded-full bg-white transition" />
+		<span class="thumb block rounded-full bg-white transition"></span>
 	</button>
 	<input bind:checked type="checkbox" class="sr-only" />
 </div>
