@@ -1,24 +1,32 @@
 <script lang="ts">
-	let { checked = $bindable(false), label = '' }: { checked?: boolean; label?: string } = $props();
+	interface Props {
+		checked?: boolean;
+		label?: string;
+		id?: string;
+	}
+
+	let { checked = $bindable(false), label = '', id }: Props = $props();
 </script>
 
-<div class="flex items-center">
-	<label class="pr-4 leading-none text-text" for="airplane-mode" id="airplane-mode-label">
-		{label}
-	</label>
+<div class="switch">
+	<label class="flex items-center gap-4 pr-4 text-text">
+		{#if label}
+			<span class="leading-none">
+				{label}
+			</span>
+		{/if}
 
-	<button
-		onclick={() => {
-			checked = !checked;
-		}}
-		data-state={checked ? 'checked' : 'unchecked'}
-		class="relative h-6 cursor-pointer rounded-full bg-gray-500 transition-colors data-[state=checked]:bg-accent"
-		id="airplane-mode"
-		aria-labelledby="airplane-mode-label"
-	>
-		<span class="thumb block rounded-full bg-white transition"></span>
-	</button>
-	<input bind:checked type="checkbox" class="sr-only" />
+		<button
+			onclick={() => {
+				checked = !checked;
+			}}
+			data-state={checked ? 'checked' : 'unchecked'}
+			class="relative h-6 cursor-pointer rounded-full bg-gray-500 transition-colors data-[state=checked]:bg-accent"
+		>
+			<span class="thumb block rounded-full bg-white transition"></span>
+		</button>
+		<input bind:checked type="checkbox" class="sr-only" {id} />
+	</label>
 </div>
 
 <style>
