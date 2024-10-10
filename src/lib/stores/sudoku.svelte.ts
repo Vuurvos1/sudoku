@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { Store } from '@tauri-apps/plugin-store';
+import { createStore, Store } from '@tauri-apps/plugin-store';
 
 export type Cell = {
 	value: number;
@@ -10,8 +10,11 @@ export type Cell = {
 
 export type Sudoku = Cell[][];
 
-function createSudokuStore() {
-	const store = new Store('oneSudoku.bin');
+async function createSudokuStore() {
+	const store = await createStore('oneSudoku.bin', {
+		// autoSave: true
+	});
+
 	let sudoku = $state<Sudoku | null>(null);
 	let solved = $state<number[][] | null>(null);
 
@@ -94,4 +97,4 @@ function createSudokuStore() {
 	};
 }
 
-export const sudokuStore = createSudokuStore();
+export const sudokuStore = await createSudokuStore();
