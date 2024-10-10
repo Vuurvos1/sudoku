@@ -1,7 +1,13 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
 
-	let { open = $bindable(true) }: { open?: boolean } = $props();
+	interface Props {
+		open?: boolean;
+		children?: Snippet;
+	}
+
+	let { open = $bindable(true), children }: Props = $props();
 </script>
 
 <div>
@@ -14,7 +20,7 @@
 			transition:fade={{ duration: 150 }}
 			class="fixed inset-4 z-40 rounded-lg border border-accent bg-background p-4"
 		>
-			<slot />
+			{@render children?.()}
 
 			<button onclick={() => (open = false)}>close</button>
 		</div>
