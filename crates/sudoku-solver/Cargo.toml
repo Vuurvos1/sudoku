@@ -1,0 +1,15 @@
+[package]
+name = "sudoku-solver"
+version = "0.1.0"
+edition = "2021"
+description = "Constraint-based Sudoku solver with hint generation"
+license = "MIT"
+
+[features]
+default = []
+serde = ["dep:serde"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+
+[dev-dependencies]
