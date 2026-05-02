@@ -18,7 +18,7 @@ impl Candidates {
     pub fn is_subset_of(self, other: Self) -> bool { self.0 & other.0 == self.0 }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct CellId(pub u8); // 0..81
 
 impl CellId {

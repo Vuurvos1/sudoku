@@ -13,3 +13,8 @@ serde = ["dep:serde"]
 serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "solve"
+harness = false
