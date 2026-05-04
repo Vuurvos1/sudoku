@@ -143,6 +143,43 @@ impl Explanation {
             }],
         }
     }
+
+    pub fn naked_subset(cells: &[CellId], digits: &[u8]) -> Self {
+        let kind_word = match cells.len() {
+            2 => "Pair",
+            3 => "Triple",
+            _ => "Subset",
+        };
+        let cells_str: Vec<String> = cells.iter().map(|c| c.to_string()).collect();
+        let digits_str: Vec<String> = digits.iter().map(|d| d.to_string()).collect();
+        Explanation {
+            summary: format!(
+                "Naked {}: {} share candidates {{{}}}",
+                kind_word,
+                cells_str.join(", "),
+                digits_str.join(", "),
+            ),
+            detail: format!(
+                "Cells {} contain only candidates {{{}}}. These digits can be \
+                 eliminated from all other cells that share a group with them.",
+                cells_str.join(" and "),
+                digits_str.join(", "),
+            ),
+            highlights: vec![Highlights {
+                cells: cells.iter().map(|&cell| CellHighlight {
+                    cell,
+                    role: HighlightRole::Focus,
+                }).collect(),
+                candidates: cells.iter().flat_map(|&cell| {
+                    digits.iter().map(move |&digit| CandidateHighlight {
+                        cell,
+                        digit,
+                        role: HighlightRole::Focus,
+                    })
+                }).collect(),
+            }],
+        }
+    }
 }
 
 pub trait Strategy {

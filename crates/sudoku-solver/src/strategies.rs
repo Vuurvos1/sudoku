@@ -1,9 +1,41 @@
 use crate::{
-    board::{Board, CellId},
+    board::{Board, Candidates, CellId},
     constraint::{GroupKind, UniqueGroup},
     solver::SolverContext,
     strategy::{Deduction, Explanation, Strategy},
 };
+
+/// Call `f` with each N-sized combination of indices `0..len`.
+/// Returns early with `Some(d)` the first time `f` returns `Some`.
+fn find_in_combinations<F>(len: usize, n: usize, mut f: F) -> Option<Deduction>
+where
+    F: FnMut(&[usize]) -> Option<Deduction>,
+{
+    fn recurse<F>(
+        len: usize,
+        n: usize,
+        start: usize,
+        buf: &mut Vec<usize>,
+        f: &mut F,
+    ) -> Option<Deduction>
+    where
+        F: FnMut(&[usize]) -> Option<Deduction>,
+    {
+        if buf.len() == n {
+            return f(buf);
+        }
+        for i in start..len {
+            buf.push(i);
+            if let Some(d) = recurse(len, n, i + 1, buf, f) {
+                return Some(d);
+            }
+            buf.pop();
+        }
+        None
+    }
+    let mut buf = Vec::with_capacity(n);
+    recurse(len, n, 0, &mut buf, &mut f)
+}
 
 pub struct NakedSingle;
 
@@ -200,8 +232,79 @@ fn box_line_for_line(board: &Board, line: GroupKind) -> Option<Deduction> {
     None
 }
 
-// naked pairs
-// naked triples
+pub struct NakedSubset<const N: usize>;
+
+impl<const N: usize> Strategy for NakedSubset<N> {
+    fn name(&self) -> &'static str {
+        match N {
+            2 => "naked pair",
+            3 => "naked triple",
+            _ => "naked subset",
+        }
+    }
+
+    fn find(&self, board: &Board, ctx: &SolverContext) -> Option<Deduction> {
+        for constraint in ctx.constraints {
+            let all_cells = constraint.cells();
+
+            // Only cells that could form an N-subset (at most N candidates)
+            let subset_cells: Vec<CellId> = all_cells
+                .iter()
+                .copied()
+                .filter(|&c| !board.is_decided(c))
+                .filter(|&c| board.candidates(c).count() as usize <= N)
+                .collect();
+
+            if subset_cells.len() < N {
+                continue;
+            }
+
+            let result = find_in_combinations(subset_cells.len(), N, |indices| {
+                let subset: Vec<CellId> = indices.iter().map(|&i| subset_cells[i]).collect();
+                let union = subset
+                    .iter()
+                    .fold(Candidates::EMPTY, |acc, &c| acc.union(board.candidates(c)));
+
+                if union.count() as usize != N {
+                    return None;
+                }
+
+                let eliminations: Vec<(CellId, u8)> = all_cells
+                    .iter()
+                    .filter(|c| !board.is_decided(**c) && !subset.contains(c))
+                    .flat_map(|&c| {
+                        union
+                            .iter()
+                            .filter(move |&d| board.candidates(c).contains(d))
+                            .map(move |d| (c, d))
+                    })
+                    .collect();
+
+                if eliminations.is_empty() {
+                    return None;
+                }
+
+                let digits: Vec<u8> = union.iter().collect();
+                Some(Deduction {
+                    strategy: match N {
+                        2 => "naked pair",
+                        3 => "naked triple",
+                        _ => "naked subset",
+                    },
+                    difficulty: if N == 2 { 4 } else { 5 },
+                    placements: vec![],
+                    eliminations,
+                    explanation: Explanation::naked_subset(&subset, &digits),
+                })
+            });
+
+            if result.is_some() {
+                return result;
+            }
+        }
+        None
+    }
+}
 
 // hidden pairs
 // hidden triples
