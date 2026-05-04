@@ -7,19 +7,19 @@ use crate::{
 
 /// Call `f` with each N-sized combination of indices `0..len`.
 /// Returns early with `Some(d)` the first time `f` returns `Some`.
-fn find_in_combinations<F>(len: usize, n: usize, mut f: F) -> Option<Deduction>
+fn find_in_combinations<T, F>(len: usize, n: usize, mut f: F) -> Option<T>
 where
-    F: FnMut(&[usize]) -> Option<Deduction>,
+    F: FnMut(&[usize]) -> Option<T>,
 {
-    fn recurse<F>(
+    fn recurse<T, F>(
         len: usize,
         n: usize,
         start: usize,
         buf: &mut Vec<usize>,
         f: &mut F,
-    ) -> Option<Deduction>
+    ) -> Option<T>
     where
-        F: FnMut(&[usize]) -> Option<Deduction>,
+        F: FnMut(&[usize]) -> Option<T>,
     {
         if buf.len() == n {
             return f(buf);
@@ -286,11 +286,7 @@ impl<const N: usize> Strategy for NakedSubset<N> {
 
                 let digits: Vec<u8> = union.iter().collect();
                 Some(Deduction {
-                    strategy: match N {
-                        2 => "naked pair",
-                        3 => "naked triple",
-                        _ => "naked subset",
-                    },
+                    strategy: self.name(),
                     difficulty: if N == 2 { 4 } else { 5 },
                     placements: vec![],
                     eliminations,
@@ -306,8 +302,103 @@ impl<const N: usize> Strategy for NakedSubset<N> {
     }
 }
 
-// hidden pairs
-// hidden triples
+pub struct HiddenSubset<const N: usize>;
+
+impl<const N: usize> Strategy for HiddenSubset<N> {
+    fn name(&self) -> &'static str {
+        match N {
+            2 => "hidden pair",
+            3 => "hidden triple",
+            _ => "hidden subset",
+        }
+    }
+
+    fn find(&self, board: &Board, ctx: &SolverContext) -> Option<Deduction> {
+        for constraint in ctx.constraints {
+            let undecided: Vec<CellId> = constraint
+                .cells()
+                .iter()
+                .copied()
+                .filter(|&c| !board.is_decided(c))
+                .collect();
+
+            // Map each digit to the undecided cells that contain it
+            let mut digit_cells: [Vec<CellId>; 10] = std::array::from_fn(|_| Vec::new());
+            for &cell in &undecided {
+                for d in board.candidates(cell).iter() {
+                    digit_cells[d as usize].push(cell);
+                }
+            }
+
+            // Only consider digits present in 1..=N cells
+            let active_digits: Vec<u8> = (1..=9u8)
+                .filter(|&d| {
+                    let count = digit_cells[d as usize].len();
+                    count > 0 && count <= N
+                })
+                .collect();
+
+            if active_digits.len() < N {
+                continue;
+            }
+
+            let result = find_in_combinations(active_digits.len(), N, |indices| {
+                let digits: Vec<u8> = indices.iter().map(|&i| active_digits[i]).collect();
+
+                // Collect unique cells that contain any of these digits
+                let mut cells_set: Vec<CellId> = Vec::new();
+                for &d in &digits {
+                    for &cell in &digit_cells[d as usize] {
+                        if !cells_set.contains(&cell) {
+                            cells_set.push(cell);
+                        }
+                    }
+                }
+
+                if cells_set.len() != N {
+                    return None;
+                }
+
+                // Sort for deterministic elimination order
+                cells_set.sort_by_key(|c| c.0);
+
+                // Build a candidate mask for the hidden digits
+                let hidden = digits
+                    .iter()
+                    .fold(Candidates::EMPTY, |acc, &d| acc.union(Candidates::single(d)));
+
+                // Eliminate all non-hidden candidates from the N cells
+                let eliminations: Vec<(CellId, u8)> = cells_set
+                    .iter()
+                    .flat_map(|&c| {
+                        board
+                            .candidates(c)
+                            .iter()
+                            .filter(move |&d| !hidden.contains(d))
+                            .map(move |d| (c, d))
+                    })
+                    .collect();
+
+                if eliminations.is_empty() {
+                    return None;
+                }
+
+                Some(Deduction {
+                    strategy: self.name(),
+                    difficulty: if N == 2 { 4 } else { 5 },
+                    placements: vec![],
+                    eliminations,
+                    explanation: Explanation::hidden_subset(&cells_set, &digits),
+                })
+            });
+
+            if result.is_some() {
+                return result;
+            }
+        }
+        None
+    }
+}
 
 // x-wing
 // y-wing

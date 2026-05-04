@@ -180,6 +180,43 @@ impl Explanation {
             }],
         }
     }
+
+    pub fn hidden_subset(cells: &[CellId], digits: &[u8]) -> Self {
+        let kind_word = match cells.len() {
+            2 => "Pair",
+            3 => "Triple",
+            _ => "Subset",
+        };
+        let cells_str: Vec<String> = cells.iter().map(|c| c.to_string()).collect();
+        let digits_str: Vec<String> = digits.iter().map(|d| d.to_string()).collect();
+        Explanation {
+            summary: format!(
+                "Hidden {}: digits {{{}}} only in {}",
+                kind_word,
+                digits_str.join(", "),
+                cells_str.join(", "),
+            ),
+            detail: format!(
+                "Digits {{{}}} can only go in cells {}. All other candidates \
+                 can be eliminated from these cells.",
+                digits_str.join(", "),
+                cells_str.join(" and "),
+            ),
+            highlights: vec![Highlights {
+                cells: cells.iter().map(|&cell| CellHighlight {
+                    cell,
+                    role: HighlightRole::Focus,
+                }).collect(),
+                candidates: cells.iter().flat_map(|&cell| {
+                    digits.iter().map(move |&digit| CandidateHighlight {
+                        cell,
+                        digit,
+                        role: HighlightRole::Supporting,
+                    })
+                }).collect(),
+            }],
+        }
+    }
 }
 
 pub trait Strategy {
