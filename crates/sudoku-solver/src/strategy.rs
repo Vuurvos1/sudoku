@@ -1,4 +1,4 @@
-use crate::{board::{Board, CellId}, constraint::GroupKind, solver::SolverContext};
+use crate::{board::{Board, CellId}, solver::SolverContext};
 
 pub enum HighlightRole {
     Focus,
@@ -29,12 +29,7 @@ pub struct Explanation {
 }
 
 impl Explanation {
-    pub fn group_elimination(kind: GroupKind, source: CellId, digit: u8) -> Self {
-        let group_name = match kind {
-            GroupKind::Row(r) => format!("Row {}", r + 1),
-            GroupKind::Col(c) => format!("Column {}", c + 1),
-            GroupKind::Box(b) => format!("Box {}", b + 1),
-        };
+    pub fn group_elimination(group_name: &str, source: CellId, digit: u8) -> Self {
         Explanation {
             summary: format!("{}: {} placed at {}", group_name, digit, source),
             detail: format!(
@@ -89,22 +84,17 @@ impl Explanation {
         }
     }
 
-    pub fn pointing(box_idx: u8, digit: u8, line: GroupKind, locked: &[CellId]) -> Self {
-        let line_name = match line {
-            GroupKind::Row(r) => format!("row {}", r + 1),
-            GroupKind::Col(c) => format!("column {}", c + 1),
-            GroupKind::Box(b) => format!("box {}", b + 1),
-        };
+    pub fn pointing(box_name: &str, digit: u8, line_name: &str, locked: &[CellId]) -> Self {
         let kind_word = if locked.len() == 2 { "Pair" } else { "Triple" };
         Explanation {
             summary: format!(
-                "Pointing {}: {} in box {} locked to {}",
-                kind_word, digit, box_idx + 1, line_name
+                "Pointing {}: {} in {} locked to {}",
+                kind_word, digit, box_name, line_name
             ),
             detail: format!(
-                "In box {}, {} can only go in cells of {}. So {} can be \
+                "In {}, {} can only go in cells of {}. So {} can be \
                  eliminated from the rest of {}.",
-                box_idx + 1, digit, line_name, digit, line_name
+                box_name, digit, line_name, digit, line_name
             ),
             highlights: vec![Highlights {
                 cells: locked.iter().map(|&cell| CellHighlight {
@@ -117,21 +107,16 @@ impl Explanation {
         }
     }
 
-    pub fn box_line_reduction(box_idx: u8, digit: u8, line: GroupKind, locked: &[CellId]) -> Self {
-        let line_name = match line {
-            GroupKind::Row(r) => format!("row {}", r + 1),
-            GroupKind::Col(c) => format!("column {}", c + 1),
-            GroupKind::Box(b) => format!("box {}", b + 1),
-        };
+    pub fn box_line_reduction(box_name: &str, digit: u8, line_name: &str, locked: &[CellId]) -> Self {
         Explanation {
             summary: format!(
-                "Box/Line Reduction: {} in {} locked to box {}",
-                digit, line_name, box_idx + 1
+                "Box/Line Reduction: {} in {} locked to {}",
+                digit, line_name, box_name
             ),
             detail: format!(
-                "In {}, {} can only go in cells inside box {}. So {} can be \
-                 eliminated from the rest of box {}.",
-                line_name, digit, box_idx + 1, digit, box_idx + 1
+                "In {}, {} can only go in cells inside {}. So {} can be \
+                 eliminated from the rest of {}.",
+                line_name, digit, box_name, digit, box_name
             ),
             highlights: vec![Highlights {
                 cells: locked.iter().map(|&cell| CellHighlight {

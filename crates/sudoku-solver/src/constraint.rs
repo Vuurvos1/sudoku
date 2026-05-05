@@ -1,14 +1,40 @@
 use crate::{board::{Board, CellId}, strategy::{Deduction, Explanation}};
 
 pub trait Constraint {
+    fn name(&self) -> &str;
     fn cells(&self) -> &[CellId];
 
-    fn propagate(&self, board: &mut Board) -> Vec<Deduction>;
+    /// Default propagation: for each decided cell, eliminate its digit from peers.
+    fn propagate(&self, board: &mut Board) -> Vec<Deduction> {
+        let mut deductions = Vec::new();
+        for &source in self.cells() {
+            let Some(digit) = board.value(source) else { continue };
+            let mut eliminations = Vec::new();
+            for &peer in self.cells() {
+                if peer == source { continue; }
+                if board.candidates(peer).contains(digit) {
+                    board.remove_candidate(peer, digit);
+                    eliminations.push((peer, digit));
+                }
+            }
+            if !eliminations.is_empty() {
+                deductions.push(Deduction {
+                    strategy: "constraint propagation",
+                    difficulty: 0,
+                    placements: vec![],
+                    eliminations,
+                    explanation: Explanation::group_elimination(self.name(), source, digit),
+                });
+            }
+        }
+        deductions
+    }
 }
 
 pub struct UniqueGroup {
     pub cells: Vec<CellId>,
     pub kind: GroupKind,
+    name: String,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
@@ -18,60 +44,48 @@ pub enum GroupKind {
     Box(u8),
 }
 
+impl std::fmt::Display for GroupKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            GroupKind::Row(r) => write!(f, "row {}", r + 1),
+            GroupKind::Col(c) => write!(f, "column {}", c + 1),
+            GroupKind::Box(b) => write!(f, "box {}", b + 1),
+        }
+    }
+}
+
 impl UniqueGroup {
     pub fn row(r: u8) -> Self {
+        let kind = GroupKind::Row(r);
         UniqueGroup {
             cells: (0..9).map(|c| CellId::from_rc(r, c)).collect(),
-            kind: GroupKind::Row(r),
+            name: kind.to_string(),
+            kind,
         }
     }
 
     pub fn col(c: u8) -> Self {
+        let kind = GroupKind::Col(c);
         UniqueGroup {
             cells: (0..9).map(|r| CellId::from_rc(r, c)).collect(),
-            kind: GroupKind::Col(c),
+            name: kind.to_string(),
+            kind,
         }
     }
 
     pub fn box_(b: u8) -> Self {
         let row_start = b / 3 * 3;
         let col_start = b % 3 * 3;
+        let kind = GroupKind::Box(b);
         let cells = (0..9).map(|i| CellId::from_rc(row_start + i / 3, col_start + i % 3)).collect();
-        UniqueGroup { cells, kind: GroupKind::Box(b) }
+        UniqueGroup { cells, name: kind.to_string(), kind }
     }
 }
 
 impl Constraint for UniqueGroup {
+    fn name(&self) -> &str { &self.name }
     fn cells(&self) -> &[CellId] { &self.cells }
-
-    fn propagate(&self, board: &mut Board) -> Vec<Deduction> {
-        let mut deductions = Vec::new();
-
-        for &source in &self.cells {
-            let Some(digit) = board.value(source) else { continue };
-
-            let mut eliminations = Vec::new();
-            for &peer in &self.cells {
-                if peer == source { continue; }
-                if board.candidates(peer).contains(digit) {
-                    board.remove_candidate(peer, digit);
-                    eliminations.push((peer, digit));
-                }
-            }
-
-            if !eliminations.is_empty() {
-                deductions.push(Deduction {
-                    strategy: "unique group propagation",
-                    difficulty: 0,
-                    placements: vec![],
-                    eliminations,
-                    explanation: Explanation::group_elimination(self.kind, source, digit),
-                });
-            }
-        }
-
-        deductions
-    }
+    // uses default propagate()
 }
 
 /// The 27 unique-distinct constraints of a standard 9×9 sudoku

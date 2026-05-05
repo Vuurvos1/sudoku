@@ -166,7 +166,12 @@ fn pointing_eliminations(
         difficulty: 3,
         placements: vec![],
         eliminations,
-        explanation: Explanation::pointing(box_idx, digit, line, locked),
+        explanation: Explanation::pointing(
+            &GroupKind::Box(box_idx).to_string(),
+            digit,
+            &line.to_string(),
+            locked,
+        ),
     })
 }
 
@@ -226,7 +231,12 @@ fn box_line_for_line(board: &Board, line: GroupKind) -> Option<Deduction> {
             difficulty: 3,
             placements: vec![],
             eliminations,
-            explanation: Explanation::box_line_reduction(b0, digit, line, &cells),
+            explanation: Explanation::box_line_reduction(
+                &GroupKind::Box(b0).to_string(),
+                digit,
+                &line.to_string(),
+                &cells,
+            ),
         });
     }
     None
