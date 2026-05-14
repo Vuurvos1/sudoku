@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { createStore, Store } from '@tauri-apps/plugin-store';
+import { LazyStore } from '@tauri-apps/plugin-store';
 
 export type Cell = {
 	value: number;
@@ -10,13 +10,25 @@ export type Cell = {
 
 export type Sudoku = Cell[][];
 
-async function createSudokuStore() {
-	const store = await createStore('oneSudoku.bin', {
-		// autoSave: true
-	});
+export type HintResponse = {
+	strategy: string;
+	difficulty: number;
+	summary: string;
+	detail: string;
+	placements: { cell: number; digit: number }[];
+	eliminations: { cell: number; digit: number }[];
+	highlights: {
+		cells: { cell: number; role: string }[];
+		candidates: { cell: number; digit: number; role: string }[];
+	}[];
+};
+
+function createSudokuStore() {
+	const store = new LazyStore('oneSudoku.bin');
 
 	let sudoku = $state<Sudoku | null>(null);
 	let solved = $state<number[][] | null>(null);
+	let lastHint = $state<HintResponse | null>(null);
 
 	async function generate(difficulty: number) {
 		console.info('generate', difficulty);
@@ -59,16 +71,19 @@ async function createSudokuStore() {
 
 	async function save() {
 		await store.set('sudoku', sudoku);
-
-		// You can manually save the store after making changes.
-		// Otherwise, it will save upon graceful exit.
 		await store.save();
 	}
 
 	async function load() {
-		sudoku = await store.get<Sudoku>('sudoku');
+		sudoku = (await store.get<Sudoku>('sudoku')) ?? null;
 
-		const solvedRes = await invoke<number[]>('solve_sudoku', { sudokuLine: sudoku });
+		if (!sudoku) return;
+
+		const sudokuLine = sudoku
+			.map((row) => row.map((cell) => (cell.value > 0 ? cell.value : '.')).join(''))
+			.join('');
+
+		const solvedRes = await invoke<number[]>('solve_sudoku', { sudokuLine });
 		solved = Array.from({ length: 9 }, (_, i) => solvedRes.slice(i * 9, i * 9 + 9));
 	}
 
@@ -77,7 +92,18 @@ async function createSudokuStore() {
 	}
 
 	async function hint() {
-		console.info('hint');
+		if (!sudoku) return;
+
+		const sudokuLine = sudoku
+			.map((row) => row.map((cell) => (cell.value > 0 ? cell.value : '.')).join(''))
+			.join('');
+
+		try {
+			lastHint = await invoke<HintResponse>('hint_sudoku', { sudokuLine });
+		} catch (e) {
+			console.warn('No hint available:', e);
+			lastHint = null;
+		}
 	}
 
 	load();
@@ -89,6 +115,9 @@ async function createSudokuStore() {
 		get solved() {
 			return solved;
 		},
+		get lastHint() {
+			return lastHint;
+		},
 		generate,
 		save,
 		load,
@@ -97,4 +126,4 @@ async function createSudokuStore() {
 	};
 }
 
-export const sudokuStore = await createSudokuStore();
+export const sudokuStore = createSudokuStore();

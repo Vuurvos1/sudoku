@@ -164,3 +164,6 @@ let solver = Solver::new(vec![
 | `HiddenSubset::<2>`  | Elimination | 4          |
 | `NakedSubset::<3>`   | Elimination | 5          |
 | `HiddenSubset::<3>`  | Elimination | 5          |
+| `Fish::<2>` (x wing) | Elimination | 6          |
+| `YWing`              | Elimination | 6          |
+| `Fish::<3>` (swordfish) | Elimination | 7       |

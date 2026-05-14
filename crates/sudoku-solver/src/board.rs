@@ -80,6 +80,20 @@ impl Board {
         board
     }
 
+    /// Parse an 81-char puzzle string (`1`–`9` for givens, `.` or `0` for empty).
+    pub fn from_line(s: &str) -> Self {
+        assert!(s.chars().count() == 81, "puzzle string must be exactly 81 characters");
+        let mut array = [0u8; 81];
+        for (i, ch) in s.chars().enumerate() {
+            array[i] = match ch {
+                '1'..='9' => ch as u8 - b'0',
+                '.' | '0' => 0,
+                _ => panic!("unexpected character '{}' at position {}", ch, i),
+            };
+        }
+        Self::from_array(&array)
+    }
+
     /// Place a digit during solving, Erasable
     pub fn set_value(&mut self, id: CellId, digit: u8) {
         let cell = &mut self.cells[id.0 as usize];

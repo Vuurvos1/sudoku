@@ -11,7 +11,6 @@
 		LightbulbIcon
 	} from 'lucide-svelte';
 	import HintDialog from '$lib/components/HintDialog.svelte';
-	import { invoke } from '@tauri-apps/api/core';
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
 
@@ -85,17 +84,8 @@
 			<div class="flex w-32 flex-row items-center justify-end gap-4">
 				<button
 					onclick={async () => {
-						if (!sudokuStore.sudoku) return;
-
-						const sudokuString = sudokuStore.sudoku
-							.map((row) => row.map((cell) => cell.value).join(''))
-							.join('')
-							.replace(/0/g, '.');
-
-						console.log(sudokuString);
-
-						const res = await invoke('hint_sudoku', { sudokuLine: sudokuString });
-						console.log(res);
+						await sudokuStore.hint();
+						dialogState.hintOpen = true;
 					}}
 					aria-label="hint"
 				>
@@ -255,7 +245,7 @@
 	</main>
 </div>
 
-<HintDialog bind:open={dialogState.hintOpen} />
+<HintDialog bind:open={dialogState.hintOpen} hint={sudokuStore.lastHint} />
 
 <style lang="postcss">
 	/* .sudoku * * {

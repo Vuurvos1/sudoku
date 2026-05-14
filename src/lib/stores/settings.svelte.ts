@@ -1,4 +1,4 @@
-import { Store } from '@tauri-apps/plugin-store';
+import { LazyStore } from '@tauri-apps/plugin-store';
 import { themeStore, themes } from '$lib/stores/theme.svelte';
 
 export enum NoteStyles {
@@ -14,7 +14,7 @@ export type Settings = {
 };
 
 function createSettingsStore() {
-	const store = new Store('oneSudokuSettings.bin');
+	const store = new LazyStore('oneSudokuSettings.bin');
 
 	// TODO: add theme
 	const settings = $state<Settings>({

@@ -1,6 +1,6 @@
 use crate::{
     board::{Board, Candidates, CellId},
-    constraint::{GroupKind, UniqueGroup},
+    constraint::{Constraint, GroupKind, UniqueGroup},
     solver::SolverContext,
     strategy::{Deduction, Explanation, Strategy},
 };
@@ -556,4 +556,80 @@ fn find_fish(
     })
 }
 
-// y-wing
+fn sees(a: CellId, b: CellId, constraints: &[Box<dyn Constraint>]) -> bool {
+    constraints.iter().any(|c| {
+        let cells = c.cells();
+        cells.contains(&a) && cells.contains(&b)
+    })
+}
+
+pub struct YWing;
+
+impl Strategy for YWing {
+    fn name(&self) -> &'static str { "y-wing" }
+
+    fn find(&self, board: &Board, ctx: &SolverContext) -> Option<Deduction> {
+        // Collect bivalue cells (exactly 2 candidates)
+        let bivalues: Vec<(CellId, u8, u8)> = (0..81u8)
+            .filter_map(|i| {
+                let id = CellId(i);
+                if board.is_decided(id) { return None; }
+                let cands = board.candidates(id);
+                if cands.count() != 2 { return None; }
+                let mut iter = cands.iter();
+                let a = iter.next().unwrap();
+                let b = iter.next().unwrap();
+                Some((id, a, b))
+            })
+            .collect();
+
+        for &(pivot, a, b) in &bivalues {
+            // Find wing1: shares candidate 'a' with pivot, has {a, c} where c != b
+            for &(w1, w1_x, w1_y) in &bivalues {
+                if w1 == pivot { continue; }
+                if !sees(pivot, w1, ctx.constraints) { continue; }
+
+                let c = if w1_x == a && w1_y != b {
+                    w1_y
+                } else if w1_y == a && w1_x != b {
+                    w1_x
+                } else {
+                    continue;
+                };
+
+                // Find wing2: shares candidate 'b' with pivot, has {b, c}
+                for &(w2, w2_x, w2_y) in &bivalues {
+                    if w2 == pivot || w2 == w1 { continue; }
+                    if !sees(pivot, w2, ctx.constraints) { continue; }
+                    if !((w2_x == b && w2_y == c) || (w2_y == b && w2_x == c)) {
+                        continue;
+                    }
+
+                    // Eliminate c from cells seeing both wings
+                    let eliminations: Vec<(CellId, u8)> = (0..81u8)
+                        .filter_map(|i| {
+                            let cell = CellId(i);
+                            if cell == pivot || cell == w1 || cell == w2 { return None; }
+                            if board.is_decided(cell) { return None; }
+                            if !board.candidates(cell).contains(c) { return None; }
+                            if !sees(cell, w1, ctx.constraints) { return None; }
+                            if !sees(cell, w2, ctx.constraints) { return None; }
+                            Some((cell, c))
+                        })
+                        .collect();
+
+                    if !eliminations.is_empty() {
+                        return Some(Deduction {
+                            strategy: self.name(),
+                            difficulty: 6,
+                            placements: vec![],
+                            eliminations,
+                            explanation: Explanation::y_wing(pivot, w1, w2, a, b, c),
+                        });
+                    }
+                }
+            }
+        }
+        None
+    }
+}

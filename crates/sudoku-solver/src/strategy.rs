@@ -233,6 +233,36 @@ impl Explanation {
             }],
         }
     }
+
+    pub fn y_wing(pivot: CellId, wing1: CellId, wing2: CellId, a: u8, b: u8, c: u8) -> Self {
+        Explanation {
+            summary: format!(
+                "Y-Wing: pivot {} {{{}, {}}}, wings {} and {} eliminate {}",
+                pivot, a, b, wing1, wing2, c
+            ),
+            detail: format!(
+                "{} must be {} or {}. \
+                 If {}, {} must be {}. If {}, {} must be {}. \
+                 Either way, {} can be eliminated from cells seeing both wings.",
+                pivot, a, b,
+                a, wing1, c, b, wing2, c,
+                c
+            ),
+            highlights: vec![Highlights {
+                cells: vec![
+                    CellHighlight { cell: pivot, role: HighlightRole::Focus },
+                    CellHighlight { cell: wing1, role: HighlightRole::Supporting },
+                    CellHighlight { cell: wing2, role: HighlightRole::Supporting },
+                ],
+                candidates: vec![
+                    CandidateHighlight { cell: pivot, digit: a, role: HighlightRole::Focus },
+                    CandidateHighlight { cell: pivot, digit: b, role: HighlightRole::Focus },
+                    CandidateHighlight { cell: wing1, digit: c, role: HighlightRole::Supporting },
+                    CandidateHighlight { cell: wing2, digit: c, role: HighlightRole::Supporting },
+                ],
+            }],
+        }
+    }
 }
 
 pub trait Strategy {

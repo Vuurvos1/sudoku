@@ -1,13 +1,18 @@
-
-
-
-use std::fmt::format;
-use serde_json::json;
+mod types;
 
 use sudoku::Sudoku;
-use sudoku::strategy;
+use sudoku_solver::{
+    board::{Board, CellId},
+    constraint::standard_constraints,
+    solver::{SolveResult, Solver, SolverContext},
+};
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+use crate::types::hint_response_from;
+
+fn is_valid_sudoku_line(s: &str) -> bool {
+    s.len() == 81 && s.chars().all(|c| matches!(c, '0'..='9' | '.'))
+}
+
 #[tauri::command]
 fn generate_sudoku() -> String {
     let s = Sudoku::generate();
@@ -15,77 +20,52 @@ fn generate_sudoku() -> String {
 }
 
 #[tauri::command]
-fn solve_sudoku(sudoku_line: String) -> Vec<u8> {
-    let sudoku = Sudoku::from_str_line(&sudoku_line).unwrap();
-
-    if let Some(solution) = sudoku.solution() {
-        println!("{}", solution);
-
-        println!("{:?}", solution.to_bytes());
-        let cell_contents = solution.to_bytes();
-        return cell_contents.to_vec();
+fn solve_sudoku(sudoku_line: String) -> Result<Vec<u8>, String> {
+    if !is_valid_sudoku_line(&sudoku_line) {
+        return Err("Invalid puzzle string".to_string());
     }
 
-    // return vec![1,2,3,4]
-    // TODO: throw error or something
-    return [0; 81].to_vec();
-    // return "No solution found".to_string();
+    let mut board = Board::from_line(&sudoku_line);
+    let constraints = standard_constraints();
+    let ctx = SolverContext { constraints: &constraints };
+    let solver = Solver::default();
+
+    if let SolveResult::Solved(_) = solver.solve(&mut board, &ctx) {
+        return Ok((0..81u8)
+            .map(|i| board.value(CellId(i)).unwrap_or(0))
+            .collect());
+    }
+
+    // Fallback: external crate brute-force solver
+    let sudoku = Sudoku::from_str_line(&sudoku_line)
+        .map_err(|e| format!("Invalid puzzle: {}", e))?;
+    match sudoku.solution() {
+        Some(solution) => Ok(solution.to_bytes().to_vec()),
+        None => Err("No solution found".to_string()),
+    }
 }
 
-// -> String
 #[tauri::command]
-fn hint_sudoku(sudoku_line: String) -> String  {
-    let sudoku = Sudoku::from_str_line(&sudoku_line).unwrap();
+fn hint_sudoku(sudoku_line: String) -> Result<types::HintResponse, String> {
+    if !is_valid_sudoku_line(&sudoku_line) {
+        return Err("Invalid puzzle string".to_string());
+    }
 
-    let solver = strategy::StrategySolver::from_sudoku(sudoku);
+    let mut board = Board::from_line(&sudoku_line);
+    let constraints = standard_constraints();
+    let ctx = SolverContext { constraints: &constraints };
+    let solver = Solver::default();
 
-    // TODO: get all strategies
-    let strategies = [strategy::Strategy::HiddenSingles, strategy::Strategy::HiddenPairs, strategy::Strategy::HiddenTriples, strategy::Strategy::HiddenQuads, strategy::Strategy::NakedSingles, strategy::Strategy::NakedPairs, strategy::Strategy::NakedTriples, strategy::Strategy::NakedQuads, strategy::Strategy::XWing, strategy::Strategy::Swordfish, strategy::Strategy::Jellyfish];
-    let res = solver.solve(&strategies).unwrap();
-
-    println!("{:?}", res.1);
-
-    // stingify first hint item and return
-    // if let Some(hint) = res.1.len() {
-    //     return hint.to_string();
-    // }
-
-    // return format!("{:?}", json!(res.1));
-    return format!("{:?}", res.1);
-
-
-    // let strategies = [strategy::Strategy::HiddenSingles, strategy::Strategy::HiddenPairs, strategy::Strategy::HiddenTriples, strategy::Strategy::HiddenQuads, strategy::Strategy::NakedSingles, strategy::Strategy::NakedPairs, strategy::Strategy::NakedTriples, strategy::Strategy::NakedQuads, strategy::Strategy::PointingPairs, strategy::Strategy::PointingTriples, strategy::Strategy::BoxLineReduction, strategy::Strategy::XWing, strategy::Strategy::Swordfish, strategy::Strategy::Jellyfish, strategy::Strategy::XYWing, strategy::Strategy::XYZWing, strategy::Strategy::WXYZWing, strategy::Strategy::SueDeCoq, strategy::Strategy::GroupedXWing, strategy::Strategy::GroupedSueDeCoq, strategy::Strategy::GroupedJellyfish, strategy::Strategy::GroupedSwordfish, strategy::Strategy::GroupedXYZWing, strategy::Strategy::GroupedWXYZWing];
-
-    // let res = solver.solve(&strategies);
-
-    // return "No hint found".to_string();
-
-
-    // {
-    //     return hint.to_string();
-    // }
-
-    // return "No hint found".to_string();
-
-    // let hint = strategy::deduction::Deduction::from(&sudoku);
-    
-    // if let Some(hint) = hint {
-    //     return hint.to_string();
-    // }
-
-    // return "No hint found".to_string();
-
-
-    // strategy::deduction::Deduction::from
-    // if let Some(hint) =
-
-
+    match solver.hint(&mut board, &ctx) {
+        Some(deduction) => Ok(hint_response_from(&deduction)),
+        None => Err("No hint available".to_string()),
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-    .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![generate_sudoku, solve_sudoku, hint_sudoku])
         .run(tauri::generate_context!())

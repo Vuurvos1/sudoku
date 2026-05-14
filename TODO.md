@@ -26,6 +26,7 @@ App features
   - german whispers
   - double dot
   - consecutive dot
+- Button to fill all notes (would reset all notes?)
 
 - themes
 - difficulty
