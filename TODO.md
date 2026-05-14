@@ -2,7 +2,7 @@
 
 
 App features
-- Daily puzzle
+- Daily puzzle (medium-hard) show difficulty?
 - Variant
 - Hints
 - Timer
@@ -27,8 +27,23 @@ App features
   - double dot
   - consecutive dot
 - Button to fill all notes (would reset all notes?)
+- improve cell highlighting
+  - selected cell row,column,3x3 cell semi highlighting
+  - selected Cell outlining and bg
+  - note outline and bg highlighting
+  - filled outline highlighting
+- Stats page
+  - all, daily, weekly, monthly, yearly
+  - filter per difficulty beginner, easy, medium, hard, expert, master sudoku
+  - best times
+  - average time
+  - total completed
+
+
 
 - themes
+  - option for custom themes
+  - option for custom highlight colors
 - difficulty
   - Easy
   - Medium

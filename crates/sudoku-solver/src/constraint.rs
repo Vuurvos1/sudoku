@@ -88,6 +88,28 @@ impl Constraint for UniqueGroup {
     // uses default propagate()
 }
 
+/// Returns all cells that share a constraint group with the given cell (excluding itself).
+pub fn peers(cell: CellId, constraints: &[Box<dyn Constraint>]) -> Vec<CellId> {
+    let mut result = Vec::new();
+    for c in constraints {
+        let cells = c.cells();
+        if cells.contains(&cell) {
+            for &peer in cells {
+                if peer != cell && !result.contains(&peer) {
+                    result.push(peer);
+                }
+            }
+        }
+    }
+    result.sort_by_key(|c| c.0);
+    result
+}
+
+/// Returns the peer set for every cell (0..81) as a flat map.
+pub fn all_peers(constraints: &[Box<dyn Constraint>]) -> Vec<Vec<CellId>> {
+    (0..81u8).map(|i| peers(CellId(i), constraints)).collect()
+}
+
 /// The 27 unique-distinct constraints of a standard 9×9 sudoku
 /// 9 rows + 9 columns + 9 boxes
 pub fn standard_constraints() -> Vec<Box<dyn Constraint>> {

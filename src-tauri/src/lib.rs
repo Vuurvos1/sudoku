@@ -3,7 +3,7 @@ mod types;
 use sudoku::Sudoku;
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
+    constraint::{all_peers, standard_constraints},
     solver::{SolveResult, Solver, SolverContext},
 };
 
@@ -62,12 +62,21 @@ fn hint_sudoku(sudoku_line: String) -> Result<types::HintResponse, String> {
     }
 }
 
+#[tauri::command]
+fn get_peers() -> Vec<Vec<u8>> {
+    let constraints = standard_constraints();
+    all_peers(&constraints)
+        .into_iter()
+        .map(|peers| peers.into_iter().map(|c| c.0).collect())
+        .collect()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![generate_sudoku, solve_sudoku, hint_sudoku])
+        .invoke_handler(tauri::generate_handler![generate_sudoku, solve_sudoku, hint_sudoku, get_peers])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

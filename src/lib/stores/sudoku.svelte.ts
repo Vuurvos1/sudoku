@@ -29,6 +29,12 @@ function createSudokuStore() {
 	let sudoku = $state<Sudoku | null>(null);
 	let solved = $state<number[][] | null>(null);
 	let lastHint = $state<HintResponse | null>(null);
+	let peerMap = $state<number[][] | null>(null);
+
+	// Fetch the peer map from the constraint system (cached, only needs to be called once per puzzle type)
+	invoke<number[][]>('get_peers').then((res) => {
+		peerMap = res;
+	});
 
 	async function generate(difficulty: number) {
 		console.info('generate', difficulty);
@@ -117,6 +123,9 @@ function createSudokuStore() {
 		},
 		get lastHint() {
 			return lastHint;
+		},
+		get peerMap() {
+			return peerMap;
 		},
 		generate,
 		save,

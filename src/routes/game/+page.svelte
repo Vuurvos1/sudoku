@@ -66,6 +66,15 @@
 
 		sudokuStore.sudoku[row][col].value = 0;
 	}
+
+	function isPeer(row: number, col: number) {
+		if (selectedCell.row < 0 || selectedCell.col < 0) return false;
+		const peerMap = sudokuStore.peerMap;
+		if (!peerMap) return false;
+		const selectedIndex = selectedCell.row * 9 + selectedCell.col;
+		const cellIndex = row * 9 + col;
+		return peerMap[selectedIndex].includes(cellIndex);
+	}
 </script>
 
 <div class="flex h-full max-h-full flex-col">
@@ -113,18 +122,19 @@
 						{#each sudokuStore.sudoku as row, i}
 							{#each row as cell, j}
 								<div
-									class="cell border border-accent/40"
-									class:selected={selectedCell.col === j && selectedCell.row === i}
-									class:bg-accent={selectedCell.row >= 0 &&
-										selectedCell.col >= 0 &&
-										cell.value !== 0 &&
-										sudokuStore.sudoku[selectedCell.row][selectedCell.col] === cell}
-									class:bg-blue-400={selectedCell.row >= 0 &&
-										selectedCell.col >= 0 &&
-										cell.notes.includes(
-											sudokuStore.sudoku[selectedCell.row][selectedCell.col].value
-										)}
-								>
+									class={["cell border border-accent/40", {
+										'bg-accent/60 selected': selectedCell.col === j && selectedCell.row === i,
+										'bg-accent/20': selectedCell.col !== j || selectedCell.row !== i
+											? isPeer(i, j)
+											: false,
+										'bg-accent/10': selectedCell.row >= 0 &&
+											selectedCell.col >= 0 &&
+											!isPeer(i, j) &&
+											!(selectedCell.col === j && selectedCell.row === i) &&
+											sudokuStore.sudoku[selectedCell.row][selectedCell.col].value > 0 &&
+											cell.notes.includes(
+												sudokuStore.sudoku[selectedCell.row][selectedCell.col].value)
+									}]}								>
 									<button
 										onkeydown={(ev) => handleCellKeydown(ev, j, i)}
 										onclick={() => handleCellClick(j, i)}
@@ -299,6 +309,10 @@
 	}
 
 	.cell.selected {
-		@apply bg-sky-400/40;
+		/* @apply bg-sky-400/40; */
+	}
+
+	.cell.highlighted {
+		@apply bg-accent/20
 	}
 </style>
