@@ -202,6 +202,37 @@ impl Explanation {
             }],
         }
     }
+
+    pub fn fish(locked: &[CellId], digit: u8, bases: &[String], covers: &[String]) -> Self {
+        let kind = match bases.len() {
+            2 => "X-Wing",
+            3 => "Swordfish",
+            _ => "Fish",
+        };
+        Explanation {
+            summary: format!(
+                "{}: {} in {} locked to {}",
+                kind, digit, bases.join(", "), covers.join(", "),
+            ),
+            detail: format!(
+                "In {}, {} only appears in {}. \
+                 So {} can be eliminated from the rest of {}.",
+                bases.join(" and "), digit, covers.join(" and "),
+                digit, covers.join(" and "),
+            ),
+            highlights: vec![Highlights {
+                cells: locked.iter().map(|&cell| CellHighlight {
+                    cell,
+                    role: HighlightRole::Focus,
+                }).collect(),
+                candidates: locked.iter().map(|&cell| CandidateHighlight {
+                    cell,
+                    digit,
+                    role: HighlightRole::Focus,
+                }).collect(),
+            }],
+        }
+    }
 }
 
 pub trait Strategy {

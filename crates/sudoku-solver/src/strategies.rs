@@ -410,6 +410,150 @@ impl<const N: usize> Strategy for HiddenSubset<N> {
     }
 }
 
-// x-wing
+pub struct Fish<const N: usize>;
+
+impl<const N: usize> Strategy for Fish<N> {
+    fn name(&self) -> &'static str {
+        match N {
+            2 => "x-wing",
+            3 => "swordfish",
+            _ => "fish",
+        }
+    }
+
+    fn find(&self, board: &Board, _ctx: &SolverContext) -> Option<Deduction> {
+        for digit in 1..=9u8 {
+            // Try rows as base, columns as cover
+            if let Some(d) = find_fish(board, digit, N, true, self.name()) {
+                return Some(d);
+            }
+            // Try columns as base, rows as cover
+            if let Some(d) = find_fish(board, digit, N, false, self.name()) {
+                return Some(d);
+            }
+        }
+        None
+    }
+}
+
+fn find_fish(
+    board: &Board,
+    digit: u8,
+    n: usize,
+    rows_as_base: bool,
+    strategy: &'static str,
+) -> Option<Deduction> {
+    // For each base line, collect which cover positions contain the digit
+    let mut base_covers: Vec<(u8, Vec<u8>)> = Vec::new();
+
+    for base in 0..9u8 {
+        let covers: Vec<u8> = (0..9u8)
+            .filter(|&cover| {
+                let cell = if rows_as_base {
+                    CellId::from_rc(base, cover)
+                } else {
+                    CellId::from_rc(cover, base)
+                };
+                !board.is_decided(cell) && board.candidates(cell).contains(digit)
+            })
+            .collect();
+
+        if covers.len() >= 2 && covers.len() <= n {
+            base_covers.push((base, covers));
+        }
+    }
+
+    if base_covers.len() < n {
+        return None;
+    }
+
+    find_in_combinations(base_covers.len(), n, |indices| {
+        // Union of cover positions
+        let mut cover_union: Vec<u8> = Vec::new();
+        for &i in indices {
+            for &c in &base_covers[i].1 {
+                if !cover_union.contains(&c) {
+                    cover_union.push(c);
+                }
+            }
+        }
+
+        if cover_union.len() != n {
+            return None;
+        }
+
+        let base_set: Vec<u8> = indices.iter().map(|&i| base_covers[i].0).collect();
+
+        // Eliminate digit from cover lines outside the base lines
+        let eliminations: Vec<(CellId, u8)> = cover_union
+            .iter()
+            .flat_map(|&cover| {
+                (0..9u8)
+                    .filter(|other| !base_set.contains(other))
+                    .filter_map(|other| {
+                        let cell = if rows_as_base {
+                            CellId::from_rc(other, cover)
+                        } else {
+                            CellId::from_rc(cover, other)
+                        };
+                        if !board.is_decided(cell) && board.candidates(cell).contains(digit) {
+                            Some((cell, digit))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+
+        if eliminations.is_empty() {
+            return None;
+        }
+
+        // Locked cells: cells in the fish pattern
+        let locked: Vec<CellId> = indices
+            .iter()
+            .flat_map(|&i| {
+                let base = base_covers[i].0;
+                base_covers[i].1.iter().map(move |&cover| {
+                    if rows_as_base {
+                        CellId::from_rc(base, cover)
+                    } else {
+                        CellId::from_rc(cover, base)
+                    }
+                })
+            })
+            .collect();
+
+        let base_names: Vec<String> = base_set
+            .iter()
+            .map(|&b| {
+                if rows_as_base {
+                    format!("row {}", b + 1)
+                } else {
+                    format!("column {}", b + 1)
+                }
+            })
+            .collect();
+        let cover_names: Vec<String> = cover_union
+            .iter()
+            .map(|&c| {
+                if rows_as_base {
+                    format!("column {}", c + 1)
+                } else {
+                    format!("row {}", c + 1)
+                }
+            })
+            .collect();
+
+        Some(Deduction {
+            strategy,
+            difficulty: if n == 2 { 6 } else { 7 },
+            placements: vec![],
+            eliminations,
+            explanation: Explanation::fish(&locked, digit, &base_names, &cover_names),
+        })
+    })
+}
+
 // y-wing
-// swordfish
