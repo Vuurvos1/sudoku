@@ -154,16 +154,16 @@ let solver = Solver::new(vec![
 
 ## Available strategies
 
-| Strategy             | Type        | Difficulty |
-| -------------------- | ----------- | ---------- |
-| `NakedSingle`        | Placement   | 1          |
-| `HiddenSingle`       | Placement   | 2          |
-| `PointingPairs`      | Elimination | 3          |
-| `BoxLineReduction`   | Elimination | 3          |
-| `NakedSubset::<2>`   | Elimination | 4          |
-| `HiddenSubset::<2>`  | Elimination | 4          |
-| `NakedSubset::<3>`   | Elimination | 5          |
-| `HiddenSubset::<3>`  | Elimination | 5          |
-| `Fish::<2>` (x wing) | Elimination | 6          |
-| `YWing`              | Elimination | 6          |
-| `Fish::<3>` (swordfish) | Elimination | 7       |
+| Strategy                | Type        | Difficulty |
+| ----------------------- | ----------- | ---------- |
+| `NakedSingle`           | Placement   | 1          |
+| `HiddenSingle`          | Placement   | 2          |
+| `PointingPairs`         | Elimination | 3          |
+| `BoxLineReduction`      | Elimination | 3          |
+| `NakedSubset::<2>`      | Elimination | 4          |
+| `HiddenSubset::<2>`     | Elimination | 4          |
+| `NakedSubset::<3>`      | Elimination | 5          |
+| `HiddenSubset::<3>`     | Elimination | 5          |
+| `Fish::<2>` (x wing)    | Elimination | 6          |
+| `YWing`                 | Elimination | 6          |
+| `Fish::<3>` (swordfish) | Elimination | 7          |

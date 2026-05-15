@@ -1,7 +1,7 @@
 - Toggle remaining digit amount in settings
 
-
 App features
+
 - Daily puzzle (medium-hard) show difficulty?
 - Variant
 - Hints
@@ -38,8 +38,6 @@ App features
   - best times
   - average time
   - total completed
-
-
 
 - themes
   - option for custom themes
