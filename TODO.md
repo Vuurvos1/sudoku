@@ -38,10 +38,11 @@ App features
   - best times
   - average time
   - total completed
+- better visualize hints
 
 - themes
   - option for custom themes
-  - option for custom highlight colors
+  - option for custom highlight/coloring colors
 - difficulty
   - Easy
   - Medium
@@ -50,3 +51,7 @@ App features
 - continue button
 - tips section?
 - link to github? link to support?
+
+- sudoku builder?
+  - variant support
+  - share sudoku through link/code?
