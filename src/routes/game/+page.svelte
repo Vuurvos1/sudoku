@@ -47,6 +47,24 @@
 
 		if (mode === 'fill') {
 			sudokuStore.sudoku[row][col].value = num;
+			sudokuStore.sudoku[row][col].notes = [];
+
+			// clear matching notes from peers
+			const boxStartRow = Math.floor(row / 3) * 3;
+			const boxStartCol = Math.floor(col / 3) * 3;
+			for (let i = 0; i < 9; i++) {
+				sudokuStore.sudoku[row][i].notes = sudokuStore.sudoku[row][i].notes.filter(
+					(n) => n !== num
+				);
+				sudokuStore.sudoku[i][col].notes = sudokuStore.sudoku[i][col].notes.filter(
+					(n) => n !== num
+				);
+			}
+			for (let r = boxStartRow; r < boxStartRow + 3; r++) {
+				for (let c = boxStartCol; c < boxStartCol + 3; c++) {
+					sudokuStore.sudoku[r][c].notes = sudokuStore.sudoku[r][c].notes.filter((n) => n !== num);
+				}
+			}
 		} else if (mode === 'note') {
 			// add or remove if needed
 			if (sudokuStore.sudoku[row][col].notes.includes(num)) {
@@ -117,56 +135,90 @@
 			class="sudoku mx-auto h-full max-h-full w-full max-w-screen-lg flex-1 overflow-hidden px-4 py-12 md:px-8"
 		>
 			<div class="mx-auto flex aspect-square max-h-full">
-				<div class="row mx-auto grid h-full max-h-full w-full max-w-full grid-cols-9 grid-rows-9">
-					{#if sudokuStore.sudoku}
-						{#each sudokuStore.sudoku as row, i}
-							{#each row as cell, j}
-								<div
-									class={["cell border border-accent/40", {
-										'bg-accent/60 selected': selectedCell.col === j && selectedCell.row === i,
-										'bg-accent/20': selectedCell.col !== j || selectedCell.row !== i
-											? isPeer(i, j)
-											: false,
-										'bg-accent/10': selectedCell.row >= 0 &&
-											selectedCell.col >= 0 &&
-											!isPeer(i, j) &&
-											!(selectedCell.col === j && selectedCell.row === i) &&
-											sudokuStore.sudoku[selectedCell.row][selectedCell.col].value > 0 &&
-											cell.notes.includes(
-												sudokuStore.sudoku[selectedCell.row][selectedCell.col].value)
-									}]}								>
-									<button
-										onkeydown={(ev) => handleCellKeydown(ev, j, i)}
-										onclick={() => handleCellClick(j, i)}
-										class="grid h-full w-full place-items-center"
-									>
-										{#if cell.value > 0}
-											<span
-												class:text-red-400={sudokuStore.solved &&
-													cell.value !== sudokuStore.solved[i][j]}
-												class="text-xl font-medium"
-											>
-												{cell.value}
-											</span>
-										{:else}
-											<!-- notes -->
-											<div
-												class="grid h-full w-full grid-cols-3 grid-rows-3 place-items-center text-xs leading-none"
-											>
-												{#each { length: 9 } as _, x}
-													{#if cell.notes.length > 0 && cell.notes.includes(x + 1)}
-														<div class="text-xs leading-none">{x + 1}</div>
-													{:else}
-														<div></div>
-													{/if}
-												{/each}
-											</div>
-										{/if}
-									</button>
-								</div>
-							{/each}
+				<div class="relative mx-auto h-full max-h-full w-full max-w-full">
+					<svg
+						class="pointer-events-none absolute inset-0 z-10 h-full w-full"
+						viewBox="0 0 9 9"
+						preserveAspectRatio="none"
+						stroke-linecap="round"
+						overflow="visible"
+					>
+						<!-- thin lines -->
+						{#each [1, 2, 4, 5, 7, 8] as i}
+							<line x1={i} y1={0} x2={i} y2={9} class="grid-line-thin" stroke-width="0.02" />
+							<line x1={0} y1={i} x2={9} y2={i} class="grid-line-thin" stroke-width="0.02" />
 						{/each}
-					{/if}
+						<!-- thick lines -->
+						{#each [3, 6] as i}
+							<line x1={i} y1={0} x2={i} y2={9} class="stroke-accent" stroke-width="0.06" />
+							<line x1={0} y1={i} x2={9} y2={i} class="stroke-accent" stroke-width="0.06" />
+						{/each}
+					</svg>
+					<div class="row grid h-full w-full grid-cols-9 grid-rows-9">
+						{#if sudokuStore.sudoku}
+							{#each sudokuStore.sudoku as row, i}
+								{#each row as cell, j}
+									<div
+										class={[
+											'cell',
+											(() => {
+												const isSelected = selectedCell.col === j && selectedCell.row === i;
+												const hasSelection = selectedCell.row >= 0 && selectedCell.col >= 0;
+												const selectedValue = hasSelection
+													? sudokuStore.sudoku[selectedCell.row][selectedCell.col].value
+													: 0;
+												const peer = isPeer(i, j);
+												const sameDigit =
+													hasSelection &&
+													selectedValue > 0 &&
+													cell.value === selectedValue &&
+													!isSelected;
+												const matchingNote =
+													hasSelection &&
+													selectedValue > 0 &&
+													cell.notes.includes(selectedValue) &&
+													!isSelected;
+												return {
+													'selected bg-accent/60': isSelected,
+													'bg-accent/20': !isSelected && (peer || sameDigit),
+													'bg-accent/10': !isSelected && !peer && !sameDigit && matchingNote
+												};
+											})()
+										]}
+									>
+										<button
+											onkeydown={(ev) => handleCellKeydown(ev, j, i)}
+											onclick={() => handleCellClick(j, i)}
+											class="grid h-full w-full place-items-center"
+										>
+											{#if cell.value > 0}
+												<span
+													class:text-red-400={sudokuStore.solved &&
+														cell.value !== sudokuStore.solved[i][j]}
+													class="text-xl font-medium"
+												>
+													{cell.value}
+												</span>
+											{:else}
+												<!-- notes -->
+												<div
+													class="grid h-full w-full grid-cols-3 grid-rows-3 place-items-center text-xs leading-none"
+												>
+													{#each { length: 9 } as _, x}
+														{#if cell.notes.length > 0 && cell.notes.includes(x + 1)}
+															<div class="text-xs leading-none">{x + 1}</div>
+														{:else}
+															<div></div>
+														{/if}
+													{/each}
+												</div>
+											{/if}
+										</button>
+									</div>
+								{/each}
+							{/each}
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -274,45 +326,11 @@
 		@apply grid w-full place-items-center rounded-full border border-transparent py-1 transition hover:border-accent;
 	}
 
-	/* thiccc borders */
-	.cell:nth-child(n + 10):nth-child(-n + 9) {
-		@apply border-t-4 border-t-accent/75;
-	}
-
-	.cell:nth-child(n + 19):nth-child(-n + 27) {
-		@apply border-b-4 border-b-accent/75;
-	}
-
-	.cell:nth-child(n + 46):nth-child(-n + 54) {
-		@apply border-b-4 border-b-accent/75;
-	}
-
-	.cell:nth-child(3n):not(:nth-child(9n)) {
-		@apply border-r-4 border-r-accent/75;
-	}
-
-	/* remove outer borders */
-	.cell:nth-child(-n + 9) {
-		border-top: none;
-	}
-
-	.cell:nth-child(n + 73) {
-		border-bottom: none;
-	}
-
-	.cell:nth-child(9n) {
-		border-right: none;
-	}
-
-	.cell:nth-child(1n + 1) {
-		border-left: none;
-	}
-
-	.cell.selected {
-		/* @apply bg-sky-400/40; */
+	.grid-line-thin {
+		stroke: hsl(var(--color-accent-hsl) / 0.4);
 	}
 
 	.cell.highlighted {
-		@apply bg-accent/20
+		@apply bg-accent/20;
 	}
 </style>
