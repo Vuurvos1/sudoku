@@ -108,7 +108,33 @@
 		const cellIndex = row * 9 + col;
 		return peerMap[selectedIndex].includes(cellIndex);
 	}
+
+	function handleUndo() {
+		const state = history.undo();
+		if (state) sudokuStore.restore(state);
+	}
+
+	function handleRedo() {
+		const state = history.redo();
+		if (state) sudokuStore.restore(state);
+	}
 </script>
+
+<svelte:window
+	onkeydown={(ev) => {
+		const key = ev.key.toLowerCase();
+		if (key === 'z' && (ev.ctrlKey || ev.metaKey) && ev.shiftKey) {
+			ev.preventDefault();
+			handleRedo();
+		} else if (key === 'z' && (ev.ctrlKey || ev.metaKey)) {
+			ev.preventDefault();
+			handleUndo();
+		} else if (key === 'y' && (ev.ctrlKey || ev.metaKey)) {
+			ev.preventDefault();
+			handleRedo();
+		}
+	}}
+/>
 
 <div class="flex h-full max-h-full flex-col">
 	<header class="py-3">
@@ -315,10 +341,7 @@
 					class:opacity-30={!history.canUndo}
 					aria-label="undo"
 					disabled={!history.canUndo}
-					onclick={() => {
-						const state = history.undo();
-						if (state) sudokuStore.restore(state);
-					}}
+					onclick={handleUndo}
 				>
 					<UndoIcon />
 				</button>
@@ -328,10 +351,7 @@
 					class:opacity-30={!history.canRedo}
 					aria-label="redo"
 					disabled={!history.canRedo}
-					onclick={() => {
-						const state = history.redo();
-						if (state) sudokuStore.restore(state);
-					}}
+					onclick={handleRedo}
 				>
 					<RedoIcon />
 				</button>
