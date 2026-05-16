@@ -1,0 +1,11 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"useTabs": true,
+	"singleQuote": true,
+	"trailingComma": "none",
+	"printWidth": 100,
+	"sortTailwindcss": true,
+	"sortPackageJson": true,
+	"svelte": true,
+	"ignorePatterns": ["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "src-tauri/", ".claude/"]
+}

@@ -12,7 +12,7 @@ export function hexToHSL(hex: string) {
 	let r = parseInt(result[1], 16);
 	let g = parseInt(result[2], 16);
 	let b = parseInt(result[3], 16);
-	(r /= 255), (g /= 255), (b /= 255);
+	((r /= 255), (g /= 255), (b /= 255));
 
 	const max = Math.max(r, g, b);
 	const min = Math.min(r, g, b);

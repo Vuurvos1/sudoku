@@ -2,10 +2,8 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import type { HintResponse } from '$lib/stores/sudoku.svelte';
 
-	let {
-		open = $bindable(false),
-		hint = null
-	}: { open?: boolean; hint?: HintResponse | null } = $props();
+	let { open = $bindable(false), hint = null }: { open?: boolean; hint?: HintResponse | null } =
+		$props();
 </script>
 
 <Dialog bind:open>
