@@ -30,6 +30,7 @@
 			class="p-1 hover:bg-accent-1"
 			class:bg-accent={settingsStore.settings.noteStyle === NoteStyles.Grid}
 			class:text-background={settingsStore.settings.noteStyle === NoteStyles.Grid}
+			aria-label="grid note style"
 		>
 			<svg
 				width="24"
@@ -56,6 +57,7 @@
 			class="p-1 hover:bg-accent-1"
 			class:bg-accent={settingsStore.settings.noteStyle === NoteStyles.Row}
 			class:text-background={settingsStore.settings.noteStyle === NoteStyles.Row}
+			aria-label="row note style"
 		>
 			<svg
 				width="24"

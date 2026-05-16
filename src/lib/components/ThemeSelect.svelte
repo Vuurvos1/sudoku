@@ -11,6 +11,7 @@
 			onclick={() => {
 				themeStore.setTheme(key);
 			}}
+			aria-label="select theme"
 		>
 			<div
 				style="background:{value.accent}"

@@ -22,6 +22,7 @@
 			}}
 			data-state={checked ? 'checked' : 'unchecked'}
 			class="relative h-6 cursor-pointer rounded-full bg-gray-500 transition-colors data-[state=checked]:bg-accent"
+			aria-label="toggle"
 		>
 			<span class="thumb block rounded-full bg-white transition"></span>
 		</button>
