@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { settingsStore, dialogState, sudokuStore } from '$lib/stores';
+	import { HistoryStore } from '$lib/stores/history.svelte';
 	import {
 		UndoIcon,
 		RedoIcon,
@@ -13,6 +14,8 @@
 	import HintDialog from '$lib/components/HintDialog.svelte';
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
+
+	const history = new HistoryStore<ReturnType<typeof sudokuStore.copy>>();
 
 	const selectedCell = $state({ row: -1, col: -1 });
 
@@ -37,6 +40,12 @@
 		}
 	}
 
+	function pushInitialState() {
+		if (history.current === undefined) {
+			history.pushState(sudokuStore.copy());
+		}
+	}
+
 	function setSudokuCell(num: number) {
 		if (!sudokuStore.sudoku) return;
 
@@ -44,6 +53,8 @@
 
 		if (col < 0 || row < 0) return;
 		if (sudokuStore.sudoku[row][col].fixed) return;
+
+		pushInitialState();
 
 		if (mode === 'fill') {
 			sudokuStore.sudoku[row][col].value = num;
@@ -76,13 +87,17 @@
 			}
 		}
 
+		history.pushState(sudokuStore.copy());
 		sudokuStore.save();
 	}
 
 	function clearCell(col: number, row: number) {
 		if (!sudokuStore.sudoku) return;
 
+		pushInitialState();
 		sudokuStore.sudoku[row][col].value = 0;
+		history.pushState(sudokuStore.copy());
+		sudokuStore.save();
 	}
 
 	function isPeer(row: number, col: number) {
@@ -295,11 +310,29 @@
 					<PencilIcon class="transition" />
 				</button>
 
-				<button class="option-btn" aria-label="undo" onclick={() => {}}>
+				<button
+					class="option-btn"
+					class:opacity-30={!history.canUndo}
+					aria-label="undo"
+					disabled={!history.canUndo}
+					onclick={() => {
+						const state = history.undo();
+						if (state) sudokuStore.restore(state);
+					}}
+				>
 					<UndoIcon />
 				</button>
 
-				<button class="option-btn" aria-label="redo" onclick={() => {}}>
+				<button
+					class="option-btn"
+					class:opacity-30={!history.canRedo}
+					aria-label="redo"
+					disabled={!history.canRedo}
+					onclick={() => {
+						const state = history.redo();
+						if (state) sudokuStore.restore(state);
+					}}
+				>
 					<RedoIcon />
 				</button>
 			</div>

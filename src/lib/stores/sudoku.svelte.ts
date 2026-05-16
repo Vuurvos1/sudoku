@@ -114,9 +114,21 @@ function createSudokuStore() {
 
 	load();
 
+	function copy(): Sudoku {
+		return structuredClone($state.snapshot(sudoku)) as Sudoku;
+	}
+
+	function restore(grid: Sudoku) {
+		sudoku = grid;
+		save();
+	}
+
 	return {
 		get sudoku() {
 			return sudoku;
+		},
+		set sudoku(grid: Sudoku | null) {
+			sudoku = grid;
 		},
 		get solved() {
 			return solved;
@@ -131,7 +143,9 @@ function createSudokuStore() {
 		save,
 		load,
 		clear,
-		hint
+		hint,
+		copy,
+		restore
 	};
 }
 
