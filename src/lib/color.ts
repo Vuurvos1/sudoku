@@ -1,3 +1,31 @@
+export const CELL_COLORS = [
+	'#f87171', // red
+	'#fb923c', // orange
+	'#facc15', // yellow
+	'#4ade80', // green
+	'#22d3ee', // cyan
+	'#60a5fa', // blue
+	'#a78bfa', // purple
+	'#f472b6', // pink
+	'#a8a29e' // gray
+];
+
+export function cellGradient(colors: string[]): string {
+	if (colors.length === 0) return '';
+	if (colors.length === 1) return `${colors[0]}66`;
+
+	const sliceSize = 360 / colors.length;
+	const stops = colors
+		.map((color, i) => {
+			const start = Math.round(sliceSize * i);
+			const end = Math.round(sliceSize * (i + 1));
+			return `${color}66 ${start}deg ${end}deg`;
+		})
+		.join(', ');
+
+	return `conic-gradient(from 22.5deg, ${stops})`;
+}
+
 function round(num: number) {
 	return Math.round(num * 100) / 100;
 }

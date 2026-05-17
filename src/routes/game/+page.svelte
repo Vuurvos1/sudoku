@@ -12,6 +12,7 @@
 		LightbulbIcon
 	} from 'lucide-svelte';
 	import HintDialog from '$lib/components/HintDialog.svelte';
+	import { CELL_COLORS, cellGradient } from '$lib/color';
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
 
@@ -52,7 +53,8 @@
 		const { col, row } = selectedCell;
 
 		if (col < 0 || row < 0) return;
-		if (sudokuStore.sudoku[row][col].fixed) return;
+
+		if (mode !== 'color' && sudokuStore.sudoku[row][col].fixed) return;
 
 		pushInitialState();
 
@@ -84,6 +86,14 @@
 				);
 			} else {
 				sudokuStore.sudoku[row][col].notes.push(num);
+			}
+		} else if (mode === 'color') {
+			const colorHex = CELL_COLORS[num - 1];
+			const cell = sudokuStore.sudoku[row][col];
+			if (cell.colors.includes(colorHex)) {
+				cell.colors = cell.colors.filter((c) => c !== colorHex);
+			} else {
+				cell.colors = [...cell.colors, colorHex];
 			}
 		}
 
@@ -227,10 +237,16 @@
 											})()
 										]}
 									>
+										{#if cell.colors.length > 0}
+											<div
+												class="absolute inset-0"
+												style:background={cellGradient(cell.colors)}
+											></div>
+										{/if}
 										<button
 											onkeydown={(ev) => handleCellKeydown(ev, j, i)}
 											onclick={() => handleCellClick(j, i)}
-											class="grid h-full w-full place-items-center"
+											class="relative z-10 grid h-full w-full place-items-center"
 										>
 											{#if cell.value > 0}
 												<span
@@ -269,32 +285,38 @@
 				{#each { length: 9 } as _, i}
 					<button
 						onclick={() => {
-							// if (selectedNumber === i + 1) {
-							// 	selectedNumber = 0;
-							// } else {
-							// 	selectedNumber = i + 1;
-							// 	if (selectedCell.row >= 0 && selectedCell.col >= 0) {
-							// 		setSudokuCell(i + 1);
-							// 	}
-							// }
 							setSudokuCell(i + 1);
 						}}
 						class="digit-btn"
 						class:bg-accent={selectedNumber === i + 1}
+						style:background={mode === 'color' ? `${CELL_COLORS[i]}66` : ''}
+						style:border-color={mode === 'color' ? CELL_COLORS[i] : ''}
 					>
-						<span class="relative">
-							{i + 1}
-							{#if settingsStore.settings.showRemainingDigits}
-								<sup class="absolute -right-[7px] top-1">2</sup>
-							{/if}
-						</span>
+						{#if mode !== 'color'}
+							<span class="relative">
+								{i + 1}
+								{#if settingsStore.settings.showRemainingDigits}
+									<sup class="absolute -right-[7px] top-1">2</sup>
+								{/if}
+							</span>
+						{/if}
 					</button>
 				{/each}
 
 				<button
 					class="digit-btn"
 					onclick={() => {
-						setSudokuCell(0);
+						if (mode === 'color') {
+							if (!sudokuStore.sudoku) return;
+							const { col, row } = selectedCell;
+							if (col < 0 || row < 0) return;
+							pushInitialState();
+							sudokuStore.sudoku[row][col].colors = [];
+							history.pushState(sudokuStore.copy());
+							sudokuStore.save();
+						} else {
+							setSudokuCell(0);
+						}
 					}}
 				>
 					<EraserIcon size="22" />
@@ -381,6 +403,10 @@
 
 	.grid-line-thin {
 		stroke: hsl(var(--color-accent-hsl) / 0.4);
+	}
+
+	.cell {
+		@apply relative;
 	}
 
 	.cell.highlighted {

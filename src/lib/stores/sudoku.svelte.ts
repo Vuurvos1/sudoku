@@ -4,7 +4,7 @@ import { LazyStore } from '@tauri-apps/plugin-store';
 export type Cell = {
 	value: number;
 	notes: number[];
-	color: string[]; // TODO: enumify?
+	colors: string[];
 	fixed: boolean; // one of the original/base digits
 };
 
@@ -56,7 +56,7 @@ export class SudokuStore {
 					return {
 						value: 0,
 						notes: [],
-						color: [],
+						colors: [],
 						fixed: false
 					};
 				})
