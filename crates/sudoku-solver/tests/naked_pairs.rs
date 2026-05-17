@@ -17,7 +17,9 @@ fn finds_naked_pair_in_row() {
     }
 
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     let deduction = NakedSubset::<2>
         .find(&board, &ctx)

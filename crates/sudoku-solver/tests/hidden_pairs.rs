@@ -25,7 +25,9 @@ fn finds_hidden_pair_in_row() {
     }
 
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     let deduction = HiddenSubset::<2>
         .find(&board, &ctx)

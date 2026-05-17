@@ -1,4 +1,7 @@
-use crate::{board::{Board, CellId}, strategy::{Deduction, Explanation}};
+use crate::{
+    board::{Board, CellId},
+    strategy::{Deduction, Explanation},
+};
 
 pub trait Constraint {
     fn name(&self) -> &str;
@@ -8,10 +11,14 @@ pub trait Constraint {
     fn propagate(&self, board: &mut Board) -> Vec<Deduction> {
         let mut deductions = Vec::new();
         for &source in self.cells() {
-            let Some(digit) = board.value(source) else { continue };
+            let Some(digit) = board.value(source) else {
+                continue;
+            };
             let mut eliminations = Vec::new();
             for &peer in self.cells() {
-                if peer == source { continue; }
+                if peer == source {
+                    continue;
+                }
                 if board.candidates(peer).contains(digit) {
                     board.remove_candidate(peer, digit);
                     eliminations.push((peer, digit));
@@ -77,14 +84,24 @@ impl UniqueGroup {
         let row_start = b / 3 * 3;
         let col_start = b % 3 * 3;
         let kind = GroupKind::Box(b);
-        let cells = (0..9).map(|i| CellId::from_rc(row_start + i / 3, col_start + i % 3)).collect();
-        UniqueGroup { cells, name: kind.to_string(), kind }
+        let cells = (0..9)
+            .map(|i| CellId::from_rc(row_start + i / 3, col_start + i % 3))
+            .collect();
+        UniqueGroup {
+            cells,
+            name: kind.to_string(),
+            kind,
+        }
     }
 }
 
 impl Constraint for UniqueGroup {
-    fn name(&self) -> &str { &self.name }
-    fn cells(&self) -> &[CellId] { &self.cells }
+    fn name(&self) -> &str {
+        &self.name
+    }
+    fn cells(&self) -> &[CellId] {
+        &self.cells
+    }
     // uses default propagate()
 }
 

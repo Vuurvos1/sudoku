@@ -1,4 +1,7 @@
-use crate::{board::{Board, CellId}, solver::SolverContext};
+use crate::{
+    board::{Board, CellId},
+    solver::SolverContext,
+};
 
 pub enum HighlightRole {
     Focus,
@@ -25,7 +28,7 @@ pub struct Highlights {
 pub struct Explanation {
     pub summary: String,
     pub detail: String,
-    pub highlights: Vec<Highlights>
+    pub highlights: Vec<Highlights>,
 }
 
 impl Explanation {
@@ -38,9 +41,14 @@ impl Explanation {
                 group_name, digit, source, digit
             ),
             highlights: vec![Highlights {
-                cells: vec![CellHighlight { cell: source, role: HighlightRole::Focus }],
+                cells: vec![CellHighlight {
+                    cell: source,
+                    role: HighlightRole::Focus,
+                }],
                 candidates: vec![CandidateHighlight {
-                    cell: source, digit, role: HighlightRole::Focus,
+                    cell: source,
+                    digit,
+                    role: HighlightRole::Focus,
                 }],
             }],
         }
@@ -55,12 +63,15 @@ impl Explanation {
                 cell, digit
             ),
             highlights: vec![Highlights {
-                cells: vec![
-                    CellHighlight { cell, role: HighlightRole::Focus },
-                ],
-                candidates: vec![
-                    CandidateHighlight { cell, digit, role: HighlightRole::Focus },
-                ],
+                cells: vec![CellHighlight {
+                    cell,
+                    role: HighlightRole::Focus,
+                }],
+                candidates: vec![CandidateHighlight {
+                    cell,
+                    digit,
+                    role: HighlightRole::Focus,
+                }],
             }],
         }
     }
@@ -74,12 +85,15 @@ impl Explanation {
                 cell, digit, digit
             ),
             highlights: vec![Highlights {
-                cells: vec![
-                    CellHighlight { cell, role: HighlightRole::Focus },
-                ],
-                candidates: vec![
-                    CandidateHighlight { cell, digit, role: HighlightRole::Focus },
-                ],
+                cells: vec![CellHighlight {
+                    cell,
+                    role: HighlightRole::Focus,
+                }],
+                candidates: vec![CandidateHighlight {
+                    cell,
+                    digit,
+                    role: HighlightRole::Focus,
+                }],
             }],
         }
     }
@@ -97,17 +111,31 @@ impl Explanation {
                 box_name, digit, line_name, digit, line_name
             ),
             highlights: vec![Highlights {
-                cells: locked.iter().map(|&cell| CellHighlight {
-                    cell, role: HighlightRole::Focus,
-                }).collect(),
-                candidates: locked.iter().map(|&cell| CandidateHighlight {
-                    cell, digit, role: HighlightRole::Focus,
-                }).collect(),
+                cells: locked
+                    .iter()
+                    .map(|&cell| CellHighlight {
+                        cell,
+                        role: HighlightRole::Focus,
+                    })
+                    .collect(),
+                candidates: locked
+                    .iter()
+                    .map(|&cell| CandidateHighlight {
+                        cell,
+                        digit,
+                        role: HighlightRole::Focus,
+                    })
+                    .collect(),
             }],
         }
     }
 
-    pub fn box_line_reduction(box_name: &str, digit: u8, line_name: &str, locked: &[CellId]) -> Self {
+    pub fn box_line_reduction(
+        box_name: &str,
+        digit: u8,
+        line_name: &str,
+        locked: &[CellId],
+    ) -> Self {
         Explanation {
             summary: format!(
                 "Box/Line Reduction: {} in {} locked to {}",
@@ -119,12 +147,21 @@ impl Explanation {
                 line_name, digit, box_name, digit, box_name
             ),
             highlights: vec![Highlights {
-                cells: locked.iter().map(|&cell| CellHighlight {
-                    cell, role: HighlightRole::Focus,
-                }).collect(),
-                candidates: locked.iter().map(|&cell| CandidateHighlight {
-                    cell, digit, role: HighlightRole::Focus,
-                }).collect(),
+                cells: locked
+                    .iter()
+                    .map(|&cell| CellHighlight {
+                        cell,
+                        role: HighlightRole::Focus,
+                    })
+                    .collect(),
+                candidates: locked
+                    .iter()
+                    .map(|&cell| CandidateHighlight {
+                        cell,
+                        digit,
+                        role: HighlightRole::Focus,
+                    })
+                    .collect(),
             }],
         }
     }
@@ -151,17 +188,23 @@ impl Explanation {
                 digits_str.join(", "),
             ),
             highlights: vec![Highlights {
-                cells: cells.iter().map(|&cell| CellHighlight {
-                    cell,
-                    role: HighlightRole::Focus,
-                }).collect(),
-                candidates: cells.iter().flat_map(|&cell| {
-                    digits.iter().map(move |&digit| CandidateHighlight {
+                cells: cells
+                    .iter()
+                    .map(|&cell| CellHighlight {
                         cell,
-                        digit,
                         role: HighlightRole::Focus,
                     })
-                }).collect(),
+                    .collect(),
+                candidates: cells
+                    .iter()
+                    .flat_map(|&cell| {
+                        digits.iter().map(move |&digit| CandidateHighlight {
+                            cell,
+                            digit,
+                            role: HighlightRole::Focus,
+                        })
+                    })
+                    .collect(),
             }],
         }
     }
@@ -188,17 +231,23 @@ impl Explanation {
                 cells_str.join(" and "),
             ),
             highlights: vec![Highlights {
-                cells: cells.iter().map(|&cell| CellHighlight {
-                    cell,
-                    role: HighlightRole::Focus,
-                }).collect(),
-                candidates: cells.iter().flat_map(|&cell| {
-                    digits.iter().map(move |&digit| CandidateHighlight {
+                cells: cells
+                    .iter()
+                    .map(|&cell| CellHighlight {
                         cell,
-                        digit,
-                        role: HighlightRole::Supporting,
+                        role: HighlightRole::Focus,
                     })
-                }).collect(),
+                    .collect(),
+                candidates: cells
+                    .iter()
+                    .flat_map(|&cell| {
+                        digits.iter().map(move |&digit| CandidateHighlight {
+                            cell,
+                            digit,
+                            role: HighlightRole::Supporting,
+                        })
+                    })
+                    .collect(),
             }],
         }
     }
@@ -212,24 +261,36 @@ impl Explanation {
         Explanation {
             summary: format!(
                 "{}: {} in {} locked to {}",
-                kind, digit, bases.join(", "), covers.join(", "),
+                kind,
+                digit,
+                bases.join(", "),
+                covers.join(", "),
             ),
             detail: format!(
                 "In {}, {} only appears in {}. \
                  So {} can be eliminated from the rest of {}.",
-                bases.join(" and "), digit, covers.join(" and "),
-                digit, covers.join(" and "),
+                bases.join(" and "),
+                digit,
+                covers.join(" and "),
+                digit,
+                covers.join(" and "),
             ),
             highlights: vec![Highlights {
-                cells: locked.iter().map(|&cell| CellHighlight {
-                    cell,
-                    role: HighlightRole::Focus,
-                }).collect(),
-                candidates: locked.iter().map(|&cell| CandidateHighlight {
-                    cell,
-                    digit,
-                    role: HighlightRole::Focus,
-                }).collect(),
+                cells: locked
+                    .iter()
+                    .map(|&cell| CellHighlight {
+                        cell,
+                        role: HighlightRole::Focus,
+                    })
+                    .collect(),
+                candidates: locked
+                    .iter()
+                    .map(|&cell| CandidateHighlight {
+                        cell,
+                        digit,
+                        role: HighlightRole::Focus,
+                    })
+                    .collect(),
             }],
         }
     }
@@ -244,21 +305,44 @@ impl Explanation {
                 "{} must be {} or {}. \
                  If {}, {} must be {}. If {}, {} must be {}. \
                  Either way, {} can be eliminated from cells seeing both wings.",
-                pivot, a, b,
-                a, wing1, c, b, wing2, c,
-                c
+                pivot, a, b, a, wing1, c, b, wing2, c, c
             ),
             highlights: vec![Highlights {
                 cells: vec![
-                    CellHighlight { cell: pivot, role: HighlightRole::Focus },
-                    CellHighlight { cell: wing1, role: HighlightRole::Supporting },
-                    CellHighlight { cell: wing2, role: HighlightRole::Supporting },
+                    CellHighlight {
+                        cell: pivot,
+                        role: HighlightRole::Focus,
+                    },
+                    CellHighlight {
+                        cell: wing1,
+                        role: HighlightRole::Supporting,
+                    },
+                    CellHighlight {
+                        cell: wing2,
+                        role: HighlightRole::Supporting,
+                    },
                 ],
                 candidates: vec![
-                    CandidateHighlight { cell: pivot, digit: a, role: HighlightRole::Focus },
-                    CandidateHighlight { cell: pivot, digit: b, role: HighlightRole::Focus },
-                    CandidateHighlight { cell: wing1, digit: c, role: HighlightRole::Supporting },
-                    CandidateHighlight { cell: wing2, digit: c, role: HighlightRole::Supporting },
+                    CandidateHighlight {
+                        cell: pivot,
+                        digit: a,
+                        role: HighlightRole::Focus,
+                    },
+                    CandidateHighlight {
+                        cell: pivot,
+                        digit: b,
+                        role: HighlightRole::Focus,
+                    },
+                    CandidateHighlight {
+                        cell: wing1,
+                        digit: c,
+                        role: HighlightRole::Supporting,
+                    },
+                    CandidateHighlight {
+                        cell: wing2,
+                        digit: c,
+                        role: HighlightRole::Supporting,
+                    },
                 ],
             }],
         }

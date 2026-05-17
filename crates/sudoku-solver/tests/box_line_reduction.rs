@@ -17,7 +17,9 @@ fn finds_box_line_reduction_for_row_locked_to_box() {
     }
 
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     let deduction = BoxLineReduction
         .find(&board, &ctx)

@@ -40,7 +40,9 @@ where
 pub struct NakedSingle;
 
 impl Strategy for NakedSingle {
-    fn name(&self) -> &'static str { "naked single" }
+    fn name(&self) -> &'static str {
+        "naked single"
+    }
     fn find(&self, board: &Board, _ctx: &SolverContext) -> Option<Deduction> {
         for i in 0..81 {
             let id = CellId(i);
@@ -54,7 +56,7 @@ impl Strategy for NakedSingle {
                     placements: vec![(id, digit)],
                     eliminations: vec![],
                     explanation: Explanation::naked_single(id, digit),
-                })
+                });
             }
         }
 
@@ -65,7 +67,9 @@ impl Strategy for NakedSingle {
 pub struct HiddenSingle;
 
 impl Strategy for HiddenSingle {
-    fn name(&self) -> &'static str { "hidden single" }
+    fn name(&self) -> &'static str {
+        "hidden single"
+    }
     fn find(&self, board: &Board, ctx: &SolverContext) -> Option<Deduction> {
         for constraint in ctx.constraints {
             let cells = constraint.cells();
@@ -75,7 +79,9 @@ impl Strategy for HiddenSingle {
                 for &cell in cells {
                     if board.candidates(cell).contains(digit) {
                         count += 1;
-                        if count > 1 { break; }
+                        if count > 1 {
+                            break;
+                        }
                         found = Some(cell);
                     }
                 }
@@ -103,7 +109,9 @@ impl Strategy for HiddenSingle {
 pub struct PointingPairs;
 
 impl Strategy for PointingPairs {
-    fn name(&self) -> &'static str { "pointing pair" }
+    fn name(&self) -> &'static str {
+        "pointing pair"
+    }
     fn find(&self, board: &Board, _ctx: &SolverContext) -> Option<Deduction> {
         for b in 0..9u8 {
             let box_group = UniqueGroup::box_(b);
@@ -114,22 +122,24 @@ impl Strategy for PointingPairs {
                     .copied()
                     .filter(|c| board.candidates(*c).contains(digit))
                     .collect();
-                if cells.len() < 2 || cells.len() > 3 { continue; }
+                if cells.len() < 2 || cells.len() > 3 {
+                    continue;
+                }
 
                 let r0 = cells[0].row();
                 if cells.iter().all(|c| c.row() == r0) {
-                    if let Some(d) = pointing_eliminations(
-                        board, b, digit, &cells, GroupKind::Row(r0),
-                    ) {
+                    if let Some(d) =
+                        pointing_eliminations(board, b, digit, &cells, GroupKind::Row(r0))
+                    {
                         return Some(d);
                     }
                 }
 
                 let c0 = cells[0].col();
                 if cells.iter().all(|c| c.col() == c0) {
-                    if let Some(d) = pointing_eliminations(
-                        board, b, digit, &cells, GroupKind::Col(c0),
-                    ) {
+                    if let Some(d) =
+                        pointing_eliminations(board, b, digit, &cells, GroupKind::Col(c0))
+                    {
                         return Some(d);
                     }
                 }
@@ -159,7 +169,9 @@ fn pointing_eliminations(
         .map(|c| (c, digit))
         .collect();
 
-    if eliminations.is_empty() { return None; }
+    if eliminations.is_empty() {
+        return None;
+    }
 
     Some(Deduction {
         strategy: "pointing pair",
@@ -181,7 +193,9 @@ fn pointing_eliminations(
 pub struct BoxLineReduction;
 
 impl Strategy for BoxLineReduction {
-    fn name(&self) -> &'static str { "box/line reduction" }
+    fn name(&self) -> &'static str {
+        "box/line reduction"
+    }
     fn find(&self, board: &Board, _ctx: &SolverContext) -> Option<Deduction> {
         for r in 0..9u8 {
             if let Some(d) = box_line_for_line(board, GroupKind::Row(r)) {
@@ -210,10 +224,14 @@ fn box_line_for_line(board: &Board, line: GroupKind) -> Option<Deduction> {
             .copied()
             .filter(|c| board.candidates(*c).contains(digit))
             .collect();
-        if cells.len() < 2 || cells.len() > 3 { continue; }
+        if cells.len() < 2 || cells.len() > 3 {
+            continue;
+        }
 
         let b0 = cells[0].box_idx();
-        if !cells.iter().all(|c| c.box_idx() == b0) { continue; }
+        if !cells.iter().all(|c| c.box_idx() == b0) {
+            continue;
+        }
 
         let box_cells = UniqueGroup::box_(b0).cells;
         let line_set: std::collections::HashSet<CellId> = line_cells.iter().copied().collect();
@@ -224,7 +242,9 @@ fn box_line_for_line(board: &Board, line: GroupKind) -> Option<Deduction> {
             .map(|c| (c, digit))
             .collect();
 
-        if eliminations.is_empty() { continue; }
+        if eliminations.is_empty() {
+            continue;
+        }
 
         return Some(Deduction {
             strategy: "box/line reduction",
@@ -373,9 +393,9 @@ impl<const N: usize> Strategy for HiddenSubset<N> {
                 cells_set.sort_by_key(|c| c.0);
 
                 // Build a candidate mask for the hidden digits
-                let hidden = digits
-                    .iter()
-                    .fold(Candidates::EMPTY, |acc, &d| acc.union(Candidates::single(d)));
+                let hidden = digits.iter().fold(Candidates::EMPTY, |acc, &d| {
+                    acc.union(Candidates::single(d))
+                });
 
                 // Eliminate all non-hidden candidates from the N cells
                 let eliminations: Vec<(CellId, u8)> = cells_set
@@ -566,16 +586,22 @@ fn sees(a: CellId, b: CellId, constraints: &[Box<dyn Constraint>]) -> bool {
 pub struct YWing;
 
 impl Strategy for YWing {
-    fn name(&self) -> &'static str { "y-wing" }
+    fn name(&self) -> &'static str {
+        "y-wing"
+    }
 
     fn find(&self, board: &Board, ctx: &SolverContext) -> Option<Deduction> {
         // Collect bivalue cells (exactly 2 candidates)
         let bivalues: Vec<(CellId, u8, u8)> = (0..81u8)
             .filter_map(|i| {
                 let id = CellId(i);
-                if board.is_decided(id) { return None; }
+                if board.is_decided(id) {
+                    return None;
+                }
                 let cands = board.candidates(id);
-                if cands.count() != 2 { return None; }
+                if cands.count() != 2 {
+                    return None;
+                }
                 let mut iter = cands.iter();
                 let a = iter.next().unwrap();
                 let b = iter.next().unwrap();
@@ -586,8 +612,12 @@ impl Strategy for YWing {
         for &(pivot, a, b) in &bivalues {
             // Find wing1: shares candidate 'a' with pivot, has {a, c} where c != b
             for &(w1, w1_x, w1_y) in &bivalues {
-                if w1 == pivot { continue; }
-                if !sees(pivot, w1, ctx.constraints) { continue; }
+                if w1 == pivot {
+                    continue;
+                }
+                if !sees(pivot, w1, ctx.constraints) {
+                    continue;
+                }
 
                 let c = if w1_x == a && w1_y != b {
                     w1_y
@@ -599,8 +629,12 @@ impl Strategy for YWing {
 
                 // Find wing2: shares candidate 'b' with pivot, has {b, c}
                 for &(w2, w2_x, w2_y) in &bivalues {
-                    if w2 == pivot || w2 == w1 { continue; }
-                    if !sees(pivot, w2, ctx.constraints) { continue; }
+                    if w2 == pivot || w2 == w1 {
+                        continue;
+                    }
+                    if !sees(pivot, w2, ctx.constraints) {
+                        continue;
+                    }
                     if !((w2_x == b && w2_y == c) || (w2_y == b && w2_x == c)) {
                         continue;
                     }
@@ -609,11 +643,21 @@ impl Strategy for YWing {
                     let eliminations: Vec<(CellId, u8)> = (0..81u8)
                         .filter_map(|i| {
                             let cell = CellId(i);
-                            if cell == pivot || cell == w1 || cell == w2 { return None; }
-                            if board.is_decided(cell) { return None; }
-                            if !board.candidates(cell).contains(c) { return None; }
-                            if !sees(cell, w1, ctx.constraints) { return None; }
-                            if !sees(cell, w2, ctx.constraints) { return None; }
+                            if cell == pivot || cell == w1 || cell == w2 {
+                                return None;
+                            }
+                            if board.is_decided(cell) {
+                                return None;
+                            }
+                            if !board.candidates(cell).contains(c) {
+                                return None;
+                            }
+                            if !sees(cell, w1, ctx.constraints) {
+                                return None;
+                            }
+                            if !sees(cell, w2, ctx.constraints) {
+                                return None;
+                            }
                             Some((cell, c))
                         })
                         .collect();

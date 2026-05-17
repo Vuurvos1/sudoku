@@ -39,7 +39,7 @@ function createSettingsStore() {
 	$effect.root(() => {
 		$effect(() => {
 			console.log('saving settings');
-			settings;
+			void settings;
 			save();
 		});
 	});

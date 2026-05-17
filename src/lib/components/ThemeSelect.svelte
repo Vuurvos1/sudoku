@@ -3,7 +3,7 @@
 </script>
 
 <div class="my-4 flex flex-row flex-wrap gap-4">
-	{#each Object.entries(themes) as [key, value]}
+	{#each Object.entries(themes) as [key, value] (key)}
 		<button
 			class:active={themeStore.get().id === value.id}
 			style="background:{value.background}"

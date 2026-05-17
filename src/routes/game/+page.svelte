@@ -13,6 +13,7 @@
 	} from 'lucide-svelte';
 	import HintDialog from '$lib/components/HintDialog.svelte';
 	import { CELL_COLORS, cellGradient } from '$lib/color';
+	import { resolve } from '$app/paths';
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
 
@@ -150,7 +151,7 @@
 	<header class="py-3">
 		<nav class="container flex flex-row items-center justify-between">
 			<div class="flex w-32 flex-row items-center gap-4">
-				<a href="/" aria-label="back">
+				<a href={resolve('/')} aria-label="back">
 					<ChevronLeftIcon />
 				</a>
 			</div>
@@ -195,20 +196,20 @@
 						overflow="visible"
 					>
 						<!-- thin lines -->
-						{#each [1, 2, 4, 5, 7, 8] as i}
+						{#each [1, 2, 4, 5, 7, 8] as i (i)}
 							<line x1={i} y1={0} x2={i} y2={9} class="grid-line-thin" stroke-width="0.02" />
 							<line x1={0} y1={i} x2={9} y2={i} class="grid-line-thin" stroke-width="0.02" />
 						{/each}
 						<!-- thick lines -->
-						{#each [3, 6] as i}
+						{#each [3, 6] as i (i)}
 							<line x1={i} y1={0} x2={i} y2={9} class="stroke-accent" stroke-width="0.06" />
 							<line x1={0} y1={i} x2={9} y2={i} class="stroke-accent" stroke-width="0.06" />
 						{/each}
 					</svg>
 					<div class="row grid h-full w-full grid-cols-9 grid-rows-9">
 						{#if sudokuStore.sudoku}
-							{#each sudokuStore.sudoku as row, i}
-								{#each row as cell, j}
+							{#each sudokuStore.sudoku as row, i (i)}
+								{#each row as cell, j (j)}
 									<div
 										class={[
 											'cell',
@@ -261,7 +262,7 @@
 												<div
 													class="grid h-full w-full grid-cols-3 grid-rows-3 place-items-center text-xs leading-none"
 												>
-													{#each { length: 9 } as _, x}
+													{#each { length: 9 } as _, x (x)}
 														{#if cell.notes.length > 0 && cell.notes.includes(x + 1)}
 															<div class="text-xs leading-none">{x + 1}</div>
 														{:else}
@@ -282,7 +283,7 @@
 
 		<div>
 			<div class="digits mx-auto mb-8 grid w-min gap-4">
-				{#each { length: 9 } as _, i}
+				{#each { length: 9 } as _, i (i)}
 					<button
 						onclick={() => {
 							setSudokuCell(i + 1);

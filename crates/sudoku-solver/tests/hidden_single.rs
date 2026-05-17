@@ -12,8 +12,14 @@ fn finds_hidden_single_in_row() {
     // so in row 0 the digit 9 can only go in column 0.
     // (R1C1 has many other candidates, so naked single would not fire.)
     let placements = [
-        (3, 1), (6, 2), (1, 3), (4, 4),
-        (7, 5), (2, 6), (5, 7), (8, 8),
+        (3, 1),
+        (6, 2),
+        (1, 3),
+        (4, 4),
+        (7, 5),
+        (2, 6),
+        (5, 7),
+        (8, 8),
     ];
     let givens: Vec<(CellId, u8)> = placements
         .iter()
@@ -28,7 +34,9 @@ fn finds_hidden_single_in_row() {
         c.propagate(&mut board);
     }
 
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
     let deduction = HiddenSingle
         .find(&board, &ctx)
         .expect("expected to find a hidden single for 9 at R1C1");

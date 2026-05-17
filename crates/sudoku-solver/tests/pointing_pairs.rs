@@ -18,7 +18,9 @@ fn finds_pointing_pair_in_box_locked_to_row() {
     }
 
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     let deduction = PointingPairs
         .find(&board, &ctx)
@@ -26,8 +28,6 @@ fn finds_pointing_pair_in_box_locked_to_row() {
 
     assert!(deduction.placements.is_empty());
 
-    let expected: Vec<(CellId, u8)> = (3..=8u8)
-        .map(|c| (CellId::from_rc(2, c), 5))
-        .collect();
+    let expected: Vec<(CellId, u8)> = (3..=8u8).map(|c| (CellId::from_rc(2, c), 5)).collect();
     assert_eq!(deduction.eliminations, expected);
 }

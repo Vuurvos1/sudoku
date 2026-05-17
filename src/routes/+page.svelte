@@ -4,6 +4,7 @@
 	import InfoDialog from '$lib/components/InfoDialog.svelte';
 	import logo from '$lib/assets/logo.svg';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	const difficulties = {
 		beginner: 10,
@@ -51,7 +52,7 @@
 			<h2>Difficulty</h2>
 
 			<select bind:value={selectedDifficulty}>
-				{#each Object.entries(difficulties) as [key, value]}
+				{#each Object.entries(difficulties) as [key, value] (key)}
 					<option {value}>{key}</option>
 				{/each}
 			</select>
@@ -62,7 +63,7 @@
 		<button
 			onclick={() => {
 				sudokuStore.generate(selectedDifficulty);
-				goto('/game');
+				goto(resolve('/game'));
 			}}
 			class="inline-block rounded-full border-2 px-6 py-2"
 		>
@@ -72,7 +73,7 @@
 		{#if sudokuStore.sudoku}
 			<button
 				onclick={() => {
-					goto('/game');
+					goto(resolve('/game'));
 				}}
 				class="mt-4 inline-block rounded-full border-2 px-6 py-2"
 			>

@@ -10,32 +10,16 @@ use sudoku_solver::{
 // An easy puzzle derived from a complete grid by erasing ~22 cells.
 // Solvable with naked + hidden singles + propagation only.
 const EASY: [u8; 81] = [
-    5, 3, 4, 6, 7, 8, 9, 1, 2,
-    6, 7, 0, 0, 9, 5, 3, 0, 8,
-    1, 0, 8, 3, 0, 2, 0, 6, 7,
-
-    8, 0, 9, 7, 6, 0, 4, 2, 0,
-    4, 2, 0, 8, 5, 0, 7, 9, 1,
-    0, 1, 3, 9, 0, 4, 8, 0, 6,
-
-    9, 0, 1, 0, 3, 7, 2, 8, 0,
-    0, 8, 7, 4, 0, 9, 6, 3, 0,
-    3, 4, 5, 2, 8, 0, 0, 7, 9,
+    5, 3, 4, 6, 7, 8, 9, 1, 2, 6, 7, 0, 0, 9, 5, 3, 0, 8, 1, 0, 8, 3, 0, 2, 0, 6, 7, 8, 0, 9, 7, 6,
+    0, 4, 2, 0, 4, 2, 0, 8, 5, 0, 7, 9, 1, 0, 1, 3, 9, 0, 4, 8, 0, 6, 9, 0, 1, 0, 3, 7, 2, 8, 0, 0,
+    8, 7, 4, 0, 9, 6, 3, 0, 3, 4, 5, 2, 8, 0, 0, 7, 9,
 ];
 
 // A medium puzzle that exercises pointing pairs and box/line reduction.
 const MEDIUM: [u8; 81] = [
-    0, 0, 0, 2, 6, 0, 7, 0, 1,
-    6, 8, 0, 0, 7, 0, 0, 9, 0,
-    1, 9, 0, 0, 0, 4, 5, 0, 0,
-
-    8, 2, 0, 1, 0, 0, 0, 4, 0,
-    0, 0, 4, 6, 0, 2, 9, 0, 0,
-    0, 5, 0, 0, 0, 3, 0, 2, 8,
-
-    0, 0, 9, 3, 0, 0, 0, 7, 4,
-    0, 4, 0, 0, 5, 0, 0, 3, 6,
-    7, 0, 3, 0, 1, 8, 0, 0, 0,
+    0, 0, 0, 2, 6, 0, 7, 0, 1, 6, 8, 0, 0, 7, 0, 0, 9, 0, 1, 9, 0, 0, 0, 4, 5, 0, 0, 8, 2, 0, 1, 0,
+    0, 0, 4, 0, 0, 0, 4, 6, 0, 2, 9, 0, 0, 0, 5, 0, 0, 0, 3, 0, 2, 8, 0, 0, 9, 3, 0, 0, 0, 7, 4, 0,
+    4, 0, 0, 5, 0, 0, 3, 6, 7, 0, 3, 0, 1, 8, 0, 0, 0,
 ];
 
 fn build_solver() -> Solver {
@@ -60,7 +44,9 @@ fn assert_solvable(label: &str, puzzle: &[u8; 81], solver: &Solver, ctx: &Solver
 fn bench_solve(c: &mut Criterion) {
     let constraints = standard_constraints();
     let solver = build_solver();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     // Sanity check: bail out loudly if a puzzle isn't solvable with the current
     // strategy set, so a "stuck" run can't masquerade as a fast solve.

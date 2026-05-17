@@ -27,7 +27,9 @@ fn finds_swordfish_in_rows() {
     remove_from(&mut board, 6, [4, 7]);
 
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     let deduction = Fish::<3>
         .find(&board, &ctx)

@@ -24,7 +24,9 @@ fn finds_y_wing() {
     }
 
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     let deduction = YWing
         .find(&board, &ctx)
@@ -35,8 +37,6 @@ fn finds_y_wing() {
 
     // R4C5 (3,4) sees both wings (shares row 3 with wing2, column 4 with wing1)
     // and has candidate 5, so 5 should be eliminated
-    let expected: Vec<(CellId, u8)> = vec![
-        (CellId::from_rc(3, 4), 5),
-    ];
+    let expected: Vec<(CellId, u8)> = vec![(CellId::from_rc(3, 4), 5)];
     assert_eq!(deduction.eliminations, expected);
 }

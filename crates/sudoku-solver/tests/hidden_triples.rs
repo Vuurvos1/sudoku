@@ -30,7 +30,9 @@ fn finds_hidden_triple_in_row() {
     }
 
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     let deduction = HiddenSubset::<3>
         .find(&board, &ctx)

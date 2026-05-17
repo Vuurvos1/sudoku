@@ -24,7 +24,9 @@ fn finds_naked_triple_in_row() {
     }
 
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     let deduction = NakedSubset::<3>
         .find(&board, &ctx)
@@ -35,11 +37,13 @@ fn finds_naked_triple_in_row() {
 
     // Should eliminate 2, 5, 8 from R1C4..R1C9
     let expected: Vec<(CellId, u8)> = (3..9u8)
-        .flat_map(|c| [
-            (CellId::from_rc(0, c), 2),
-            (CellId::from_rc(0, c), 5),
-            (CellId::from_rc(0, c), 8),
-        ])
+        .flat_map(|c| {
+            [
+                (CellId::from_rc(0, c), 2),
+                (CellId::from_rc(0, c), 5),
+                (CellId::from_rc(0, c), 8),
+            ]
+        })
         .collect();
     assert_eq!(deduction.eliminations, expected);
 }

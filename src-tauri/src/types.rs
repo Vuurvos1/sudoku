@@ -51,24 +51,45 @@ pub fn hint_response_from(d: &Deduction) -> HintResponse {
         difficulty: d.difficulty,
         summary: d.explanation.summary.clone(),
         detail: d.explanation.detail.clone(),
-        placements: d.placements.iter().map(|&(cell, digit)| CellAction {
-            cell: cell.0,
-            digit,
-        }).collect(),
-        eliminations: d.eliminations.iter().map(|&(cell, digit)| CellAction {
-            cell: cell.0,
-            digit,
-        }).collect(),
-        highlights: d.explanation.highlights.iter().map(|h| HighlightGroup {
-            cells: h.cells.iter().map(|c| HighlightCell {
-                cell: c.cell.0,
-                role: role_to_string(&c.role),
-            }).collect(),
-            candidates: h.candidates.iter().map(|c| HighlightCandidate {
-                cell: c.cell.0,
-                digit: c.digit,
-                role: role_to_string(&c.role),
-            }).collect(),
-        }).collect(),
+        placements: d
+            .placements
+            .iter()
+            .map(|&(cell, digit)| CellAction {
+                cell: cell.0,
+                digit,
+            })
+            .collect(),
+        eliminations: d
+            .eliminations
+            .iter()
+            .map(|&(cell, digit)| CellAction {
+                cell: cell.0,
+                digit,
+            })
+            .collect(),
+        highlights: d
+            .explanation
+            .highlights
+            .iter()
+            .map(|h| HighlightGroup {
+                cells: h
+                    .cells
+                    .iter()
+                    .map(|c| HighlightCell {
+                        cell: c.cell.0,
+                        role: role_to_string(&c.role),
+                    })
+                    .collect(),
+                candidates: h
+                    .candidates
+                    .iter()
+                    .map(|c| HighlightCandidate {
+                        cell: c.cell.0,
+                        digit: c.digit,
+                        role: role_to_string(&c.role),
+                    })
+                    .collect(),
+            })
+            .collect(),
     }
 }

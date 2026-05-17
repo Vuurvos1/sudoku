@@ -27,7 +27,9 @@ fn solve_sudoku(sudoku_line: String) -> Result<Vec<u8>, String> {
 
     let mut board = Board::from_line(&sudoku_line);
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
     let solver = Solver::default();
 
     if let SolveResult::Solved(_) = solver.solve(&mut board, &ctx) {
@@ -37,8 +39,8 @@ fn solve_sudoku(sudoku_line: String) -> Result<Vec<u8>, String> {
     }
 
     // Fallback: external crate brute-force solver
-    let sudoku = Sudoku::from_str_line(&sudoku_line)
-        .map_err(|e| format!("Invalid puzzle: {}", e))?;
+    let sudoku =
+        Sudoku::from_str_line(&sudoku_line).map_err(|e| format!("Invalid puzzle: {}", e))?;
     match sudoku.solution() {
         Some(solution) => Ok(solution.to_bytes().to_vec()),
         None => Err("No solution found".to_string()),
@@ -53,7 +55,9 @@ fn hint_sudoku(sudoku_line: String) -> Result<types::HintResponse, String> {
 
     let mut board = Board::from_line(&sudoku_line);
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
     let solver = Solver::default();
 
     match solver.hint(&mut board, &ctx) {
@@ -76,7 +80,12 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![generate_sudoku, solve_sudoku, hint_sudoku, get_peers])
+        .invoke_handler(tauri::generate_handler![
+            generate_sudoku,
+            solve_sudoku,
+            hint_sudoku,
+            get_peers
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

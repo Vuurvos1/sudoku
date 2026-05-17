@@ -19,7 +19,9 @@ fn finds_x_wing_in_rows() {
     }
 
     let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext {
+        constraints: &constraints,
+    };
 
     let deduction = Fish::<2>
         .find(&board, &ctx)

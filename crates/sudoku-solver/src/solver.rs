@@ -1,7 +1,11 @@
-use crate::{board::Board, constraint::Constraint, strategy::{Deduction, Strategy}};
 use crate::strategies::{
-    NakedSingle, HiddenSingle, PointingPairs, BoxLineReduction,
-    NakedSubset, HiddenSubset, Fish, YWing,
+    BoxLineReduction, Fish, HiddenSingle, HiddenSubset, NakedSingle, NakedSubset, PointingPairs,
+    YWing,
+};
+use crate::{
+    board::Board,
+    constraint::Constraint,
+    strategy::{Deduction, Strategy},
 };
 
 pub struct SolverContext<'a> {
