@@ -14,7 +14,7 @@ val tauriProperties = Properties().apply {
 }
 
 android {
-    compileSdk = 34
+    compileSdk = 36
     namespace = "com.tauri_app.app"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
