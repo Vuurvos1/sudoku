@@ -23,28 +23,31 @@ export type HintResponse = {
 	}[];
 };
 
-function createSudokuStore() {
-	const store = new LazyStore('oneSudoku.bin');
+export class SudokuStore {
+	#store = new LazyStore('oneSudoku.bin');
 
-	let sudoku = $state<Sudoku | null>(null);
-	let solved = $state<number[][] | null>(null);
-	let lastHint = $state<HintResponse | null>(null);
-	let peerMap = $state<number[][] | null>(null);
+	sudoku = $state<Sudoku | null>(null);
+	solved = $state<number[][] | null>(null);
+	lastHint = $state<HintResponse | null>(null);
+	peerMap = $state<number[][] | null>(null);
 
-	// Fetch the peer map from the constraint system (cached, only needs to be called once per puzzle type)
-	invoke<number[][]>('get_peers').then((res) => {
-		peerMap = res;
-	});
+	constructor() {
+		invoke<number[][]>('get_peers').then((res) => {
+			this.peerMap = res;
+		});
 
-	async function generate(difficulty: number) {
+		this.load();
+	}
+
+	async generate(difficulty: number) {
 		console.info('generate', difficulty);
 
 		const sudokuString = await invoke<string>('generate_sudoku');
 		console.info('sudokuString', sudokuString);
 
 		const solvedRes = await invoke<number[]>('solve_sudoku', { sudokuLine: sudokuString });
-		solved = Array.from({ length: 9 }, (_, i) => solvedRes.slice(i * 9, i * 9 + 9));
-		console.info('solved', solved);
+		this.solved = Array.from({ length: 9 }, (_, i) => solvedRes.slice(i * 9, i * 9 + 9));
+		console.info('solved', this.solved);
 
 		const grid: Sudoku = Array.from({ length: 9 }, () =>
 			Array(9)
@@ -70,83 +73,56 @@ function createSudokuStore() {
 			grid[row][col].fixed = true;
 		}
 
-		sudoku = grid;
-		save();
+		this.sudoku = grid;
+		this.save();
 		return grid;
 	}
 
-	async function save() {
-		await store.set('sudoku', sudoku);
-		await store.save();
+	async save() {
+		await this.#store.set('sudoku', this.sudoku);
+		await this.#store.save();
 	}
 
-	async function load() {
-		sudoku = (await store.get<Sudoku>('sudoku')) ?? null;
+	async load() {
+		this.sudoku = (await this.#store.get<Sudoku>('sudoku')) ?? null;
 
-		if (!sudoku) return;
+		if (!this.sudoku) return;
 
-		const sudokuLine = sudoku
+		const sudokuLine = this.sudoku
 			.map((row) => row.map((cell) => (cell.value > 0 ? cell.value : '.')).join(''))
 			.join('');
 
 		const solvedRes = await invoke<number[]>('solve_sudoku', { sudokuLine });
-		solved = Array.from({ length: 9 }, (_, i) => solvedRes.slice(i * 9, i * 9 + 9));
+		this.solved = Array.from({ length: 9 }, (_, i) => solvedRes.slice(i * 9, i * 9 + 9));
 	}
 
-	function clear() {
-		sudoku = null;
+	clear() {
+		this.sudoku = null;
 	}
 
-	async function hint() {
-		if (!sudoku) return;
+	async hint() {
+		if (!this.sudoku) return;
 
-		const sudokuLine = sudoku
+		const sudokuLine = this.sudoku
 			.map((row) => row.map((cell) => (cell.value > 0 ? cell.value : '.')).join(''))
 			.join('');
 
 		try {
-			lastHint = await invoke<HintResponse>('hint_sudoku', { sudokuLine });
+			this.lastHint = await invoke<HintResponse>('hint_sudoku', { sudokuLine });
 		} catch (e) {
 			console.warn('No hint available:', e);
-			lastHint = null;
+			this.lastHint = null;
 		}
 	}
 
-	load();
-
-	function copy(): Sudoku {
-		return structuredClone($state.snapshot(sudoku)) as Sudoku;
+	copy(): Sudoku {
+		return structuredClone($state.snapshot(this.sudoku)) as Sudoku;
 	}
 
-	function restore(grid: Sudoku) {
-		sudoku = grid;
-		save();
+	restore(sudoku: Sudoku) {
+		this.sudoku = sudoku;
+		this.save();
 	}
-
-	return {
-		get sudoku() {
-			return sudoku;
-		},
-		set sudoku(grid: Sudoku | null) {
-			sudoku = grid;
-		},
-		get solved() {
-			return solved;
-		},
-		get lastHint() {
-			return lastHint;
-		},
-		get peerMap() {
-			return peerMap;
-		},
-		generate,
-		save,
-		load,
-		clear,
-		hint,
-		copy,
-		restore
-	};
 }
 
-export const sudokuStore = createSudokuStore();
+export const sudokuStore = new SudokuStore();
