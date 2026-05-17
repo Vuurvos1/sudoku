@@ -18,7 +18,8 @@
 	{#if open}
 		<div
 			transition:fade={{ duration: 150 }}
-			class="fixed inset-4 z-40 rounded-lg border border-accent bg-background p-4"
+			class="fixed inset-4 z-40 overflow-y-auto rounded-lg border border-accent bg-background p-4"
+			style="top: calc(1rem + env(safe-area-inset-top)); bottom: calc(1rem + env(safe-area-inset-bottom))"
 		>
 			{@render children?.()}
 

@@ -394,7 +394,7 @@
 	}
 
 	.digit-btn {
-		@apply grid h-12 w-12 place-items-center rounded-full border border-text;
+		@apply grid h-12 w-12 place-items-center rounded-full border border-text bg-transparent;
 	}
 
 	.option-btn {
