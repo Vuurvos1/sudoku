@@ -1,7 +1,7 @@
 {
   "productName": "one-sudoku",
   "version": "0.1.0",
-  "identifier": "com.tauri-app.app",
+  "identifier": "com.onesudoku.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",

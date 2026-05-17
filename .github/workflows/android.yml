@@ -1,24 +1,7 @@
 name: Android
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - 'src-tauri/**'
-      - 'crates/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/android.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'src/**'
-      - 'src-tauri/**'
-      - 'crates/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/android.yml'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

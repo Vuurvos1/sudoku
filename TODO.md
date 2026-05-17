@@ -1,9 +1,8 @@
-- Toggle remaining digit amount in settings
-
 App features
 
+- Settings
+  - Toggle remaining digit amount in settings
 - Daily puzzle (medium-hard) show difficulty?
-- Variant
 - Hints
 - Timer
 - Board
