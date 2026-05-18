@@ -22,7 +22,7 @@
 
 	let selectedCells = $state(new Set<number>());
 	const primaryCell = $derived(
-		selectedCells.size === 1 ? selectedCells.values().next().value ?? null : null
+		selectedCells.size === 1 ? (selectedCells.values().next().value ?? null) : null
 	);
 	let isDragging = $state(false);
 	let dragMode = $state<'add' | 'remove'>('add');
