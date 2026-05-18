@@ -179,6 +179,17 @@
 		}
 	}
 
+	function remainingCount(digit: number): number {
+		if (!sudokuStore.sudoku) return 9;
+		let count = 0;
+		for (const row of sudokuStore.sudoku) {
+			for (const cell of row) {
+				if (cell.value === digit) count++;
+			}
+		}
+		return 9 - count;
+	}
+
 	function handleUndo() {
 		const state = history.undo();
 		if (state) sudokuStore.restore(state);
@@ -360,7 +371,7 @@
 							<span class="relative">
 								{i + 1}
 								{#if settingsStore.settings.showRemainingDigits}
-									<sup class="absolute -right-[7px] top-1">2</sup>
+									<sup class="absolute -right-[7px] top-1">{remainingCount(i + 1)}</sup>
 								{/if}
 							</span>
 						{/if}
