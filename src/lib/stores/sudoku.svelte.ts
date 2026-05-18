@@ -30,6 +30,21 @@ export class SudokuStore {
 	solved = $state<number[][] | null>(null);
 	lastHint = $state<HintResponse | null>(null);
 	peerMap = $state<number[][] | null>(null);
+	startTime = $state<number | null>(null);
+	endTime = $state<number | null>(null);
+
+	get isSolved(): boolean {
+		if (!this.sudoku || !this.solved) return false;
+
+		for (let i = 0; i < 9; i++) {
+			for (let j = 0; j < 9; j++) {
+				if (this.sudoku[i][j].value === 0) return false;
+				if (this.sudoku[i][j].value !== this.solved[i][j]) return false;
+			}
+		}
+
+		return true;
+	}
 
 	constructor() {
 		invoke<number[][]>('get_peers').then((res) => {
@@ -41,6 +56,10 @@ export class SudokuStore {
 
 	async generate(difficulty: number) {
 		console.info('generate', difficulty);
+		this.sudoku = null;
+		this.solved = null;
+		this.startTime = Date.now();
+		this.endTime = null;
 
 		const sudokuString = await invoke<string>('generate_sudoku');
 		console.info('sudokuString', sudokuString);
@@ -80,11 +99,15 @@ export class SudokuStore {
 
 	async save() {
 		await this.#store.set('sudoku', this.sudoku);
+		await this.#store.set('startTime', this.startTime);
+		await this.#store.set('endTime', this.endTime);
 		await this.#store.save();
 	}
 
 	async load() {
 		this.sudoku = (await this.#store.get<Sudoku>('sudoku')) ?? null;
+		this.startTime = (await this.#store.get<number>('startTime')) ?? null;
+		this.endTime = (await this.#store.get<number>('endTime')) ?? null;
 
 		if (!this.sudoku) return;
 

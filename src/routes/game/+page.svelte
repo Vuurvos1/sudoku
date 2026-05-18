@@ -12,6 +12,7 @@
 		LightbulbIcon
 	} from 'lucide-svelte';
 	import HintDialog from '$lib/components/HintDialog.svelte';
+	import GameFinishedDialog from '$lib/components/GameFinishedDialog.svelte';
 	import { CELL_COLORS, cellGradient } from '$lib/color';
 	import { resolve } from '$app/paths';
 
@@ -22,6 +23,48 @@
 	const selectedCell = $state({ row: -1, col: -1 });
 
 	let selectedNumber = $state(0);
+
+	let now = $state(Date.now());
+
+	$effect(() => {
+		if (sudokuStore.isSolved || !sudokuStore.startTime) return;
+
+		const interval = setInterval(() => {
+			now = Date.now();
+		}, 1000);
+
+		return () => clearInterval(interval);
+	});
+
+	function formatTime(ms: number): string {
+		const totalSeconds = Math.floor(ms / 1000);
+		const minutes = Math.floor(totalSeconds / 60);
+		const seconds = totalSeconds % 60;
+		return `${minutes}m ${seconds}s`;
+	}
+
+	const elapsedDisplay = $derived(() => {
+		if (!sudokuStore.startTime) return '';
+		const end = sudokuStore.endTime ?? now;
+		return formatTime(end - sudokuStore.startTime);
+	});
+
+	let boardSolved = $state(false);
+
+	$effect(() => {
+		if (sudokuStore.isSolved && !sudokuStore.endTime) {
+			sudokuStore.endTime = Date.now();
+			sudokuStore.save();
+
+			selectedCell.row = -1;
+			selectedCell.col = -1;
+			boardSolved = true;
+
+			setTimeout(() => {
+				dialogState.gameFinishedOpen = true;
+			}, 1000);
+		}
+	});
 
 	function handleCellClick(col: number, row: number) {
 		if (selectedCell.row === row && selectedCell.col === col) {
@@ -120,6 +163,22 @@
 		return peerMap[selectedIndex].includes(cellIndex);
 	}
 
+	function devAlmostSolve() {
+		if (!sudokuStore.sudoku || !sudokuStore.solved) return;
+		let skipped = false;
+		for (let i = 0; i < 9; i++) {
+			for (let j = 0; j < 9; j++) {
+				if (sudokuStore.sudoku[i][j].fixed) continue;
+				if (!skipped) {
+					skipped = true;
+					sudokuStore.sudoku[i][j].value = 0;
+					continue;
+				}
+				sudokuStore.sudoku[i][j].value = sudokuStore.solved[i][j];
+			}
+		}
+	}
+
 	function handleUndo() {
 		const state = history.undo();
 		if (state) sudokuStore.restore(state);
@@ -143,6 +202,9 @@
 		} else if (key === 'y' && (ev.ctrlKey || ev.metaKey)) {
 			ev.preventDefault();
 			handleRedo();
+		} else if (import.meta.env.DEV && key === 'd' && (ev.ctrlKey || ev.metaKey) && ev.shiftKey) {
+			ev.preventDefault();
+			devAlmostSolve();
 		}
 	}}
 />
@@ -157,7 +219,7 @@
 			</div>
 
 			{#if settingsStore.settings.showTimer}
-				<h3 class="font-bold">2m 12s</h3>
+				<h3 class="font-bold">{elapsedDisplay()}</h3>
 			{/if}
 
 			<div class="flex w-32 flex-row items-center justify-end gap-4">
@@ -206,7 +268,7 @@
 							<line x1={0} y1={i} x2={9} y2={i} class="stroke-accent" stroke-width="0.06" />
 						{/each}
 					</svg>
-					<div class="row grid h-full w-full grid-cols-9 grid-rows-9">
+					<div class={['row grid h-full w-full grid-cols-9 grid-rows-9', { solved: boardSolved }]}>
 						{#if sudokuStore.sudoku}
 							{#each sudokuStore.sudoku as row, i (i)}
 								{#each row as cell, j (j)}
@@ -237,6 +299,7 @@
 												};
 											})()
 										]}
+										style:animation-delay={boardSolved ? `${(i + j) * 40}ms` : ''}
 									>
 										{#if cell.colors.length > 0}
 											<div
@@ -384,6 +447,7 @@
 </div>
 
 <HintDialog bind:open={dialogState.hintOpen} hint={sudokuStore.lastHint} />
+<GameFinishedDialog bind:open={dialogState.gameFinishedOpen} />
 
 <style lang="postcss">
 	/* .sudoku * * {
@@ -412,5 +476,24 @@
 
 	.cell.highlighted {
 		@apply bg-accent/20;
+	}
+
+	@keyframes cell-celebrate {
+		0% {
+			background-color: transparent;
+			transform: scale(1);
+		}
+		50% {
+			background-color: hsl(var(--color-accent-hsl) / 0.4);
+			transform: scale(1.05);
+		}
+		100% {
+			background-color: transparent;
+			transform: scale(1);
+		}
+	}
+
+	.solved .cell {
+		animation: cell-celebrate 0.4s ease-out both;
 	}
 </style>
