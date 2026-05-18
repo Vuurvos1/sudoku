@@ -15,12 +15,13 @@
 	import GameFinishedDialog from '$lib/components/GameFinishedDialog.svelte';
 	import { CELL_COLORS, cellGradient } from '$lib/color';
 	import { resolve } from '$app/paths';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
 
 	const history = new HistoryStore<ReturnType<typeof sudokuStore.copy>>();
 
-	let selectedCells = $state(new Set<number>());
+	let selectedCells = new SvelteSet<number>();
 	const primaryCell = $derived(
 		selectedCells.size === 1 ? (selectedCells.values().next().value ?? null) : null
 	);
@@ -81,7 +82,7 @@
 			sudokuStore.endTime = Date.now();
 			sudokuStore.save();
 
-			selectedCells = new Set();
+			selectedCells.clear();
 			boardSolved = true;
 
 			setTimeout(() => {
@@ -99,7 +100,6 @@
 			} else {
 				selectedCells.add(index);
 			}
-			selectedCells = new Set(selectedCells);
 			return;
 		}
 
@@ -109,13 +109,11 @@
 		if (selectedCells.size === 1 && selectedCells.has(index)) {
 			// clicking the only selected cell — deselect
 			selectedCells.clear();
-			selectedCells = new Set(selectedCells);
 			return;
 		}
 
 		selectedCells.clear();
 		selectedCells.add(index);
-		selectedCells = new Set(selectedCells);
 	}
 
 	function handlePointerMove(_ev: PointerEvent, col: number, row: number) {
@@ -126,12 +124,10 @@
 		if (dragMode === 'add') {
 			if (!selectedCells.has(index)) {
 				selectedCells.add(index);
-				selectedCells = new Set(selectedCells);
 			}
 		} else {
 			if (selectedCells.has(index)) {
 				selectedCells.delete(index);
-				selectedCells = new Set(selectedCells);
 			}
 		}
 	}
