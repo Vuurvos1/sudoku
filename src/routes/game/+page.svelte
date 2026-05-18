@@ -20,7 +20,32 @@
 
 	const history = new HistoryStore<ReturnType<typeof sudokuStore.copy>>();
 
-	const selectedCell = $state({ row: -1, col: -1 });
+	let selectedCells = $state(new Set<number>());
+	const primaryCell = $derived(
+		selectedCells.size === 1 ? selectedCells.values().next().value ?? null : null
+	);
+	let isDragging = $state(false);
+	let dragMode = $state<'add' | 'remove'>('add');
+
+	function cellIndex(row: number, col: number): number {
+		return row * 9 + col;
+	}
+
+	function cellFromIndex(index: number): { row: number; col: number } {
+		return { row: Math.floor(index / 9), col: index % 9 };
+	}
+
+	function selectionBorders(row: number, col: number): string {
+		const index = cellIndex(row, col);
+		if (!selectedCells.has(index)) return '';
+
+		const top = row > 0 && selectedCells.has(cellIndex(row - 1, col)) ? '' : 'border-t-2';
+		const bottom = row < 8 && selectedCells.has(cellIndex(row + 1, col)) ? '' : 'border-b-2';
+		const left = col > 0 && selectedCells.has(cellIndex(row, col - 1)) ? '' : 'border-l-2';
+		const right = col < 8 && selectedCells.has(cellIndex(row, col + 1)) ? '' : 'border-r-2';
+
+		return [top, bottom, left, right].filter(Boolean).join(' ');
+	}
 
 	let selectedNumber = $state(0);
 
@@ -56,8 +81,7 @@
 			sudokuStore.endTime = Date.now();
 			sudokuStore.save();
 
-			selectedCell.row = -1;
-			selectedCell.col = -1;
+			selectedCells = new Set();
 			boardSolved = true;
 
 			setTimeout(() => {
@@ -66,22 +90,62 @@
 		}
 	});
 
-	function handleCellClick(col: number, row: number) {
-		if (selectedCell.row === row && selectedCell.col === col) {
-			selectedCell.row = -1;
-			selectedCell.col = -1;
+	function handlePointerDown(ev: PointerEvent, col: number, row: number) {
+		const index = cellIndex(row, col);
+
+		if (ev.ctrlKey || ev.metaKey) {
+			if (selectedCells.has(index)) {
+				selectedCells.delete(index);
+			} else {
+				selectedCells.add(index);
+			}
+			selectedCells = new Set(selectedCells);
+			return;
+		}
+
+		isDragging = true;
+		dragMode = 'add';
+
+		if (selectedCells.size === 1 && selectedCells.has(index)) {
+			// clicking the only selected cell — deselect
+			selectedCells.clear();
+			selectedCells = new Set(selectedCells);
+			return;
+		}
+
+		selectedCells.clear();
+		selectedCells.add(index);
+		selectedCells = new Set(selectedCells);
+	}
+
+	function handlePointerMove(_ev: PointerEvent, col: number, row: number) {
+		if (!isDragging) return;
+
+		const index = cellIndex(row, col);
+
+		if (dragMode === 'add') {
+			if (!selectedCells.has(index)) {
+				selectedCells.add(index);
+				selectedCells = new Set(selectedCells);
+			}
 		} else {
-			selectedCell.row = row;
-			selectedCell.col = col;
+			if (selectedCells.has(index)) {
+				selectedCells.delete(index);
+				selectedCells = new Set(selectedCells);
+			}
 		}
 	}
 
-	function handleCellKeydown(ev: KeyboardEvent, col: number, row: number) {
+	function handlePointerUp() {
+		isDragging = false;
+	}
+
+	function handleCellKeydown(ev: KeyboardEvent) {
 		const parsed = parseInt(ev.key);
 		if (parsed > 0 && parsed <= 9) {
 			setSudokuCell(parsed);
 		} else if (ev.key === 'Backspace' || ev.key === 'Delete') {
-			clearCell(col, row);
+			clearCell();
 		}
 	}
 
@@ -93,51 +157,88 @@
 
 	function setSudokuCell(num: number) {
 		if (!sudokuStore.sudoku) return;
-
-		const { col, row } = selectedCell;
-
-		if (col < 0 || row < 0) return;
-
-		if (mode !== 'color' && sudokuStore.sudoku[row][col].fixed) return;
+		if (selectedCells.size === 0) return;
 
 		pushInitialState();
 
-		if (mode === 'fill') {
-			sudokuStore.sudoku[row][col].value = num;
-			sudokuStore.sudoku[row][col].notes = [];
+		const isMulti = selectedCells.size > 1;
+		const effectiveMode = isMulti && mode === 'fill' ? 'note' : mode;
 
-			// clear matching notes from peers
-			const boxStartRow = Math.floor(row / 3) * 3;
-			const boxStartCol = Math.floor(col / 3) * 3;
-			for (let i = 0; i < 9; i++) {
-				sudokuStore.sudoku[row][i].notes = sudokuStore.sudoku[row][i].notes.filter(
-					(n) => n !== num
-				);
-				sudokuStore.sudoku[i][col].notes = sudokuStore.sudoku[i][col].notes.filter(
-					(n) => n !== num
-				);
-			}
-			for (let r = boxStartRow; r < boxStartRow + 3; r++) {
-				for (let c = boxStartCol; c < boxStartCol + 3; c++) {
-					sudokuStore.sudoku[r][c].notes = sudokuStore.sudoku[r][c].notes.filter((n) => n !== num);
+		if (isMulti) {
+			if (effectiveMode === 'note') {
+				const allHaveNote = [...selectedCells].every((idx) => {
+					const { row, col } = cellFromIndex(idx);
+					return sudokuStore.sudoku![row][col].notes.includes(num);
+				});
+
+				for (const idx of selectedCells) {
+					const { row, col } = cellFromIndex(idx);
+					const cell = sudokuStore.sudoku[row][col];
+					if (cell.fixed) continue;
+					if (allHaveNote) {
+						cell.notes = cell.notes.filter((n) => n !== num);
+					} else if (!cell.notes.includes(num)) {
+						cell.notes.push(num);
+					}
+				}
+			} else if (effectiveMode === 'color') {
+				const colorHex = CELL_COLORS[num - 1];
+				const allHaveColor = [...selectedCells].every((idx) => {
+					const { row, col } = cellFromIndex(idx);
+					return sudokuStore.sudoku![row][col].colors.includes(colorHex);
+				});
+
+				for (const idx of selectedCells) {
+					const { row, col } = cellFromIndex(idx);
+					const cell = sudokuStore.sudoku[row][col];
+					if (allHaveColor) {
+						cell.colors = cell.colors.filter((c) => c !== colorHex);
+					} else if (!cell.colors.includes(colorHex)) {
+						cell.colors = [...cell.colors, colorHex];
+					}
 				}
 			}
-		} else if (mode === 'note') {
-			// add or remove if needed
-			if (sudokuStore.sudoku[row][col].notes.includes(num)) {
-				sudokuStore.sudoku[row][col].notes = sudokuStore.sudoku[row][col].notes.filter(
-					(i) => i !== num
-				);
-			} else {
-				sudokuStore.sudoku[row][col].notes.push(num);
-			}
-		} else if (mode === 'color') {
-			const colorHex = CELL_COLORS[num - 1];
+		} else {
+			const idx = [...selectedCells][0];
+			const { row, col } = cellFromIndex(idx);
 			const cell = sudokuStore.sudoku[row][col];
-			if (cell.colors.includes(colorHex)) {
-				cell.colors = cell.colors.filter((c) => c !== colorHex);
-			} else {
-				cell.colors = [...cell.colors, colorHex];
+
+			if (mode !== 'color' && cell.fixed) return;
+
+			if (mode === 'fill') {
+				cell.value = num;
+				cell.notes = [];
+
+				const boxStartRow = Math.floor(row / 3) * 3;
+				const boxStartCol = Math.floor(col / 3) * 3;
+				for (let i = 0; i < 9; i++) {
+					sudokuStore.sudoku[row][i].notes = sudokuStore.sudoku[row][i].notes.filter(
+						(n) => n !== num
+					);
+					sudokuStore.sudoku[i][col].notes = sudokuStore.sudoku[i][col].notes.filter(
+						(n) => n !== num
+					);
+				}
+				for (let r = boxStartRow; r < boxStartRow + 3; r++) {
+					for (let c = boxStartCol; c < boxStartCol + 3; c++) {
+						sudokuStore.sudoku[r][c].notes = sudokuStore.sudoku[r][c].notes.filter(
+							(n) => n !== num
+						);
+					}
+				}
+			} else if (mode === 'note') {
+				if (cell.notes.includes(num)) {
+					cell.notes = cell.notes.filter((i) => i !== num);
+				} else {
+					cell.notes.push(num);
+				}
+			} else if (mode === 'color') {
+				const colorHex = CELL_COLORS[num - 1];
+				if (cell.colors.includes(colorHex)) {
+					cell.colors = cell.colors.filter((c) => c !== colorHex);
+				} else {
+					cell.colors = [...cell.colors, colorHex];
+				}
 			}
 		}
 
@@ -145,22 +246,39 @@
 		sudokuStore.save();
 	}
 
-	function clearCell(col: number, row: number) {
+	function clearCell() {
 		if (!sudokuStore.sudoku) return;
+		if (selectedCells.size === 0) return;
 
 		pushInitialState();
-		sudokuStore.sudoku[row][col].value = 0;
+
+		for (const idx of selectedCells) {
+			const { row, col } = cellFromIndex(idx);
+			const cell = sudokuStore.sudoku[row][col];
+			if (cell.fixed) continue;
+
+			if (mode === 'color') {
+				cell.colors = [];
+			} else {
+				cell.value = 0;
+				cell.notes = [];
+			}
+		}
+
 		history.pushState(sudokuStore.copy());
 		sudokuStore.save();
 	}
 
-	function isPeer(row: number, col: number) {
-		if (selectedCell.row < 0 || selectedCell.col < 0) return false;
+	function isPeer(row: number, col: number): boolean {
+		if (selectedCells.size === 0) return false;
 		const peerMap = sudokuStore.peerMap;
 		if (!peerMap) return false;
-		const selectedIndex = selectedCell.row * 9 + selectedCell.col;
-		const cellIndex = row * 9 + col;
-		return peerMap[selectedIndex].includes(cellIndex);
+		const target = cellIndex(row, col);
+		if (selectedCells.has(target)) return false;
+		for (const selected of selectedCells) {
+			if (!peerMap[selected].includes(target)) return false;
+		}
+		return true;
 	}
 
 	function devAlmostSolve() {
@@ -202,6 +320,7 @@
 </script>
 
 <svelte:window
+	onpointerup={handlePointerUp}
 	onkeydown={(ev) => {
 		const key = ev.key.toLowerCase();
 		if (key === 'z' && (ev.ctrlKey || ev.metaKey) && ev.shiftKey) {
@@ -285,26 +404,30 @@
 								{#each row as cell, j (j)}
 									<div
 										class={[
-											'cell',
+											'cell border-accent',
+											selectionBorders(i, j),
 											(() => {
-												const isSelected = selectedCell.col === j && selectedCell.row === i;
-												const hasSelection = selectedCell.row >= 0 && selectedCell.col >= 0;
-												const selectedValue = hasSelection
-													? sudokuStore.sudoku[selectedCell.row][selectedCell.col].value
-													: 0;
+												const index = cellIndex(i, j);
+												const isSelected = selectedCells.has(index);
+												const hasSelection = selectedCells.size > 0;
+												const primaryValue =
+													hasSelection && primaryCell !== null
+														? sudokuStore.sudoku[Math.floor(primaryCell / 9)][primaryCell % 9].value
+														: 0;
 												const peer = isPeer(i, j);
+												const isSingle = selectedCells.size === 1;
 												const sameDigit =
-													hasSelection &&
-													selectedValue > 0 &&
-													cell.value === selectedValue &&
+													isSingle &&
+													primaryValue > 0 &&
+													cell.value === primaryValue &&
 													!isSelected;
 												const matchingNote =
-													hasSelection &&
-													selectedValue > 0 &&
-													cell.notes.includes(selectedValue) &&
+													isSingle &&
+													primaryValue > 0 &&
+													cell.notes.includes(primaryValue) &&
 													!isSelected;
 												return {
-													'selected bg-accent/60': isSelected,
+													'bg-accent/60': isSelected,
 													'bg-accent/20': !isSelected && (peer || sameDigit),
 													'bg-accent/10': !isSelected && !peer && !sameDigit && matchingNote
 												};
@@ -319,9 +442,10 @@
 											></div>
 										{/if}
 										<button
-											onkeydown={(ev) => handleCellKeydown(ev, j, i)}
-											onclick={() => handleCellClick(j, i)}
-											class="relative z-10 grid h-full w-full place-items-center"
+											onkeydown={handleCellKeydown}
+											onpointerdown={(ev) => handlePointerDown(ev, j, i)}
+											onpointermove={(ev) => handlePointerMove(ev, j, i)}
+											class="relative z-10 grid h-full w-full touch-none place-items-center"
 										>
 											{#if cell.value > 0}
 												<span
@@ -378,22 +502,7 @@
 					</button>
 				{/each}
 
-				<button
-					class="digit-btn"
-					onclick={() => {
-						if (mode === 'color') {
-							if (!sudokuStore.sudoku) return;
-							const { col, row } = selectedCell;
-							if (col < 0 || row < 0) return;
-							pushInitialState();
-							sudokuStore.sudoku[row][col].colors = [];
-							history.pushState(sudokuStore.copy());
-							sudokuStore.save();
-						} else {
-							setSudokuCell(0);
-						}
-					}}
-				>
+				<button class="digit-btn" onclick={() => clearCell()}>
 					<EraserIcon size="22" />
 				</button>
 			</div>
@@ -483,6 +592,23 @@
 
 	.cell {
 		@apply relative;
+		border: 2px solid transparent;
+	}
+
+	.cell.border-t-2 {
+		border-top-color: hsl(var(--color-accent-hsl));
+	}
+
+	.cell.border-b-2 {
+		border-bottom-color: hsl(var(--color-accent-hsl));
+	}
+
+	.cell.border-l-2 {
+		border-left-color: hsl(var(--color-accent-hsl));
+	}
+
+	.cell.border-r-2 {
+		border-right-color: hsl(var(--color-accent-hsl));
 	}
 
 	.cell.highlighted {
