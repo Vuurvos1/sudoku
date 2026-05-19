@@ -416,7 +416,10 @@
 					</svg>
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
-						class={['row grid h-full w-full grid-cols-9 grid-rows-9 touch-none', { solved: boardSolved }]}
+						class={[
+							'row grid h-full w-full touch-none grid-cols-9 grid-rows-9',
+							{ solved: boardSolved }
+						]}
 						onpointermove={handlePointerMove}
 					>
 						{#if sudokuStore.sudoku}
