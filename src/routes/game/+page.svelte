@@ -26,6 +26,9 @@
 		selectedCells.size === 1 ? (selectedCells.values().next().value ?? null) : null
 	);
 	let isDragging = $state(false);
+	let dragPending = $state(false);
+	let dragOrigin = $state<{ x: number; y: number }>({ x: 0, y: 0 });
+	const DRAG_THRESHOLD = 10; // px minimum distance before multi-select activates
 	let dragMode = $state<'add' | 'remove'>('add');
 
 	function cellIndex(row: number, col: number): number {
@@ -91,6 +94,12 @@
 		}
 	});
 
+	function getCellIndexFromPoint(x: number, y: number): number | null {
+		const el = document.elementFromPoint(x, y);
+		const cellAttr = el?.closest('[data-cell]')?.getAttribute('data-cell');
+		return cellAttr !== null && cellAttr !== undefined ? parseInt(cellAttr) : null;
+	}
+
 	function handlePointerDown(ev: PointerEvent, col: number, row: number) {
 		const index = cellIndex(row, col);
 
@@ -103,7 +112,8 @@
 			return;
 		}
 
-		isDragging = true;
+		dragPending = true;
+		dragOrigin = { x: ev.clientX, y: ev.clientY };
 		dragMode = 'add';
 
 		if (selectedCells.size === 1 && selectedCells.has(index)) {
@@ -116,10 +126,19 @@
 		selectedCells.add(index);
 	}
 
-	function handlePointerMove(_ev: PointerEvent, col: number, row: number) {
-		if (!isDragging) return;
+	function handlePointerMove(ev: PointerEvent) {
+		if (!isDragging && !dragPending) return;
 
-		const index = cellIndex(row, col);
+		if (dragPending && !isDragging) {
+			const dx = ev.clientX - dragOrigin.x;
+			const dy = ev.clientY - dragOrigin.y;
+			if (dx * dx + dy * dy < DRAG_THRESHOLD * DRAG_THRESHOLD) return;
+			isDragging = true;
+			dragPending = false;
+		}
+
+		const index = getCellIndexFromPoint(ev.clientX, ev.clientY);
+		if (index === null) return;
 
 		if (dragMode === 'add') {
 			if (!selectedCells.has(index)) {
@@ -134,6 +153,7 @@
 
 	function handlePointerUp() {
 		isDragging = false;
+		dragPending = false;
 	}
 
 	function handleCellKeydown(ev: KeyboardEvent) {
@@ -394,11 +414,16 @@
 							<line x1={0} y1={i} x2={9} y2={i} class="stroke-accent" stroke-width="0.06" />
 						{/each}
 					</svg>
-					<div class={['row grid h-full w-full grid-cols-9 grid-rows-9', { solved: boardSolved }]}>
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div
+						class={['row grid h-full w-full grid-cols-9 grid-rows-9 touch-none', { solved: boardSolved }]}
+						onpointermove={handlePointerMove}
+					>
 						{#if sudokuStore.sudoku}
 							{#each sudokuStore.sudoku as row, i (i)}
 								{#each row as cell, j (j)}
 									<div
+										data-cell={cellIndex(i, j)}
 										class={[
 											'cell border-accent',
 											selectionBorders(i, j),
@@ -440,8 +465,7 @@
 										<button
 											onkeydown={handleCellKeydown}
 											onpointerdown={(ev) => handlePointerDown(ev, j, i)}
-											onpointermove={(ev) => handlePointerMove(ev, j, i)}
-											class="relative z-10 grid h-full w-full touch-none place-items-center"
+											class="relative z-10 grid h-full w-full place-items-center"
 										>
 											{#if cell.value > 0}
 												<span
