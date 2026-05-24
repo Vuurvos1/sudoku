@@ -61,7 +61,7 @@ export class SudokuStore {
 		this.startTime = Date.now();
 		this.endTime = null;
 
-		const sudokuString = await invoke<string>('generate_sudoku');
+		const sudokuString = await invoke<string>('generate_sudoku', { difficulty });
 		console.info('sudokuString', sudokuString);
 
 		const solvedRes = await invoke<number[]>('solve_sudoku', { sudokuLine: sudokuString });

@@ -7,14 +7,13 @@
 	import { resolve } from '$app/paths';
 
 	const difficulties = {
-		beginner: 10,
-		easy: 15,
-		medium: 20,
-		hard: 30,
-		extreme: 40
+		easy: 1,
+		medium: 2,
+		hard: 3,
+		expert: 4
 	};
 
-	let selectedDifficulty = $state(difficulties.medium);
+	let selectedDifficulty = $state(difficulties.easy);
 </script>
 
 <header class="px-4 py-4 sm:px-6">

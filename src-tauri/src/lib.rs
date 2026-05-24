@@ -4,6 +4,7 @@ use sudoku::Sudoku;
 use sudoku_solver::{
     board::{Board, CellId},
     constraint::{all_peers, standard_constraints},
+    generator::{Difficulty, Generator},
     solver::{SolveResult, Solver, SolverContext},
 };
 
@@ -14,9 +15,28 @@ fn is_valid_sudoku_line(s: &str) -> bool {
 }
 
 #[tauri::command]
-fn generate_sudoku() -> String {
-    let s = Sudoku::generate();
-    s.to_string()
+fn generate_sudoku(difficulty: u8) -> Result<String, String> {
+    let diff = match difficulty {
+        1 => Difficulty::Easy,
+        2 => Difficulty::Medium,
+        3 => Difficulty::Hard,
+        4 => Difficulty::Expert,
+        _ => return Err(format!("Invalid difficulty: {}", difficulty)),
+    };
+
+    let mut gen = Generator::new();
+    let board = gen.generate(diff);
+
+    let line: String = (0..81)
+        .map(|i| {
+            board
+                .value(CellId(i))
+                .map(|d| (b'0' + d) as char)
+                .unwrap_or('.')
+        })
+        .collect();
+
+    Ok(line)
 }
 
 #[tauri::command]
