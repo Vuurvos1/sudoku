@@ -30,6 +30,7 @@
 	let dragOrigin = $state<{ x: number; y: number }>({ x: 0, y: 0 });
 	const DRAG_THRESHOLD = 10; // px minimum distance before multi-select activates
 	let dragMode = $state<'add' | 'remove'>('add');
+	let pendingClick = $state<number | null>(null);
 
 	function cellIndex(row: number, col: number): number {
 		return row * 9 + col;
@@ -39,16 +40,29 @@
 		return { row: Math.floor(index / 9), col: index % 9 };
 	}
 
-	function selectionBorders(row: number, col: number): string {
-		const index = cellIndex(row, col);
-		if (!selectedCells.has(index)) return '';
-
-		const top = row > 0 && selectedCells.has(cellIndex(row - 1, col)) ? '' : 'border-t-2';
-		const bottom = row < 8 && selectedCells.has(cellIndex(row + 1, col)) ? '' : 'border-b-2';
-		const left = col > 0 && selectedCells.has(cellIndex(row, col - 1)) ? '' : 'border-l-2';
-		const right = col < 8 && selectedCells.has(cellIndex(row, col + 1)) ? '' : 'border-r-2';
-
-		return [top, bottom, left, right].filter(Boolean).join(' ');
+	function selectionPath(): string {
+		const segments: string[] = [];
+		for (const idx of selectedCells) {
+			const row = Math.floor(idx / 9);
+			const col = idx % 9;
+			// top edge
+			if (row === 0 || !selectedCells.has(cellIndex(row - 1, col))) {
+				segments.push(`M${col},${row}L${col + 1},${row}`);
+			}
+			// bottom edge
+			if (row === 8 || !selectedCells.has(cellIndex(row + 1, col))) {
+				segments.push(`M${col},${row + 1}L${col + 1},${row + 1}`);
+			}
+			// left edge
+			if (col === 0 || !selectedCells.has(cellIndex(row, col - 1))) {
+				segments.push(`M${col},${row}L${col},${row + 1}`);
+			}
+			// right edge
+			if (col === 8 || !selectedCells.has(cellIndex(row, col + 1))) {
+				segments.push(`M${col + 1},${row}L${col + 1},${row + 1}`);
+			}
+		}
+		return segments.join('');
 	}
 
 	let selectedNumber = $state(0);
@@ -116,14 +130,14 @@
 		dragOrigin = { x: ev.clientX, y: ev.clientY };
 		dragMode = 'add';
 
-		if (selectedCells.size === 1 && selectedCells.has(index)) {
-			// clicking the only selected cell — deselect
+		if (selectedCells.has(index)) {
+			// defer until we know if it's a click or drag
+			pendingClick = index;
+		} else {
+			pendingClick = null;
 			selectedCells.clear();
-			return;
+			selectedCells.add(index);
 		}
-
-		selectedCells.clear();
-		selectedCells.add(index);
 	}
 
 	function handlePointerMove(ev: PointerEvent) {
@@ -135,10 +149,29 @@
 			if (dx * dx + dy * dy < DRAG_THRESHOLD * DRAG_THRESHOLD) return;
 			isDragging = true;
 			dragPending = false;
+
+			// drag started from an already-selected cell
+			if (pendingClick !== null) {
+				const currentIndex = getCellIndexFromPoint(ev.clientX, ev.clientY);
+				if (currentIndex !== pendingClick) {
+					// moved to a different cell — start fresh selection from origin
+					selectedCells.clear();
+					selectedCells.add(pendingClick);
+					pendingClick = null;
+				}
+				// still over the same cell — leave pendingClick for pointerUp to handle
+			}
 		}
 
 		const index = getCellIndexFromPoint(ev.clientX, ev.clientY);
 		if (index === null) return;
+
+		// pointer left the origin cell — commit the pending selection
+		if (pendingClick !== null && index !== pendingClick) {
+			selectedCells.clear();
+			selectedCells.add(pendingClick);
+			pendingClick = null;
+		}
 
 		if (dragMode === 'add') {
 			if (!selectedCells.has(index)) {
@@ -152,17 +185,17 @@
 	}
 
 	function handlePointerUp() {
+		if (pendingClick !== null) {
+			if (selectedCells.size === 1 && selectedCells.has(pendingClick)) {
+				selectedCells.clear();
+			} else {
+				selectedCells.clear();
+				selectedCells.add(pendingClick);
+			}
+			pendingClick = null;
+		}
 		isDragging = false;
 		dragPending = false;
-	}
-
-	function handleCellKeydown(ev: KeyboardEvent) {
-		const parsed = parseInt(ev.key);
-		if (parsed > 0 && parsed <= 9) {
-			setSudokuCell(parsed);
-		} else if (ev.key === 'Backspace' || ev.key === 'Delete') {
-			clearCell();
-		}
 	}
 
 	function pushInitialState() {
@@ -223,23 +256,27 @@
 
 			if (mode === 'fill') {
 				cell.value = num;
-				cell.notes = [];
 
-				const boxStartRow = Math.floor(row / 3) * 3;
-				const boxStartCol = Math.floor(col / 3) * 3;
-				for (let i = 0; i < 9; i++) {
-					sudokuStore.sudoku[row][i].notes = sudokuStore.sudoku[row][i].notes.filter(
-						(n) => n !== num
-					);
-					sudokuStore.sudoku[i][col].notes = sudokuStore.sudoku[i][col].notes.filter(
-						(n) => n !== num
-					);
-				}
-				for (let r = boxStartRow; r < boxStartRow + 3; r++) {
-					for (let c = boxStartCol; c < boxStartCol + 3; c++) {
-						sudokuStore.sudoku[r][c].notes = sudokuStore.sudoku[r][c].notes.filter(
+				const isCorrect = sudokuStore.solved && sudokuStore.solved[row][col] === num;
+				if (isCorrect) {
+					cell.notes = [];
+
+					const boxStartRow = Math.floor(row / 3) * 3;
+					const boxStartCol = Math.floor(col / 3) * 3;
+					for (let i = 0; i < 9; i++) {
+						sudokuStore.sudoku[row][i].notes = sudokuStore.sudoku[row][i].notes.filter(
 							(n) => n !== num
 						);
+						sudokuStore.sudoku[i][col].notes = sudokuStore.sudoku[i][col].notes.filter(
+							(n) => n !== num
+						);
+					}
+					for (let r = boxStartRow; r < boxStartRow + 3; r++) {
+						for (let c = boxStartCol; c < boxStartCol + 3; c++) {
+							sudokuStore.sudoku[r][c].notes = sudokuStore.sudoku[r][c].notes.filter(
+								(n) => n !== num
+							);
+						}
 					}
 				}
 			} else if (mode === 'note') {
@@ -351,6 +388,13 @@
 		} else if (import.meta.env.DEV && key === 'd' && (ev.ctrlKey || ev.metaKey) && ev.shiftKey) {
 			ev.preventDefault();
 			devAlmostSolve();
+		} else if (!ev.ctrlKey && !ev.metaKey) {
+			const parsed = parseInt(ev.key);
+			if (parsed > 0 && parsed <= 9) {
+				setSudokuCell(parsed);
+			} else if (ev.key === 'Backspace' || ev.key === 'Delete') {
+				clearCell();
+			}
 		}
 	}}
 />
@@ -413,6 +457,10 @@
 							<line x1={i} y1={0} x2={i} y2={9} class="stroke-accent" stroke-width="0.06" />
 							<line x1={0} y1={i} x2={9} y2={i} class="stroke-accent" stroke-width="0.06" />
 						{/each}
+						<!-- selection border -->
+						{#if selectedCells.size > 0}
+							<path d={selectionPath()} fill="none" class="stroke-accent" stroke-width="0.06" />
+						{/if}
 					</svg>
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
@@ -428,8 +476,7 @@
 									<div
 										data-cell={cellIndex(i, j)}
 										class={[
-											'cell border-accent',
-											selectionBorders(i, j),
+											'cell',
 											(() => {
 												const index = cellIndex(i, j);
 												const isSelected = selectedCells.has(index);
@@ -466,7 +513,6 @@
 											></div>
 										{/if}
 										<button
-											onkeydown={handleCellKeydown}
 											onpointerdown={(ev) => handlePointerDown(ev, j, i)}
 											class="relative z-10 grid h-full w-full place-items-center"
 										>
@@ -505,6 +551,7 @@
 		<div>
 			<div class="digits mx-auto mb-8 grid w-min gap-4">
 				{#each { length: 9 } as _, i (i)}
+					{@const remaining = remainingCount(i + 1)}
 					<button
 						onclick={() => {
 							setSudokuCell(i + 1);
@@ -513,12 +560,14 @@
 						class:bg-accent={selectedNumber === i + 1}
 						style:background={mode === 'color' ? `${CELL_COLORS[i]}66` : ''}
 						style:border-color={mode === 'color' ? CELL_COLORS[i] : ''}
+						class:opacity-60={remaining === 0}
+						disabled={remaining === 0}
 					>
 						{#if mode !== 'color'}
 							<span class="relative">
 								{i + 1}
 								{#if settingsStore.settings.showRemainingDigits}
-									<sup class="absolute -right-[7px] top-1">{remainingCount(i + 1)}</sup>
+									<sup class="absolute -right-[7px] top-1">{remaining}</sup>
 								{/if}
 							</span>
 						{/if}
@@ -615,23 +664,6 @@
 
 	.cell {
 		@apply relative;
-		border: 2px solid transparent;
-	}
-
-	.cell.border-t-2 {
-		border-top-color: hsl(var(--color-accent-hsl));
-	}
-
-	.cell.border-b-2 {
-		border-bottom-color: hsl(var(--color-accent-hsl));
-	}
-
-	.cell.border-l-2 {
-		border-left-color: hsl(var(--color-accent-hsl));
-	}
-
-	.cell.border-r-2 {
-		border-right-color: hsl(var(--color-accent-hsl));
 	}
 
 	.cell.highlighted {

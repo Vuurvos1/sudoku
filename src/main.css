@@ -16,9 +16,11 @@
 	-webkit-text-size-adjust: 100%;
 }
 
-button {
+button,
+select {
 	cursor: pointer;
 	background: transparent;
+	outline: none;
 }
 
 svg {
