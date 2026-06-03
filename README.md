@@ -7,6 +7,13 @@ A Rust constraint-based Sudoku solver paired with a (work-in-progress) Tauri + S
 - [`crates/sudoku-solver`](crates/sudoku-solver) - Constraint-based solver with pluggable strategies (naked single, hidden single, pointing pair, box/line reduction) that produce step-by-step `Deduction`s with explanations, intended for both solving and hint generation.
 - [`src`](src), [`src-tauri`](src-tauri) — SvelteKit frontend and Tauri shell for the desktop app. Still WIP.
 
+## Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install) (stable)
+- [Node.js](https://nodejs.org/) (v26+)
+- [pnpm](https://pnpm.io/installation) (v10+)
+- [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your platform (system dependencies vary by OS)
+
 ## Running the app (WIP)
 
 ```sh
