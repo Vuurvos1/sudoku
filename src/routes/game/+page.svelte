@@ -10,7 +10,7 @@
 		SettingsIcon,
 		ChevronLeftIcon,
 		LightbulbIcon
-	} from 'lucide-svelte';
+	} from '@lucide/svelte';
 	import HintDialog from '$lib/components/HintDialog.svelte';
 	import GameFinishedDialog from '$lib/components/GameFinishedDialog.svelte';
 	import { CELL_COLORS, cellGradient } from '$lib/color';

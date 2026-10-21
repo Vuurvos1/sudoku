@@ -3,70 +3,51 @@
 
 	let { sudoku, hint }: { sudoku: Sudoku; hint: HintResponse } = $props();
 
-	// cell index → highlight role ("focus" takes priority over "supporting")
-	const cellRoleMap = $derived.by(() => {
-		const map = new Map<number, string>();
-		for (const group of hint.highlights) {
-			for (const { cell, role } of group.cells) {
-				const existing = map.get(cell);
-				if (!existing || role === 'focus') {
-					map.set(cell, role);
-				}
-			}
-		}
-		return map;
-	});
+	// key → role, keeping the first role seen per key unless a later one is "focus".
+	// Map keeps the last entry per key, so the entries are reversed and focus entries appended.
+	function rolesByKey<K>(entries: [K, string][]): Map<K, string> {
+		const focus = entries.filter(([, role]) => role === 'focus');
+		return new Map([...entries].reverse().concat(focus));
+	}
 
-	// "cell:digit" → candidate role ("focus" takes priority over "eliminated")
-	const candidateRoleMap = $derived.by(() => {
-		const map = new Map<string, string>();
-		for (const group of hint.highlights) {
-			for (const { cell, digit, role } of group.candidates) {
-				const key = `${cell}:${digit}`;
-				const existing = map.get(key);
-				if (!existing || role === 'focus') {
-					map.set(key, role);
-				}
-			}
-		}
-		return map;
-	});
+	// cell index → highlight role
+	const cellRoleMap = $derived(
+		rolesByKey(
+			hint.highlights.flatMap((group) =>
+				group.cells.map(({ cell, role }): [number, string] => [cell, role])
+			)
+		)
+	);
+
+	// "cell:digit" → candidate role
+	const candidateRoleMap = $derived(
+		rolesByKey(
+			hint.highlights.flatMap((group) =>
+				group.candidates.map(({ cell, digit, role }): [string, string] => [
+					`${cell}:${digit}`,
+					role
+				])
+			)
+		)
+	);
 
 	// cell index → digit to place
-	const placementMap = $derived.by(() => {
-		const map = new Map<number, number>();
-		for (const { cell, digit } of hint.placements) {
-			map.set(cell, digit);
-		}
-		return map;
-	});
+	const placementMap = $derived(new Map(hint.placements.map(({ cell, digit }) => [cell, digit])));
 
 	// "cell:digit" keys for eliminations
-	const eliminationSet = $derived.by(() => {
-		const set = new Set<string>();
-		for (const { cell, digit } of hint.eliminations) {
-			set.add(`${cell}:${digit}`);
-		}
-		return set;
-	});
+	const eliminationSet = $derived(
+		new Set(hint.eliminations.map(({ cell, digit }) => `${cell}:${digit}`))
+	);
 
 	// union of all cells referenced by any map above
-	const relevantCells = $derived.by(() => {
-		const set = new Set<number>();
-		for (const cell of cellRoleMap.keys()) {
-			set.add(cell);
-		}
-		for (const key of candidateRoleMap.keys()) {
-			set.add(parseInt(key.split(':')[0]));
-		}
-		for (const cell of placementMap.keys()) {
-			set.add(cell);
-		}
-		for (const key of eliminationSet) {
-			set.add(parseInt(key.split(':')[0]));
-		}
-		return set;
-	});
+	const relevantCells = $derived(
+		new Set([
+			...cellRoleMap.keys(),
+			...[...candidateRoleMap.keys()].map((key) => parseInt(key.split(':')[0])),
+			...placementMap.keys(),
+			...[...eliminationSet].map((key) => parseInt(key.split(':')[0]))
+		])
+	);
 </script>
 
 <div class="mx-auto mt-4 aspect-square w-full max-w-72">
@@ -104,7 +85,12 @@
 							cellRole === 'supporting' && 'bg-accent/20'
 						]}
 					>
-						<div class={['flex h-full w-full items-center justify-center', !isRelevant && 'opacity-20']}>
+						<div
+							class={[
+								'flex h-full w-full items-center justify-center',
+								!isRelevant && 'opacity-20'
+							]}
+						>
 							{#if cell.value > 0}
 								<span class="text-sm font-medium">{cell.value}</span>
 							{:else if placement !== undefined}

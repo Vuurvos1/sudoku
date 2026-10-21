@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { InfoIcon, SettingsIcon } from 'lucide-svelte';
+	import { InfoIcon, SettingsIcon } from '@lucide/svelte';
 	import { dialogState, sudokuStore } from '$lib/stores';
 	import InfoDialog from '$lib/components/InfoDialog.svelte';
 	import logo from '$lib/assets/logo.svg';
