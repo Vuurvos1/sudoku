@@ -1,6 +1,6 @@
 use crate::{
     board::{Board, Candidates, CellId},
-    constraint::{Constraint, GroupKind, UniqueGroup},
+    constraint::{GroupKind, House},
     solver::SolverContext,
     strategy::{Deduction, Explanation, Strategy},
 };
@@ -71,8 +71,8 @@ impl Strategy for HiddenSingle {
         "hidden single"
     }
     fn find(&self, board: &Board, ctx: &SolverContext) -> Option<Deduction> {
-        for constraint in ctx.constraints {
-            let cells = constraint.cells();
+        for house in &ctx.houses {
+            let cells = &house.cells;
             for digit in 1..=9u8 {
                 let mut found: Option<CellId> = None;
                 let mut count = 0u8;
@@ -93,7 +93,7 @@ impl Strategy for HiddenSingle {
                             difficulty: 2,
                             placements: vec![(cell, digit)],
                             eliminations: vec![],
-                            explanation: Explanation::hidden_single(cell, digit),
+                            explanation: Explanation::hidden_single(cell, digit, &house.name),
                         });
                     }
                 }
@@ -114,7 +114,7 @@ impl Strategy for PointingPairs {
     }
     fn find(&self, board: &Board, _ctx: &SolverContext) -> Option<Deduction> {
         for b in 0..9u8 {
-            let box_group = UniqueGroup::box_(b);
+            let box_group = House::box_(b);
             for digit in 1..=9u8 {
                 let cells: Vec<CellId> = box_group
                     .cells
@@ -157,9 +157,9 @@ fn pointing_eliminations(
     line: GroupKind,
 ) -> Option<Deduction> {
     let line_cells = match line {
-        GroupKind::Row(r) => UniqueGroup::row(r).cells,
-        GroupKind::Col(c) => UniqueGroup::col(c).cells,
-        GroupKind::Box(_) => return None,
+        GroupKind::Row(r) => House::row(r).cells,
+        GroupKind::Col(c) => House::col(c).cells,
+        GroupKind::Box(_) | GroupKind::Diagonal(_) => return None,
     };
 
     let eliminations: Vec<(CellId, u8)> = line_cells
@@ -213,9 +213,9 @@ impl Strategy for BoxLineReduction {
 
 fn box_line_for_line(board: &Board, line: GroupKind) -> Option<Deduction> {
     let line_cells = match line {
-        GroupKind::Row(r) => UniqueGroup::row(r).cells,
-        GroupKind::Col(c) => UniqueGroup::col(c).cells,
-        GroupKind::Box(_) => return None,
+        GroupKind::Row(r) => House::row(r).cells,
+        GroupKind::Col(c) => House::col(c).cells,
+        GroupKind::Box(_) | GroupKind::Diagonal(_) => return None,
     };
 
     for digit in 1..=9u8 {
@@ -233,7 +233,7 @@ fn box_line_for_line(board: &Board, line: GroupKind) -> Option<Deduction> {
             continue;
         }
 
-        let box_cells = UniqueGroup::box_(b0).cells;
+        let box_cells = House::box_(b0).cells;
         let line_set: std::collections::HashSet<CellId> = line_cells.iter().copied().collect();
         let eliminations: Vec<(CellId, u8)> = box_cells
             .into_iter()
@@ -274,8 +274,8 @@ impl<const N: usize> Strategy for NakedSubset<N> {
     }
 
     fn find(&self, board: &Board, ctx: &SolverContext) -> Option<Deduction> {
-        for constraint in ctx.constraints {
-            let all_cells = constraint.cells();
+        for house in &ctx.houses {
+            let all_cells = &house.cells;
 
             // Only cells that could form an N-subset (at most N candidates)
             let subset_cells: Vec<CellId> = all_cells
@@ -344,9 +344,9 @@ impl<const N: usize> Strategy for HiddenSubset<N> {
     }
 
     fn find(&self, board: &Board, ctx: &SolverContext) -> Option<Deduction> {
-        for constraint in ctx.constraints {
-            let undecided: Vec<CellId> = constraint
-                .cells()
+        for house in &ctx.houses {
+            let undecided: Vec<CellId> = house
+                .cells
                 .iter()
                 .copied()
                 .filter(|&c| !board.is_decided(c))
@@ -576,13 +576,6 @@ fn find_fish(
     })
 }
 
-fn sees(a: CellId, b: CellId, constraints: &[Box<dyn Constraint>]) -> bool {
-    constraints.iter().any(|c| {
-        let cells = c.cells();
-        cells.contains(&a) && cells.contains(&b)
-    })
-}
-
 pub struct YWing;
 
 impl Strategy for YWing {
@@ -615,7 +608,7 @@ impl Strategy for YWing {
                 if w1 == pivot {
                     continue;
                 }
-                if !sees(pivot, w1, ctx.constraints) {
+                if !ctx.sees(pivot, w1) {
                     continue;
                 }
 
@@ -632,7 +625,7 @@ impl Strategy for YWing {
                     if w2 == pivot || w2 == w1 {
                         continue;
                     }
-                    if !sees(pivot, w2, ctx.constraints) {
+                    if !ctx.sees(pivot, w2) {
                         continue;
                     }
                     if !((w2_x == b && w2_y == c) || (w2_y == b && w2_x == c)) {
@@ -652,10 +645,10 @@ impl Strategy for YWing {
                             if !board.candidates(cell).contains(c) {
                                 return None;
                             }
-                            if !sees(cell, w1, ctx.constraints) {
+                            if !ctx.sees(cell, w1) {
                                 return None;
                             }
-                            if !sees(cell, w2, ctx.constraints) {
+                            if !ctx.sees(cell, w2) {
                                 return None;
                             }
                             Some((cell, c))

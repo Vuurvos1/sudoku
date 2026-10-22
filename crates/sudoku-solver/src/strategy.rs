@@ -32,13 +32,12 @@ pub struct Explanation {
 }
 
 impl Explanation {
-    pub fn group_elimination(group_name: &str, source: CellId, digit: u8) -> Self {
+    pub fn peer_elimination(source: CellId, digit: u8) -> Self {
         Explanation {
-            summary: format!("{}: {} placed at {}", group_name, digit, source),
+            summary: format!("{} placed at {}", digit, source),
             detail: format!(
-                "{} already contains {} at {}. The unique-digit rule eliminates \
-                 {} from every other cell in the group.",
-                group_name, digit, source, digit
+                "{} is {}, so {} is eliminated from every cell that sees it.",
+                source, digit, digit
             ),
             highlights: vec![Highlights {
                 cells: vec![CellHighlight {
@@ -54,12 +53,38 @@ impl Explanation {
         }
     }
 
+    pub fn variant_elimination(rule: &str, eliminations: &[(CellId, u8)]) -> Self {
+        let removed: Vec<String> = eliminations
+            .iter()
+            .map(|(cell, digit)| format!("{} from {}", digit, cell))
+            .collect();
+        Explanation {
+            summary: format!("{} removes {}", rule, removed.join(", ")),
+            detail: format!(
+                "No digit that satisfies the {} can go there, so {} is eliminated.",
+                rule,
+                removed.join(", ")
+            ),
+            highlights: vec![Highlights {
+                cells: vec![],
+                candidates: eliminations
+                    .iter()
+                    .map(|&(cell, digit)| CandidateHighlight {
+                        cell,
+                        digit,
+                        role: HighlightRole::Eliminated,
+                    })
+                    .collect(),
+            }],
+        }
+    }
+
     pub fn naked_single(cell: CellId, digit: u8) -> Self {
         Explanation {
             summary: format!("Naked Single: {} = {}", cell, digit),
             detail: format!(
                 "{} has only one remaining candidate. All other digits have been \
-                 eliminated by its row, column, and box, so it must be {}.",
+                 eliminated by the cells it sees, so it must be {}.",
                 cell, digit
             ),
             highlights: vec![Highlights {
@@ -76,13 +101,12 @@ impl Explanation {
         }
     }
 
-    pub fn hidden_single(cell: CellId, digit: u8) -> Self {
+    pub fn hidden_single(cell: CellId, digit: u8, house_name: &str) -> Self {
         Explanation {
             summary: format!("Hidden Single: {} = {}", cell, digit),
             detail: format!(
-                "{} is the only cell in one of its groups (row, column, or box) \
-                 that can hold {}, so it must be {}.",
-                cell, digit, digit
+                "{} is the only cell in {} that can hold {}, so it must be {}.",
+                cell, house_name, digit, digit
             ),
             highlights: vec![Highlights {
                 cells: vec![CellHighlight {

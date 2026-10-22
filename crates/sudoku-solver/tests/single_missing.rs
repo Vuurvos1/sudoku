@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
     solver::{SolveResult, Solver, SolverContext},
     strategies::NakedSingle,
     strategy::Strategy,
@@ -21,10 +20,7 @@ fn solves_single_missing_digit() {
     puzzle[target.0 as usize] = 0;
 
     let mut board = Board::from_array(&puzzle);
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
 
     let strategies: Vec<Box<dyn Strategy>> = vec![Box::new(NakedSingle)];
     let solver = Solver::new(strategies);

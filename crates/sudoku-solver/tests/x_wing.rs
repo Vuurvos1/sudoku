@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
     solver::SolverContext,
     strategies::Fish,
     strategy::Strategy,
@@ -18,10 +17,7 @@ fn finds_x_wing_in_rows() {
         board.remove_candidate(CellId::from_rc(4, c), 5);
     }
 
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
 
     let deduction = Fish::<2>
         .find(&board, &ctx)

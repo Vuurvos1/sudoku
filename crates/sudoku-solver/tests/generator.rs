@@ -1,5 +1,4 @@
 use sudoku_solver::board::{Board, CellId};
-use sudoku_solver::constraint::standard_constraints;
 use sudoku_solver::generator::{count_solutions, Difficulty, Generator};
 use sudoku_solver::solver::{SolveResult, Solver, SolverContext};
 
@@ -115,20 +114,31 @@ fn generate_easy_produces_solvable_unique_puzzle() {
     assert_eq!(count_solutions(&givens, 2), 1);
 
     // Must be solvable by the strategy solver
-    let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext::standard();
     let solver = Solver::default();
     let mut solve_board = Board::new(&givens);
     match solver.solve(&mut solve_board, &ctx) {
         SolveResult::Solved(deductions) => {
-            let max_diff = deductions.iter().map(|d| d.difficulty).filter(|&d| d > 0).max().unwrap_or(0);
-            assert!(max_diff <= 2, "easy puzzle required difficulty {}", max_diff);
+            let max_diff = deductions
+                .iter()
+                .map(|d| d.difficulty)
+                .filter(|&d| d > 0)
+                .max()
+                .unwrap_or(0);
+            assert!(
+                max_diff <= 2,
+                "easy puzzle required difficulty {}",
+                max_diff
+            );
         }
-        other => panic!("expected Solved, got {:?}", match other {
-            SolveResult::Stuck(_) => "Stuck",
-            SolveResult::Invalid(_) => "Invalid",
-            _ => unreachable!(),
-        }),
+        other => panic!(
+            "expected Solved, got {:?}",
+            match other {
+                SolveResult::Stuck(_) => "Stuck",
+                SolveResult::Invalid(_) => "Invalid",
+                _ => unreachable!(),
+            }
+        ),
     }
 }
 
@@ -150,20 +160,35 @@ fn generate_medium_requires_at_least_difficulty_3() {
 
     assert_eq!(count_solutions(&givens, 2), 1);
 
-    let constraints = standard_constraints();
-    let ctx = SolverContext { constraints: &constraints };
+    let ctx = SolverContext::standard();
     let solver = Solver::default();
     let mut solve_board = Board::new(&givens);
     match solver.solve(&mut solve_board, &ctx) {
         SolveResult::Solved(deductions) => {
-            let max_diff = deductions.iter().map(|d| d.difficulty).filter(|&d| d > 0).max().unwrap_or(0);
-            assert!(max_diff >= 3, "medium puzzle max difficulty was only {}", max_diff);
-            assert!(max_diff <= 3, "medium puzzle exceeded ceiling: {}", max_diff);
+            let max_diff = deductions
+                .iter()
+                .map(|d| d.difficulty)
+                .filter(|&d| d > 0)
+                .max()
+                .unwrap_or(0);
+            assert!(
+                max_diff >= 3,
+                "medium puzzle max difficulty was only {}",
+                max_diff
+            );
+            assert!(
+                max_diff <= 3,
+                "medium puzzle exceeded ceiling: {}",
+                max_diff
+            );
         }
-        other => panic!("expected Solved, got {:?}", match other {
-            SolveResult::Stuck(_) => "Stuck",
-            SolveResult::Invalid(_) => "Invalid",
-            _ => unreachable!(),
-        }),
+        other => panic!(
+            "expected Solved, got {:?}",
+            match other {
+                SolveResult::Stuck(_) => "Stuck",
+                SolveResult::Invalid(_) => "Invalid",
+                _ => unreachable!(),
+            }
+        ),
     }
 }

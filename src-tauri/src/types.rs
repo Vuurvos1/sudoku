@@ -1,5 +1,17 @@
-use serde::Serialize;
-use sudoku_solver::strategy::{Deduction, HighlightRole};
+use serde::{Deserialize, Serialize};
+use sudoku_solver::{
+    constraint::ConstraintSpec,
+    strategy::{Deduction, HighlightRole},
+};
+
+/// A puzzle as the frontend sees it: an 81-char line of digits
+/// (`.` or `0` for empty) plus its variant rules.
+#[derive(Serialize, Deserialize)]
+pub struct Puzzle {
+    pub givens: String,
+    #[serde(default)]
+    pub constraints: Vec<ConstraintSpec>,
+}
 
 #[derive(Serialize)]
 pub struct CellAction {

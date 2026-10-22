@@ -16,6 +16,8 @@
 	import { CELL_COLORS, cellGradient } from '$lib/color';
 	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';
+	import ConstraintShapes from '$lib/variants/ConstraintShapes.svelte';
+	import { gridCutouts, ruleLabels } from '$lib/variants';
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
 
@@ -63,6 +65,31 @@
 			}
 		}
 		return segments.join('');
+	}
+
+	const constraints = $derived(sudokuStore.puzzle?.constraints ?? []);
+	const cutouts = $derived(gridCutouts(constraints));
+
+	function highlightClasses(i: number, j: number) {
+		const sudoku = sudokuStore.sudoku!;
+		const cell = sudoku[i][j];
+		const index = cellIndex(i, j);
+		const isSelected = selectedCells.has(index);
+		const hasSelection = selectedCells.size > 0;
+		const primaryValue =
+			hasSelection && primaryCell !== null
+				? sudoku[Math.floor(primaryCell / 9)][primaryCell % 9].value
+				: 0;
+		const peer = isPeer(i, j);
+		const isSingle = selectedCells.size === 1;
+		const sameDigit = isSingle && primaryValue > 0 && cell.value === primaryValue && !isSelected;
+		const matchingNote =
+			isSingle && primaryValue > 0 && cell.notes.includes(primaryValue) && !isSelected;
+		return {
+			'bg-accent/60': isSelected,
+			'bg-accent/20': !isSelected && (peer || sameDigit),
+			'bg-accent/10': !isSelected && !peer && !sameDigit && matchingNote
+		};
 	}
 
 	let selectedNumber = $state(0);
@@ -261,22 +288,10 @@
 				if (isCorrect) {
 					cell.notes = [];
 
-					const boxStartRow = Math.floor(row / 3) * 3;
-					const boxStartCol = Math.floor(col / 3) * 3;
-					for (let i = 0; i < 9; i++) {
-						sudokuStore.sudoku[row][i].notes = sudokuStore.sudoku[row][i].notes.filter(
-							(n) => n !== num
-						);
-						sudokuStore.sudoku[i][col].notes = sudokuStore.sudoku[i][col].notes.filter(
-							(n) => n !== num
-						);
-					}
-					for (let r = boxStartRow; r < boxStartRow + 3; r++) {
-						for (let c = boxStartCol; c < boxStartCol + 3; c++) {
-							sudokuStore.sudoku[r][c].notes = sudokuStore.sudoku[r][c].notes.filter(
-								(n) => n !== num
-							);
-						}
+					for (const peerIdx of sudokuStore.peerMap?.[idx] ?? []) {
+						const peer = cellFromIndex(peerIdx);
+						const peerCell = sudokuStore.sudoku[peer.row][peer.col];
+						peerCell.notes = peerCell.notes.filter((n) => n !== num);
 					}
 				}
 			} else if (mode === 'note') {
@@ -436,36 +451,55 @@
 
 	<main class="flex h-auto flex-1 flex-col overflow-hidden py-4">
 		<div
-			class="sudoku mx-auto h-full max-h-full w-full max-w-screen-lg flex-1 overflow-hidden px-4 py-12 md:px-8"
+			class="sudoku relative mx-auto h-full max-h-full w-full max-w-screen-lg flex-1 overflow-hidden px-4 py-12 md:px-8"
 		>
+			{#if constraints.length > 0}
+				<p class="absolute inset-x-0 top-4 truncate px-4 text-center text-sm opacity-70">
+					{ruleLabels(constraints).join(' · ')}
+				</p>
+			{/if}
 			<div class="mx-auto flex aspect-square max-h-full">
 				<div class="relative mx-auto h-full max-h-full w-full max-w-full">
+					<!-- layer 1: cell highlights and colors -->
+					<div
+						class={[
+							'pointer-events-none absolute inset-0 z-0 grid grid-cols-9 grid-rows-9',
+							{ solved: boardSolved }
+						]}
+					>
+						{#if sudokuStore.sudoku}
+							{#each sudokuStore.sudoku as row, i (i)}
+								{#each row as cell, j (j)}
+									<div
+										class={['cell-bg relative', highlightClasses(i, j)]}
+										style:animation-delay={boardSolved ? `${(i + j) * 40}ms` : ''}
+									>
+										{#if cell.colors.length > 0}
+											<div
+												class="absolute inset-0"
+												style:background={cellGradient(cell.colors)}
+											></div>
+										{/if}
+									</div>
+								{/each}
+							{/each}
+						{/if}
+					</div>
+					<!-- layer 2: variant shapes below the digits -->
 					<svg
-						class="pointer-events-none absolute inset-0 z-10 h-full w-full"
+						class="pointer-events-none absolute inset-0 z-[1] h-full w-full"
 						viewBox="0 0 9 9"
 						preserveAspectRatio="none"
 						stroke-linecap="round"
 						overflow="visible"
 					>
-						<!-- thin lines -->
-						{#each [1, 2, 4, 5, 7, 8] as i (i)}
-							<line x1={i} y1={0} x2={i} y2={9} class="grid-line-thin" stroke-width="0.02" />
-							<line x1={0} y1={i} x2={9} y2={i} class="grid-line-thin" stroke-width="0.02" />
-						{/each}
-						<!-- thick lines -->
-						{#each [3, 6] as i (i)}
-							<line x1={i} y1={0} x2={i} y2={9} class="stroke-accent" stroke-width="0.06" />
-							<line x1={0} y1={i} x2={9} y2={i} class="stroke-accent" stroke-width="0.06" />
-						{/each}
-						<!-- selection border -->
-						{#if selectedCells.size > 0}
-							<path d={selectionPath()} fill="none" class="stroke-accent" stroke-width="0.06" />
-						{/if}
+						<ConstraintShapes {constraints} layer="under" />
 					</svg>
+					<!-- layer 3: digits, notes and input -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
 						class={[
-							'row grid h-full w-full touch-none grid-cols-9 grid-rows-9',
+							'row relative z-[2] grid h-full w-full touch-none grid-cols-9 grid-rows-9',
 							{ solved: boardSolved }
 						]}
 						onpointermove={handlePointerMove}
@@ -475,46 +509,12 @@
 								{#each row as cell, j (j)}
 									<div
 										data-cell={cellIndex(i, j)}
-										class={[
-											'cell',
-											(() => {
-												const index = cellIndex(i, j);
-												const isSelected = selectedCells.has(index);
-												const hasSelection = selectedCells.size > 0;
-												const primaryValue =
-													hasSelection && primaryCell !== null
-														? sudokuStore.sudoku[Math.floor(primaryCell / 9)][primaryCell % 9].value
-														: 0;
-												const peer = isPeer(i, j);
-												const isSingle = selectedCells.size === 1;
-												const sameDigit =
-													isSingle &&
-													primaryValue > 0 &&
-													cell.value === primaryValue &&
-													!isSelected;
-												const matchingNote =
-													isSingle &&
-													primaryValue > 0 &&
-													cell.notes.includes(primaryValue) &&
-													!isSelected;
-												return {
-													'bg-accent/60': isSelected,
-													'bg-accent/20': !isSelected && (peer || sameDigit),
-													'bg-accent/10': !isSelected && !peer && !sameDigit && matchingNote
-												};
-											})()
-										]}
+										class="cell"
 										style:animation-delay={boardSolved ? `${(i + j) * 40}ms` : ''}
 									>
-										{#if cell.colors.length > 0}
-											<div
-												class="absolute inset-0"
-												style:background={cellGradient(cell.colors)}
-											></div>
-										{/if}
 										<button
 											onpointerdown={(ev) => handlePointerDown(ev, j, i)}
-											class="relative z-10 grid h-full w-full place-items-center"
+											class="grid h-full w-full place-items-center"
 										>
 											{#if cell.value > 0}
 												<span
@@ -544,6 +544,41 @@
 							{/each}
 						{/if}
 					</div>
+					<!-- layer 4: grid lines, variant markers and selection -->
+					<svg
+						class="pointer-events-none absolute inset-0 z-[3] h-full w-full"
+						viewBox="0 0 9 9"
+						preserveAspectRatio="none"
+						stroke-linecap="round"
+						overflow="visible"
+					>
+						<!-- gaps in the grid lines behind markers on cell borders -->
+						{#if cutouts.length > 0}
+							<mask id="grid-cutouts" maskUnits="userSpaceOnUse" x="0" y="0" width="9" height="9">
+								<rect width="9" height="9" fill="white" />
+								{#each cutouts as { x, y, r }, i (i)}
+									<circle cx={x} cy={y} {r} fill="black" />
+								{/each}
+							</mask>
+						{/if}
+						<g mask={cutouts.length > 0 ? 'url(#grid-cutouts)' : undefined}>
+							<!-- thin lines -->
+							{#each [1, 2, 4, 5, 7, 8] as i (i)}
+								<line x1={i} y1={0} x2={i} y2={9} class="grid-line-thin" stroke-width="0.02" />
+								<line x1={0} y1={i} x2={9} y2={i} class="grid-line-thin" stroke-width="0.02" />
+							{/each}
+							<!-- thick lines -->
+							{#each [3, 6] as i (i)}
+								<line x1={i} y1={0} x2={i} y2={9} class="stroke-accent" stroke-width="0.06" />
+								<line x1={0} y1={i} x2={9} y2={i} class="stroke-accent" stroke-width="0.06" />
+							{/each}
+						</g>
+						<ConstraintShapes {constraints} layer="over" />
+						<!-- selection border -->
+						{#if selectedCells.size > 0}
+							<path d={selectionPath()} fill="none" class="stroke-accent" stroke-width="0.06" />
+						{/if}
+					</svg>
 				</div>
 			</div>
 		</div>
@@ -685,7 +720,17 @@
 		}
 	}
 
-	.solved .cell {
+	@keyframes cell-pop {
+		50% {
+			transform: scale(1.05);
+		}
+	}
+
+	.solved .cell-bg {
 		animation: cell-celebrate 0.4s ease-out both;
+	}
+
+	.solved .cell {
+		animation: cell-pop 0.4s ease-out both;
 	}
 </style>

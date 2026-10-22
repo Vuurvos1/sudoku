@@ -7,7 +7,6 @@ A constraint-based Sudoku solver with step-by-step hint generation. The solver i
 ```rust
 use sudoku_solver::{
     board::Board,
-    constraint::standard_constraints,
     solver::{Solver, SolverContext, SolveResult},
     strategies::*,
 };
@@ -26,8 +25,7 @@ let puzzle: [u8; 81] = [
 ];
 
 let mut board = Board::from_array(&puzzle);
-let constraints = standard_constraints();
-let ctx = SolverContext { constraints: &constraints };
+let ctx = SolverContext::standard();
 
 let solver = Solver::new(vec![
     Box::new(NakedSingle),
@@ -64,59 +62,31 @@ if let Some(deduction) = solver.step(&board, &ctx) {
 }
 ```
 
-## Adding custom constraints
+## Variant rules
 
-Implement the `Constraint` trait to add new rules. The default `propagate()` handles the common case (eliminating a decided cell's digit from its peers), so most constraints only need `name()` and `cells()`.
+A `SolverContext` holds a puzzle's rules:
 
-### Example: diagonal constraint
+- **Houses**: groups of 9 cells that contain each digit exactly once (rows, columns, boxes, X-sudoku diagonals). House-based strategies such as `HiddenSingle`, `NakedSubset` and `HiddenSubset` only look at these.
+- **Constraints**: every other rule (anti-knight, cages, thermos, …), implemented with the `Constraint` trait.
+- **Peers**: cell pairs that may not share a digit, derived from the houses plus each constraint's `distinct_pairs()`. Peer elimination and `ctx.sees(a, b)` use this table.
 
-In diagonal Sudoku, the two main diagonals must also contain digits 1-9 without repetition.
-
-```rust
-use sudoku_solver::{
-    board::CellId,
-    constraint::Constraint,
-};
-
-struct Diagonal {
-    cells: Vec<CellId>,
-    name: String,
-}
-
-impl Diagonal {
-    fn main() -> Self {
-        Diagonal {
-            cells: (0..9).map(|i| CellId::from_rc(i, i)).collect(),
-            name: "main diagonal".into(),
-        }
-    }
-
-    fn anti() -> Self {
-        Diagonal {
-            cells: (0..9).map(|i| CellId::from_rc(i, 8 - i)).collect(),
-            name: "anti diagonal".into(),
-        }
-    }
-}
-
-impl Constraint for Diagonal {
-    fn name(&self) -> &str { &self.name }
-    fn cells(&self) -> &[CellId] { &self.cells }
-    // propagate() is inherited, no extra code needed
-}
-```
-
-Then include them alongside the standard constraints:
+Built-in variants are described by the serializable `ConstraintSpec`:
 
 ```rust
-let mut constraints = standard_constraints();
-constraints.push(Box::new(Diagonal::main()));
-constraints.push(Box::new(Diagonal::anti()));
+use sudoku_solver::{constraint::ConstraintSpec, solver::SolverContext};
 
-let ctx = SolverContext { constraints: &constraints };
+let ctx = SolverContext::new(&[ConstraintSpec::Diagonals, ConstraintSpec::AntiKnight]);
 ```
 
-All generic strategies (`HiddenSingle`, `NakedSubset`, `HiddenSubset`) will automatically apply to the diagonals too.
+### Adding a constraint
+
+Implement `Constraint`. Every method except `name()` and `cells()` has a default that does nothing:
+
+- `distinct_pairs()`: cell pairs that may not repeat a digit; they become peers.
+- `propagate()`: variant-specific candidate elimination (peer elimination is already done by the solver).
+- `allows()`: whether a digit fits at a cell given a partial grid; the brute-force search (`count_solutions_for`, `solve_brute`, `Generator::generate_for`) relies on it.
+
+Pass custom constraints with `SolverContext::from_parts(houses, constraints)`, or add a `ConstraintSpec` variant and build it in `constraint::build`.
 
 ## Adding custom strategies
 

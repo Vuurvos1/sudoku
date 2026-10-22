@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
     solver::SolverContext,
     strategies::BoxLineReduction,
     strategy::Strategy,
@@ -16,10 +15,7 @@ fn finds_box_line_reduction_for_row_locked_to_box() {
         board.remove_candidate(CellId::from_rc(0, c), 5);
     }
 
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
 
     let deduction = BoxLineReduction
         .find(&board, &ctx)

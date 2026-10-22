@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
     solver::SolverContext,
     strategies::NakedSubset,
     strategy::Strategy,
@@ -23,10 +22,7 @@ fn finds_naked_triple_in_row() {
         board.remove_candidate(CellId::from_rc(0, 2), d);
     }
 
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
 
     let deduction = NakedSubset::<3>
         .find(&board, &ctx)
