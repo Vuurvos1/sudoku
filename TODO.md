@@ -3,12 +3,21 @@ App features
 - Settings
   - Toggle remaining digit amount in settings
 - Daily puzzle (medium-hard) show difficulty?
+  - streaks
 - Hints
+  - tiered hints: nudge (look at box 5) -> technique (there's a pointing pair) -> cells -> answer
+  - variant techniques as named strategies with difficulty (cage combinations, thermo bounds, whisper logic), now silent propagation at difficulty 0
+  - technique library, linked from each hint, with HintGrid examples
 - Timer
 - Board
   - Notes
     - Corner notes
     - center notes
+    - option to auto-fill notes / auto-clean notes
+  - rule-aware conflict checking (repeated digit, broken thermo, cage over sum) instead of comparing with the solution
+  - setting to turn mistake highlighting off
+  - digit-first input (pick a digit, tap cells) next to cell-first
+  - haptics
   - Coloring
   - Eraser
   - Undo/Redo
@@ -25,6 +34,10 @@ App features
   - german whispers
   - double dot
   - consecutive dot
+  - generator for cages, lines and dots (now only global rules are generated)
+  - tap rule label to explain the rule with a mini example
+  - import SudokuPad / f-puzzles links
+  - difficulty rating that counts variant logic
 - Button to fill all notes (would reset all notes?)
 - improve cell highlighting
   - selected cell row,column,3x3 cell semi highlighting
@@ -39,6 +52,14 @@ App features
   - total completed
 - better visualize hints
 
+- mobile layout
+  - make the board as large as possible, remove empty space below it
+  - tablet / landscape layout
+
+- accessibility
+  - colorblind-safe highlight palettes
+  - digit size setting
+
 - themes
   - option for custom themes
   - option for custom highlight/coloring colors
@@ -50,6 +71,24 @@ App features
 - continue button
 - tips section?
 - link to github? link to support?
+
+- rules library: page that lists every constraint and how it works
+  - short rule text + small example board drawn with the real variant renderers
+  - common deductions per rule (e.g. 5 can't go on a German whisper, thermo bulb limits)
+  - interactive mini puzzle per rule to try it out
+  - tapping a rule label in a game opens its page (see variants)
+  - shares examples with the hints technique library
+
+- constructed puzzles
+  - start with SudokuPad / f-puzzles link import (players bring the puzzle, no permission needed)
+  - curated packs with setter permission, credit setter + link to original on every puzzle
+  - openly licensed collections (CC-BY / public domain), check the license per source before bundling
+  - own starter pack (hand-tuned generated or self-constructed)
+  - puzzle metadata: title, setter, source link, rules text, difficulty
+  - bundle puzzles as data (JSON in repo) so new packs need no code changes
+  - browse screen: packs, filter by variant and difficulty, solved state per puzzle
+  - show unsupported rules on import (arrows, renban, sandwich...) instead of dropping them
+  - featured puzzle of the week
 
 - sudoku builder?
   - variant support
