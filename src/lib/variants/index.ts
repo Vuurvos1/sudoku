@@ -38,10 +38,10 @@ export function rendererFor(
 const CUTOUT_RADIUS: Partial<Record<Extract<ConstraintSpec, { type: 'marker' }>['kind'], number>> =
 	{
 		chevron: 0.13,
-		x: 0.17
+		x: 0.13
 	};
 
-/** Circles to cut out of the grid lines so markers sitting on a border read cleanly. */
+/** Circles to cut out of the grid, cages and lines so markers sitting on a border read cleanly. */
 export function gridCutouts(constraints: ConstraintSpec[]): { x: number; y: number; r: number }[] {
 	return constraints.flatMap((c) => {
 		const r = c.type === 'marker' ? CUTOUT_RADIUS[c.kind] : undefined;

@@ -6,10 +6,8 @@
 
 	let { constraint }: { constraint: Extract<ConstraintSpec, { type: 'marker' }> } = $props();
 
-	const X_SIZE = 0.36;
-	// cap height as a fraction of the font size, to centre the X on its baseline
-	// (WebKitGTK, the Linux webview, ignores dominant-baseline)
-	const CAP_HEIGHT = 0.72;
+	// half the width and height of the X, drawn as two strokes like the chevron
+	const X_HALF = 0.075;
 
 	// half the chevron's depth along the border's normal, and half its height along the border
 	const CHEVRON_DEPTH = 0.05;
@@ -33,16 +31,14 @@
 {#if constraint.kind === 'white' || constraint.kind === 'black'}
 	<circle cx={mid.x} cy={mid.y} r="0.12" class={constraint.kind} stroke-width="0.03" />
 {:else if constraint.kind === 'x'}
-	<text
-		x={mid.x}
-		y={mid.y + (X_SIZE * CAP_HEIGHT) / 2}
+	<path
+		d="M{mid.x - X_HALF},{mid.y - X_HALF}L{mid.x + X_HALF},{mid.y + X_HALF}M{mid.x +
+			X_HALF},{mid.y - X_HALF}L{mid.x - X_HALF},{mid.y + X_HALF}"
 		class="x"
-		font-size={X_SIZE}
-		font-weight="700"
-		text-anchor="middle"
-	>
-		X
-	</text>
+		fill="none"
+		stroke-width="0.04"
+		stroke-linecap="round"
+	/>
 {:else}
 	<polyline
 		points={chevron}
@@ -65,10 +61,7 @@
 		stroke: hsl(var(--color-text-hsl));
 	}
 
-	.x {
-		fill: hsl(var(--color-text-hsl));
-	}
-
+	.x,
 	.chevron {
 		stroke: hsl(var(--color-text-hsl));
 	}

@@ -54,7 +54,7 @@
 	class="cage"
 	fill="none"
 	stroke-width="0.018"
-	stroke-dasharray="0.05 0.035"
+	stroke-dasharray="0.1 0.07"
 />
 {#if constraint.sum !== null}
 	<text

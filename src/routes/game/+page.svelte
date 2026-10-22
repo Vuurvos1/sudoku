@@ -17,7 +17,8 @@
 	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';
 	import ConstraintShapes from '$lib/variants/ConstraintShapes.svelte';
-	import { gridCutouts, ruleLabels } from '$lib/variants';
+	import CutoutMask from '$lib/variants/CutoutMask.svelte';
+	import { ruleLabels } from '$lib/variants';
 
 	let mode = $state<'fill' | 'note' | 'color'>('fill');
 
@@ -68,7 +69,6 @@
 	}
 
 	const constraints = $derived(sudokuStore.puzzle?.constraints ?? []);
-	const cutouts = $derived(gridCutouts(constraints));
 
 	function highlightClasses(i: number, j: number) {
 		const sudoku = sudokuStore.sudoku!;
@@ -493,7 +493,10 @@
 						stroke-linecap="round"
 						overflow="visible"
 					>
-						<ConstraintShapes {constraints} layer="under" />
+						<CutoutMask id="under-cutouts" {constraints} />
+						<g mask="url(#under-cutouts)">
+							<ConstraintShapes {constraints} layer="under" />
+						</g>
 					</svg>
 					<!-- layer 3: digits, notes and input -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -552,16 +555,9 @@
 						stroke-linecap="round"
 						overflow="visible"
 					>
-						<!-- gaps in the grid lines behind markers on cell borders -->
-						{#if cutouts.length > 0}
-							<mask id="grid-cutouts" maskUnits="userSpaceOnUse" x="0" y="0" width="9" height="9">
-								<rect width="9" height="9" fill="white" />
-								{#each cutouts as { x, y, r }, i (i)}
-									<circle cx={x} cy={y} {r} fill="black" />
-								{/each}
-							</mask>
-						{/if}
-						<g mask={cutouts.length > 0 ? 'url(#grid-cutouts)' : undefined}>
+						<!-- gaps in the grid lines and selection behind markers on cell borders -->
+						<CutoutMask id="grid-cutouts" {constraints} />
+						<g mask="url(#grid-cutouts)">
 							<!-- thin lines -->
 							{#each [1, 2, 4, 5, 7, 8] as i (i)}
 								<line x1={i} y1={0} x2={i} y2={9} class="grid-line-thin" stroke-width="0.02" />
@@ -572,12 +568,12 @@
 								<line x1={i} y1={0} x2={i} y2={9} class="stroke-accent" stroke-width="0.06" />
 								<line x1={0} y1={i} x2={9} y2={i} class="stroke-accent" stroke-width="0.06" />
 							{/each}
+							<!-- selection border -->
+							{#if selectedCells.size > 0}
+								<path d={selectionPath()} fill="none" class="stroke-accent" stroke-width="0.06" />
+							{/if}
 						</g>
 						<ConstraintShapes {constraints} layer="over" />
-						<!-- selection border -->
-						{#if selectedCells.size > 0}
-							<path d={selectionPath()} fill="none" class="stroke-accent" stroke-width="0.06" />
-						{/if}
 					</svg>
 				</div>
 			</div>
