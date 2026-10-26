@@ -2,9 +2,26 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import Switch from '$lib/components/Switch.svelte';
 	import ThemeSelect from '$lib/components/ThemeSelect.svelte';
-	import { NoteStyles, settingsStore } from '$lib/stores';
+	import { NoteStyles, settingsStore, type MistakeMode } from '$lib/stores';
 
 	let { open = $bindable(true) }: { open?: boolean } = $props();
+
+	const mistakeModes: { mode: MistakeMode; label: string; description: string }[] = [
+		{ mode: 'off', label: 'Off', description: 'Mistakes are not marked.' },
+		{
+			mode: 'rules',
+			label: 'Rules',
+			description: 'Marks digits that break a rule with the digits already placed.'
+		},
+		{
+			mode: 'solution',
+			label: 'Solution',
+			description: "Marks every digit that doesn't match the solution."
+		}
+	];
+	const mistakeDescription = $derived(
+		mistakeModes.find(({ mode }) => mode === settingsStore.settings.mistakes)?.description
+	);
 </script>
 
 <!-- Base color scheme dark, light, adapt to system -->
@@ -21,6 +38,22 @@
 	<Switch label="Show timer" bind:checked={settingsStore.settings.showTimer} />
 
 	<Switch label="Show remaining digits" bind:checked={settingsStore.settings.showRemainingDigits} />
+
+	<h4 class="text-lg font-semibold">Mistakes</h4>
+
+	<div class="flex w-min flex-row divide-x rounded border">
+		{#each mistakeModes as { mode, label } (mode)}
+			<button
+				onclick={() => (settingsStore.settings.mistakes = mode)}
+				class="px-2 py-1 hover:bg-accent-1"
+				class:bg-accent={settingsStore.settings.mistakes === mode}
+				class:text-background={settingsStore.settings.mistakes === mode}
+			>
+				{label}
+			</button>
+		{/each}
+	</div>
+	<p class="mb-2 mt-1 text-sm opacity-70">{mistakeDescription}</p>
 
 	<h4 class="text-lg font-semibold">Note style</h4>
 

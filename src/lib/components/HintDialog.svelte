@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Dialog from '$lib/components/Dialog.svelte';
-	import HintGrid from '$lib/components/HintGrid.svelte';
+	import Sudoku from '$lib/components/Sudoku.svelte';
+	import { hintLayer } from '$lib/hint';
 	import type { HintResponse } from '$lib/stores/sudoku.svelte';
 	import { sudokuStore } from '$lib/stores/sudoku.svelte';
 
@@ -17,7 +18,13 @@
 		<p class="text-sm opacity-80">{hint.detail}</p>
 
 		{#if sudokuStore.sudoku}
-			<HintGrid sudoku={sudokuStore.sudoku} {hint} />
+			<div class="mx-auto mt-4 aspect-square w-full max-w-72">
+				<Sudoku
+					cells={sudokuStore.sudoku}
+					constraints={sudokuStore.puzzle?.constraints}
+					layers={[hintLayer(hint)]}
+				/>
+			</div>
 		{/if}
 	{:else}
 		<p class="text-sm opacity-60">No hint available for the current board.</p>

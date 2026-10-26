@@ -110,6 +110,22 @@ impl SolverContext {
         legal
     }
 
+    /// Filled cells in `grid` (0 = empty) that break a rule: they repeat a
+    /// peer's digit, or a constraint they're on can no longer be satisfied.
+    pub fn conflicts(&self, grid: &[u8; 81]) -> Vec<CellId> {
+        (0..81u8)
+            .map(CellId)
+            .filter(|&cell| {
+                let digit = grid[cell.0 as usize];
+                digit != 0
+                    && (self.peers(cell).iter().any(|p| grid[p.0 as usize] == digit)
+                        || self.constraints_at[cell.0 as usize]
+                            .iter()
+                            .any(|&i| !self.constraints[i].allows(grid, cell, digit)))
+            })
+            .collect()
+    }
+
     /// Strip impossible candidates: every decided cell removes its digit from
     /// its peers, then each constraint runs its own propagation.
     pub fn propagate(&self, board: &mut Board) -> Vec<Deduction> {

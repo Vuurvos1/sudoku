@@ -1,7 +1,7 @@
 use crate::{
     board::{Board, CellId},
     strategy::Deduction,
-    variants::{Cage, Relation, RelationConstraint},
+    variants::{Arrow, Cage, Relation, RelationConstraint},
 };
 
 /// A rule on top of the houses. Houses already cover "each digit once per
@@ -220,6 +220,11 @@ pub enum ConstraintSpec {
         kind: MarkerKind,
         cells: [u8; 2],
     },
+    /// The shaft's digits add up to the circle's. Cells start at the circle
+    /// and follow the shaft to the arrowhead.
+    Arrow {
+        cells: Vec<u8>,
+    },
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -263,7 +268,9 @@ impl ConstraintSpec {
     /// Rejects specs the solver can't build, such as out-of-range cells.
     pub fn validate(&self) -> Result<(), String> {
         let cells: &[u8] = match self {
-            ConstraintSpec::Cage { cells, .. } | ConstraintSpec::Line { cells, .. } => cells,
+            ConstraintSpec::Cage { cells, .. }
+            | ConstraintSpec::Line { cells, .. }
+            | ConstraintSpec::Arrow { cells } => cells,
             ConstraintSpec::Marker { cells, .. } => cells,
             _ => &[],
         };
@@ -283,6 +290,16 @@ impl ConstraintSpec {
             ConstraintSpec::Line { .. } => {
                 if ids.len() < 2 || !ids.windows(2).all(|w| adjacent(w[0], w[1])) {
                     return Err("a line needs 2+ cells, each touching the next".into());
+                }
+            }
+            ConstraintSpec::Arrow { .. } => {
+                // the shaft can hold at most nine 1s, and the circle at most 9
+                if ids.len() < 2 || ids.len() > 10 || !ids.windows(2).all(|w| adjacent(w[0], w[1]))
+                {
+                    return Err(
+                        "an arrow needs a circle and 1 to 9 shaft cells, each touching the next"
+                            .into(),
+                    );
                 }
             }
             ConstraintSpec::Marker { .. } if !orthogonal(ids[0], ids[1]) => {
@@ -331,6 +348,7 @@ pub(crate) fn build(spec: &ConstraintSpec, houses: &mut Vec<House>) -> Option<Bo
             };
             Some(Box::new(line))
         }
+        ConstraintSpec::Arrow { cells } => Some(Box::new(Arrow::new(ids(cells)))),
         ConstraintSpec::Marker { kind, cells } => {
             let (a, b) = (CellId(cells[0]), CellId(cells[1]));
             let (name, rel) = match kind {

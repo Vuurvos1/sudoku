@@ -1,6 +1,14 @@
 /** Grid units: cell (r, c) spans (c, r) to (c + 1, r + 1). */
 export type Point = { x: number; y: number };
 
+export function cellIndex(row: number, col: number): number {
+	return row * 9 + col;
+}
+
+export function cellPosition(index: number): { row: number; col: number } {
+	return { row: Math.floor(index / 9), col: index % 9 };
+}
+
 export function cellCenter(cell: number): Point {
 	return { x: (cell % 9) + 0.5, y: Math.floor(cell / 9) + 0.5 };
 }
@@ -12,9 +20,19 @@ export function borderMidpoint([a, b]: [number, number]): Point {
 	return { x: (pa.x + pb.x) / 2, y: (pa.y + pb.y) / 2 };
 }
 
-/** Inset outline around a group of cells, as an SVG path (one segment per cell side). */
-export function cageOutline(cells: number[], inset: number): string {
+/**
+ * Inset outline around a group of cells, as an SVG path (one segment per cell side);
+ * an inset of 0 traces the cell borders.
+ * `cutout` clears a rectangle (measured from the cell corner) at the top-left of the
+ * lowest-index cell; the two sides it crosses start there, so dashes resume whole.
+ */
+export function regionOutline(
+	cells: number[],
+	inset: number,
+	cutout?: { width: number; height: number }
+): string {
 	const set = new Set(cells);
+	const first = Math.min(...cells);
 	const has = (r: number, c: number) => r >= 0 && r < 9 && c >= 0 && c < 9 && set.has(r * 9 + c);
 	// outward normal and direction along the side, as [dr, dc]
 	const sides = [
@@ -42,9 +60,20 @@ export function cageOutline(cells: number[], inset: number): string {
 				const t = s * reach(s);
 				const x = c + 0.5 + out[1] * (0.5 - inset) + along[1] * t;
 				const y = r + 0.5 + out[0] * (0.5 - inset) + along[0] * t;
-				return `${x},${y}`;
+				return { x, y };
 			};
-			segments.push(`M${point(-1)}L${point(1)}`);
+			let from = point(-1);
+			let to = point(1);
+			if (cutout && cell === first && out[0] === -1) {
+				// top side, left to right: start past the cutout
+				from = { x: Math.max(from.x, c + cutout.width), y: from.y };
+				if (from.x >= to.x) continue;
+			} else if (cutout && cell === first && out[1] === -1) {
+				// left side runs upwards; flip it to start below the cutout
+				[from, to] = [{ x: to.x, y: Math.max(to.y, r + cutout.height) }, from];
+				if (from.y >= to.y) continue;
+			}
+			segments.push(`M${from.x},${from.y}L${to.x},${to.y}`);
 		}
 	}
 	return segments.join('');

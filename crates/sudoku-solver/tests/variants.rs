@@ -185,6 +185,63 @@ fn cage_keeps_only_combination_digits() {
 }
 
 #[test]
+fn arrow_bounds_circle_and_shaft() {
+    let ctx = SolverContext::new(&[ConstraintSpec::Arrow {
+        cells: vec![0, 1, 2],
+    }]);
+    let mut board = Board::new(&[]);
+    ctx.propagate(&mut board);
+    let digits = |board: &Board, c: u8| board.candidates(CellId(c)).iter().collect::<Vec<_>>();
+    // two shaft cells sum to at least 2, and leave at most 8 for either one
+    assert_eq!(digits(&board, 0), vec![2, 3, 4, 5, 6, 7, 8, 9]);
+    assert_eq!(digits(&board, 1), vec![1, 2, 3, 4, 5, 6, 7, 8]);
+
+    // a 3 in the circle leaves 1 and 2 for the shaft
+    let mut board = Board::new(&[(CellId(0), 3)]);
+    ctx.propagate(&mut board);
+    assert_eq!(digits(&board, 1), vec![1, 2]);
+    assert_eq!(digits(&board, 2), vec![1, 2]);
+}
+
+#[test]
+fn arrow_rejects_wrong_totals_in_search() {
+    // R1C1 = R2C1 + R2C2 + R3C1 has to hold in every solution
+    let ctx = SolverContext::new(&[ConstraintSpec::Arrow {
+        cells: vec![0, 9, 10, 18],
+    }]);
+    let grid = solve_brute(&ctx, &[]).unwrap();
+    assert_eq!(grid[0], grid[9] + grid[10] + grid[18]);
+}
+
+#[test]
+fn conflicts_flag_repeats_and_broken_rules() {
+    let ctx = SolverContext::new(&[
+        ConstraintSpec::Cage {
+            cells: vec![18, 19],
+            sum: Some(5),
+        },
+        ConstraintSpec::Line {
+            kind: LineKind::Thermo,
+            cells: vec![36, 37],
+        },
+    ]);
+    let mut grid = [0u8; 81];
+    // a repeat in row 1
+    grid[0] = 4;
+    grid[8] = 4;
+    // fine so far: a 1 in the 5 cage, a 2 on the thermo bulb
+    grid[18] = 1;
+    grid[36] = 2;
+    let cells = |grid: &[u8; 81]| ctx.conflicts(grid).iter().map(|c| c.0).collect::<Vec<_>>();
+    assert_eq!(cells(&grid), vec![0, 8]);
+
+    // 1 + 6 overshoots the cage, and the thermo has to rise
+    grid[19] = 6;
+    grid[37] = 1;
+    assert_eq!(cells(&grid), vec![0, 8, 18, 19, 36, 37]);
+}
+
+#[test]
 fn markers_restrict_neighbours() {
     let ctx = SolverContext::new(&[
         ConstraintSpec::Marker {
@@ -221,6 +278,10 @@ fn invalid_specs_are_rejected() {
         cells: [0, 10],
     };
     assert!(diagonal_marker.validate().is_err());
+    let arrow = |cells: Vec<u8>| ConstraintSpec::Arrow { cells };
+    assert!(arrow(vec![0, 10]).validate().is_ok());
+    assert!(arrow(vec![0]).validate().is_err());
+    assert!(arrow(vec![0, 2]).validate().is_err());
 }
 
 #[test]
@@ -247,8 +308,10 @@ fn showcase_is_valid_unique_and_solvable() {
         grid[i as usize] = d;
     }
 
-    let line = showcase::givens();
-    let board = Board::from_line(&line);
+    // the stored givens are what the search finds today
+    assert_eq!(showcase::find_givens(), showcase::GIVENS);
+    let line = showcase::GIVENS;
+    let board = Board::from_line(line);
     let givens: Vec<(CellId, u8)> = (0..81u8)
         .filter_map(|i| Some((CellId(i), board.value(CellId(i))?)))
         .collect();

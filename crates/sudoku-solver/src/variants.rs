@@ -282,3 +282,107 @@ fn fill_cage(
     }
     any
 }
+
+/// Arrow: the digits along the shaft add up to the digit in the circle.
+/// Shaft digits may repeat; the houses rule out repeats where they apply.
+pub struct Arrow {
+    name: String,
+    /// circle first, then the shaft
+    cells: Vec<CellId>,
+}
+
+impl Arrow {
+    pub fn new(cells: Vec<CellId>) -> Self {
+        let name = format!("arrow at {}", cells[0]);
+        Arrow { name, cells }
+    }
+}
+
+/// Sums 0..=127 reachable by picking one candidate from each cell, as a bitmask.
+fn reachable_sums(cands: &[Candidates]) -> u128 {
+    cands
+        .iter()
+        .fold(1, |sums, c| c.iter().fold(0, |acc, d| acc | sums << d))
+}
+
+impl Constraint for Arrow {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn cells(&self) -> &[CellId] {
+        &self.cells
+    }
+
+    /// Keep circle digits some shaft total can reach, and shaft digits that
+    /// fit in such a total together with some choice for the rest of the shaft.
+    fn propagate(&self, board: &mut Board) -> Vec<Deduction> {
+        let circle = board.candidates(self.cells[0]);
+        let shaft: Vec<Candidates> = self.cells[1..]
+            .iter()
+            .map(|&c| board.candidates(c))
+            .collect();
+
+        let mut circle_sums = 0u128;
+        for d in circle.iter() {
+            circle_sums |= 1 << d;
+        }
+
+        let mut eliminations = Vec::new();
+        let mut keep_circle = Candidates::EMPTY;
+        let totals = reachable_sums(&shaft);
+        for d in circle.iter() {
+            if totals & (1 << d) != 0 {
+                keep_circle.insert(d);
+            }
+        }
+        restrict(board, self.cells[0], keep_circle, &mut eliminations);
+
+        for (i, &cell) in self.cells[1..].iter().enumerate() {
+            let others: Vec<Candidates> = shaft
+                .iter()
+                .enumerate()
+                .filter_map(|(j, &c)| (j != i).then_some(c))
+                .collect();
+            let rest = reachable_sums(&others);
+            let mut keep = Candidates::EMPTY;
+            for d in shaft[i].iter() {
+                if (rest << d) & circle_sums != 0 {
+                    keep.insert(d);
+                }
+            }
+            restrict(board, cell, keep, &mut eliminations);
+        }
+
+        if eliminations.is_empty() {
+            return Vec::new();
+        }
+        vec![Deduction {
+            strategy: "constraint propagation",
+            difficulty: 0,
+            placements: vec![],
+            explanation: Explanation::variant_elimination(&self.name, &eliminations),
+            eliminations,
+        }]
+    }
+
+    fn allows(&self, grid: &[u8; 81], cell: CellId, digit: u8) -> bool {
+        let value = |c: CellId| if c == cell { digit } else { grid[c.0 as usize] };
+        let circle = value(self.cells[0]);
+        let mut total = 0u8;
+        let mut empty = 0u8;
+        for &c in &self.cells[1..] {
+            match value(c) {
+                0 => empty += 1,
+                d => total += d,
+            }
+        }
+        // each empty shaft cell adds 1 to 9
+        let (min, max) = (total + empty, total + 9 * empty);
+        if circle == 0 {
+            min <= 9
+        } else {
+            min <= circle && circle <= max
+        }
+    }
+}

@@ -28,8 +28,10 @@ fn build_context(constraints: &[ConstraintSpec]) -> Result<SolverContext, String
     Ok(SolverContext::new(constraints))
 }
 
+// generate, solve and hint are async: Tauri runs those off the main thread, so
+// slow work doesn't freeze the window
 #[tauri::command]
-fn generate_sudoku(
+async fn generate_sudoku(
     difficulty: u8,
     constraints: Option<Vec<ConstraintSpec>>,
 ) -> Result<Puzzle, String> {
@@ -61,7 +63,7 @@ fn generate_sudoku(
 }
 
 #[tauri::command]
-fn solve_sudoku(puzzle: Puzzle) -> Result<Vec<u8>, String> {
+async fn solve_sudoku(puzzle: Puzzle) -> Result<Vec<u8>, String> {
     let mut board = parse_board(&puzzle)?;
     let ctx = build_context(&puzzle.constraints)?;
 
@@ -86,7 +88,7 @@ fn solve_sudoku(puzzle: Puzzle) -> Result<Vec<u8>, String> {
 }
 
 #[tauri::command]
-fn hint_sudoku(puzzle: Puzzle) -> Result<types::HintResponse, String> {
+async fn hint_sudoku(puzzle: Puzzle) -> Result<types::HintResponse, String> {
     let mut board = parse_board(&puzzle)?;
     let ctx = build_context(&puzzle.constraints)?;
 
@@ -104,11 +106,24 @@ fn get_peers(constraints: Vec<ConstraintSpec>) -> Result<Vec<Vec<u8>>, String> {
         .collect())
 }
 
+/// Filled cells that break a rule, for highlighting mistakes without the solution.
+#[tauri::command]
+fn find_conflicts(constraints: Vec<ConstraintSpec>, grid: Vec<u8>) -> Result<Vec<u8>, String> {
+    let ctx = build_context(&constraints)?;
+    let grid: [u8; 81] = grid
+        .try_into()
+        .map_err(|_| "grid must have 81 cells".to_string())?;
+    if grid.iter().any(|&d| d > 9) {
+        return Err("grid digits must be 0 to 9".to_string());
+    }
+    Ok(ctx.conflicts(&grid).iter().map(|c| c.0).collect())
+}
+
 /// Hand-made puzzle using every variant marker, for testing.
 #[tauri::command]
 fn showcase_puzzle() -> Puzzle {
     Puzzle {
-        givens: showcase::givens(),
+        givens: showcase::GIVENS.to_string(),
         constraints: showcase::constraints(),
     }
 }
@@ -123,6 +138,7 @@ pub fn run() {
             solve_sudoku,
             hint_sudoku,
             get_peers,
+            find_conflicts,
             showcase_puzzle
         ])
         .run(tauri::generate_context!())

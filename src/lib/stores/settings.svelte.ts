@@ -6,10 +6,17 @@ export enum NoteStyles {
 	Row
 }
 
+/**
+ * Which digits are marked as mistakes: none, ones that break a rule given the digits
+ * around them, or any that differ from the solution.
+ */
+export type MistakeMode = 'off' | 'rules' | 'solution';
+
 export type Settings = {
 	noteStyle: NoteStyles;
 	showTimer: boolean;
 	showRemainingDigits: boolean;
+	mistakes: MistakeMode;
 	theme: keyof typeof themes;
 };
 
@@ -21,6 +28,7 @@ function createSettingsStore() {
 		noteStyle: NoteStyles.Grid,
 		showTimer: false,
 		showRemainingDigits: true,
+		mistakes: 'rules',
 		theme: 'dark'
 	});
 

@@ -24,7 +24,9 @@ export type ConstraintSpec =
 	| { type: 'antiKing' }
 	| { type: 'cage'; cells: number[]; sum: number | null }
 	| { type: 'line'; kind: LineKind; cells: number[] }
-	| { type: 'marker'; kind: MarkerKind; cells: [number, number] };
+	| { type: 'marker'; kind: MarkerKind; cells: [number, number] }
+	/** circle first, then the shaft up to the arrowhead */
+	| { type: 'arrow'; cells: number[] };
 
 export type Puzzle = {
 	/** 81 chars, digits for givens and `.` for empty cells */
@@ -57,16 +59,9 @@ export class SudokuStore {
 	endTime = $state<number | null>(null);
 
 	get isSolved(): boolean {
-		if (!this.sudoku || !this.solved) return false;
-
-		for (let i = 0; i < 9; i++) {
-			for (let j = 0; j < 9; j++) {
-				if (this.sudoku[i][j].value === 0) return false;
-				if (this.sudoku[i][j].value !== this.solved[i][j]) return false;
-			}
-		}
-
-		return true;
+		const { sudoku, solved } = this;
+		if (!sudoku || !solved) return false;
+		return sudoku.every((row, i) => row.every((cell, j) => cell.value === solved[i][j]));
 	}
 
 	constructor() {
@@ -184,6 +179,12 @@ export class SudokuStore {
 			console.warn('No hint available:', e);
 			this.lastHint = null;
 		}
+	}
+
+	/** Filled cells in `grid` (81 digits, 0 = empty) that break one of the puzzle's rules. */
+	async conflicts(grid: number[]): Promise<number[]> {
+		if (!this.puzzle) return [];
+		return invoke<number[]>('find_conflicts', { constraints: this.puzzle.constraints, grid });
 	}
 
 	copy(): Sudoku {

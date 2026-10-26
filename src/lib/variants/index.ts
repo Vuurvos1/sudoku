@@ -1,5 +1,6 @@
 import type { Component } from 'svelte';
 import type { ConstraintSpec } from '$lib/stores';
+import Arrow from './Arrow.svelte';
 import Cage from './Cage.svelte';
 import Diagonals from './Diagonals.svelte';
 import Line from './Line.svelte';
@@ -8,7 +9,7 @@ import { borderMidpoint } from './geometry';
 
 /**
  * Board layers a renderer can draw into:
- * - `under`: above cell highlights, below digits (lines, cages)
+ * - `under`: above cell highlights, below digits (lines, cages, arrows)
  * - `over`: above digits and grid lines (dots, X, chevrons)
  */
 export type Layer = 'under' | 'over';
@@ -25,6 +26,7 @@ const renderers: { [T in ConstraintSpec['type']]?: Renderer<T> } = {
 	diagonals: { layer: 'under', component: Diagonals },
 	cage: { layer: 'under', component: Cage },
 	line: { layer: 'under', component: Line },
+	arrow: { layer: 'under', component: Arrow },
 	marker: { layer: 'over', component: Marker }
 };
 
@@ -40,12 +42,14 @@ const CUTOUT_RADIUS: Partial<Record<Extract<ConstraintSpec, { type: 'marker' }>[
 		chevron: 0.13,
 		x: 0.13
 	};
+/** Extra space between a marker and where the lines around it resume, in cells. */
+const CUTOUT_PADDING = 0.03;
 
 /** Circles to cut out of the grid, cages and lines so markers sitting on a border read cleanly. */
 export function gridCutouts(constraints: ConstraintSpec[]): { x: number; y: number; r: number }[] {
 	return constraints.flatMap((c) => {
 		const r = c.type === 'marker' ? CUTOUT_RADIUS[c.kind] : undefined;
-		return c.type === 'marker' && r ? [{ ...borderMidpoint(c.cells), r }] : [];
+		return c.type === 'marker' && r ? [{ ...borderMidpoint(c.cells), r: r + CUTOUT_PADDING }] : [];
 	});
 }
 
@@ -66,6 +70,8 @@ export function ruleLabel(constraint: ConstraintSpec): string {
 				dutchWhisper: 'Dutch whispers',
 				thermo: 'Thermo'
 			}[constraint.kind];
+		case 'arrow':
+			return 'Arrow';
 		case 'marker':
 			return { white: 'Kropki', black: 'Kropki', x: 'XV', chevron: 'Greater than' }[
 				constraint.kind

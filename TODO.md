@@ -8,37 +8,39 @@ App features
   - tiered hints: nudge (look at box 5) -> technique (there's a pointing pair) -> cells -> answer
   - variant techniques as named strategies with difficulty (cage combinations, thermo bounds, whisper logic), now silent propagation at difficulty 0
   - technique library, linked from each hint, with HintGrid examples
+  - handle combined techinques and display their deduction as good as possible
 - Timer
 - Board
   - Notes
     - Corner notes
     - center notes
     - option to auto-fill notes / auto-clean notes
-  - rule-aware conflict checking (repeated digit, broken thermo, cage over sum) instead of comparing with the solution
+  - [x] rule-aware conflict checking (repeated digit, broken thermo, cage over sum) instead of comparing with the solution
   - setting to turn mistake highlighting off
   - digit-first input (pick a digit, tap cells) next to cell-first
   - haptics
-  - Coloring
-  - Eraser
-  - Undo/Redo
-  - Hint button
+  - [ ] Coloring
+  - [x] Eraser
+  - [x] Undo/Redo
+  - [ ] Hint button
 - sudoku variants
-  - killer
-  - cages
-  - x sudoku
-  - knights move
-  - kings move
-  - thermo
-  - arrow? check the difference between arrow and thermo
-  - dutch whispers
-  - german whispers
-  - double dot
-  - consecutive dot
+  - [x] killer/cages
+    - show a list of possible cage digit combinations
+  - [ ] x sudoku
+  - [x] knights move
+  - [x] kings move
+  - [x] thermo
+  - [x] arrow
+  - [x] dutch whispers
+  - [x] german whispers
+  - [x] double dot
+  - [x] consecutive dot
   - generator for cages, lines and dots (now only global rules are generated)
-  - tap rule label to explain the rule with a mini example
+  - [ ] tap rule label to explain the rule with a mini example
+  - double-click actions on variant elements (e.g. select all cells of a cage, line or arrow)
   - import SudokuPad / f-puzzles links
   - difficulty rating that counts variant logic
-- Button to fill all notes (would reset all notes?)
+- [ ] Button to fill all notes (would reset all notes?)
 - improve cell highlighting
   - selected cell row,column,3x3 cell semi highlighting
   - selected Cell outlining and bg
@@ -50,19 +52,19 @@ App features
   - best times
   - average time
   - total completed
-- better visualize hints
+- [ ] better visualize hints
 
 - mobile layout
   - make the board as large as possible, remove empty space below it
-  - tablet / landscape layout
+  - [ ] tablet / landscape layout (right side options if space is tight)
 
 - accessibility
-  - colorblind-safe highlight palettes
+  - [ ] colorblind-safe highlight palettes
   - digit size setting
 
 - themes
-  - option for custom themes
-  - option for custom highlight/coloring colors
+  - [ ] option for custom themes
+  - [ ] option for custom highlight/coloring colors
 - difficulty
   - Easy
   - Medium
@@ -73,11 +75,12 @@ App features
 - link to github? link to support?
 
 - rules library: page that lists every constraint and how it works
-  - short rule text + small example board drawn with the real variant renderers
+  - [ ] short rule text + small example board drawn with the real variant renderers
   - common deductions per rule (e.g. 5 can't go on a German whisper, thermo bulb limits)
   - interactive mini puzzle per rule to try it out
   - tapping a rule label in a game opens its page (see variants)
   - shares examples with the hints technique library
+  - [ ] icon per rule
 
 - constructed puzzles
   - start with SudokuPad / f-puzzles link import (players bring the puzzle, no permission needed)

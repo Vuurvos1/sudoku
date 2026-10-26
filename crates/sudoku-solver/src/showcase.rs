@@ -30,7 +30,7 @@ fn at(r: u8, c: u8) -> u8 {
 }
 
 pub fn constraints() -> Vec<ConstraintSpec> {
-    use ConstraintSpec::{Cage, Line, Marker};
+    use ConstraintSpec::{Arrow, Cage, Line, Marker};
     let marker = |kind, a, b| Marker {
         kind,
         cells: [a, b],
@@ -56,6 +56,10 @@ pub fn constraints() -> Vec<ConstraintSpec> {
             kind: LineKind::Thermo,
             cells: vec![at(8, 6), at(7, 7), at(7, 8), at(8, 8)],
         },
+        // 9 = 3 + 4 + 2, bending so the renderer has corners to draw
+        Arrow {
+            cells: vec![at(5, 3), at(6, 4), at(7, 3), at(8, 3)],
+        },
         marker(MarkerKind::White, at(0, 3), at(0, 4)),
         marker(MarkerKind::White, at(2, 6), at(2, 7)),
         marker(MarkerKind::Black, at(2, 4), at(2, 5)),
@@ -67,10 +71,16 @@ pub fn constraints() -> Vec<ConstraintSpec> {
     ]
 }
 
+/// The puzzle's givens, as found by `find_givens`. Finding them runs a
+/// uniqueness search per cell and takes seconds, so they're stored here; a
+/// test checks they still match when the constraints or solver change.
+pub const GIVENS: &str =
+    "....78........5.....8................2....7...1..............8.....1...5.........";
+
 /// Givens as an 81-char line, `.` for empty. Removes digits from the full
 /// solution in a fixed order for as long as the puzzle stays unique and
 /// solvable by the logical solver.
-pub fn givens() -> String {
+pub fn find_givens() -> String {
     let ctx = SolverContext::new(&constraints());
     let solver = Solver::default();
     let mut givens: Vec<Option<u8>> = SOLUTION.iter().copied().map(Some).collect();
