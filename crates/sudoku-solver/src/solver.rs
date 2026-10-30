@@ -4,7 +4,8 @@ use crate::strategies::{
 };
 use crate::{
     board::{Board, Candidates, CellId},
-    constraint::{build, standard_houses, Constraint, ConstraintSpec, House},
+    constraint::{build, Constraint, ConstraintSpec},
+    house::{standard_houses, House},
     strategy::{Deduction, Explanation, Strategy},
 };
 
@@ -144,7 +145,7 @@ impl SolverContext {
             }
             if !eliminations.is_empty() {
                 deductions.push(Deduction {
-                    strategy: "constraint propagation",
+                    strategy: "peer elimination",
                     difficulty: 0,
                     placements: vec![],
                     eliminations,
@@ -184,7 +185,7 @@ impl Solver {
         None
     }
 
-    /// Propagate constraints, then find the next strategy-based deduction.
+    /// Propagate (peers, then constraints), then find the next strategy-based deduction.
     /// Propagation mutates the board's candidate sets as a side-effect but
     /// those deductions are not returned — only the strategy deduction is.
     /// Returns `None` if the board is solved (including by propagation) or
@@ -201,7 +202,7 @@ impl Solver {
     pub fn solve(&self, board: &mut Board, ctx: &SolverContext) -> SolveResult {
         let mut steps = Vec::new();
         loop {
-            // Run all constraints to strip impossible candidates
+            // Peer elimination and constraint propagation strip impossible candidates
             steps.extend(ctx.propagate(board));
 
             if board.has_contradiction() {

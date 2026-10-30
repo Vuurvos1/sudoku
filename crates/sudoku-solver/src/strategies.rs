@@ -1,6 +1,6 @@
 use crate::{
     board::{Board, Candidates, CellId},
-    constraint::{GroupKind, House},
+    house::{House, HouseKind},
     solver::SolverContext,
     strategy::{Deduction, Explanation, Strategy},
 };
@@ -114,9 +114,9 @@ impl Strategy for PointingPairs {
     }
     fn find(&self, board: &Board, _ctx: &SolverContext) -> Option<Deduction> {
         for b in 0..9u8 {
-            let box_group = House::box_(b);
+            let box_house = House::box_(b);
             for digit in 1..=9u8 {
-                let cells: Vec<CellId> = box_group
+                let cells: Vec<CellId> = box_house
                     .cells
                     .iter()
                     .copied()
@@ -129,7 +129,7 @@ impl Strategy for PointingPairs {
                 let r0 = cells[0].row();
                 if cells.iter().all(|c| c.row() == r0) {
                     if let Some(d) =
-                        pointing_eliminations(board, b, digit, &cells, GroupKind::Row(r0))
+                        pointing_eliminations(board, b, digit, &cells, HouseKind::Row(r0))
                     {
                         return Some(d);
                     }
@@ -138,7 +138,7 @@ impl Strategy for PointingPairs {
                 let c0 = cells[0].col();
                 if cells.iter().all(|c| c.col() == c0) {
                     if let Some(d) =
-                        pointing_eliminations(board, b, digit, &cells, GroupKind::Col(c0))
+                        pointing_eliminations(board, b, digit, &cells, HouseKind::Col(c0))
                     {
                         return Some(d);
                     }
@@ -154,12 +154,12 @@ fn pointing_eliminations(
     box_idx: u8,
     digit: u8,
     locked: &[CellId],
-    line: GroupKind,
+    line: HouseKind,
 ) -> Option<Deduction> {
     let line_cells = match line {
-        GroupKind::Row(r) => House::row(r).cells,
-        GroupKind::Col(c) => House::col(c).cells,
-        GroupKind::Box(_) | GroupKind::Diagonal(_) => return None,
+        HouseKind::Row(r) => House::row(r).cells,
+        HouseKind::Col(c) => House::col(c).cells,
+        HouseKind::Box(_) | HouseKind::Diagonal(_) => return None,
     };
 
     let eliminations: Vec<(CellId, u8)> = line_cells
@@ -179,7 +179,7 @@ fn pointing_eliminations(
         placements: vec![],
         eliminations,
         explanation: Explanation::pointing(
-            &GroupKind::Box(box_idx).to_string(),
+            &HouseKind::Box(box_idx).to_string(),
             digit,
             &line.to_string(),
             locked,
@@ -198,12 +198,12 @@ impl Strategy for BoxLineReduction {
     }
     fn find(&self, board: &Board, _ctx: &SolverContext) -> Option<Deduction> {
         for r in 0..9u8 {
-            if let Some(d) = box_line_for_line(board, GroupKind::Row(r)) {
+            if let Some(d) = box_line_for_line(board, HouseKind::Row(r)) {
                 return Some(d);
             }
         }
         for c in 0..9u8 {
-            if let Some(d) = box_line_for_line(board, GroupKind::Col(c)) {
+            if let Some(d) = box_line_for_line(board, HouseKind::Col(c)) {
                 return Some(d);
             }
         }
@@ -211,11 +211,11 @@ impl Strategy for BoxLineReduction {
     }
 }
 
-fn box_line_for_line(board: &Board, line: GroupKind) -> Option<Deduction> {
+fn box_line_for_line(board: &Board, line: HouseKind) -> Option<Deduction> {
     let line_cells = match line {
-        GroupKind::Row(r) => House::row(r).cells,
-        GroupKind::Col(c) => House::col(c).cells,
-        GroupKind::Box(_) | GroupKind::Diagonal(_) => return None,
+        HouseKind::Row(r) => House::row(r).cells,
+        HouseKind::Col(c) => House::col(c).cells,
+        HouseKind::Box(_) | HouseKind::Diagonal(_) => return None,
     };
 
     for digit in 1..=9u8 {
@@ -252,7 +252,7 @@ fn box_line_for_line(board: &Board, line: GroupKind) -> Option<Deduction> {
             placements: vec![],
             eliminations,
             explanation: Explanation::box_line_reduction(
-                &GroupKind::Box(b0).to_string(),
+                &HouseKind::Box(b0).to_string(),
                 digit,
                 &line.to_string(),
                 &cells,

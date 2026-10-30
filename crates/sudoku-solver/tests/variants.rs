@@ -284,6 +284,7 @@ fn invalid_specs_are_rejected() {
     assert!(arrow(vec![0, 2]).validate().is_err());
 }
 
+#[cfg(feature = "showcase")]
 #[test]
 fn showcase_is_valid_unique_and_solvable() {
     use sudoku_solver::showcase;

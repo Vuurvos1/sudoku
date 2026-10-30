@@ -207,7 +207,7 @@ impl Explanation {
             ),
             detail: format!(
                 "Cells {} contain only candidates {{{}}}. These digits can be \
-                 eliminated from all other cells that share a group with them.",
+                 eliminated from all other cells that share a house with them.",
                 cells_str.join(" and "),
                 digits_str.join(", "),
             ),

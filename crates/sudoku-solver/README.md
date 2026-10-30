@@ -86,7 +86,7 @@ Implement `Constraint`. Every method except `name()` and `cells()` has a default
 - `propagate()`: variant-specific candidate elimination (peer elimination is already done by the solver).
 - `allows()`: whether a digit fits at a cell given a partial grid; the brute-force search (`count_solutions_for`, `solve_brute`, `Generator::generate_for`) relies on it.
 
-Pass custom constraints with `SolverContext::from_parts(houses, constraints)`, or add a `ConstraintSpec` variant and build it in `constraint::build`.
+Pass custom constraints with `SolverContext::from_parts(houses, constraints)`, or add a `ConstraintSpec` variant and build it in `constraint::build`. Houses live in the `house` module (`House`, `HouseKind`, `standard_houses()`).
 
 ## Adding custom strategies
 

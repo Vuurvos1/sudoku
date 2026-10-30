@@ -1,5 +1,6 @@
 use crate::{
     board::{Board, CellId},
+    house::House,
     strategy::Deduction,
     variants::{Arrow, Cage, Relation, RelationConstraint},
 };
@@ -30,89 +31,6 @@ pub trait Constraint {
     fn allows(&self, _grid: &[u8; 81], _cell: CellId, _digit: u8) -> bool {
         true
     }
-}
-
-/// Nine cells that must contain each digit 1–9 exactly once.
-pub struct House {
-    pub cells: Vec<CellId>,
-    pub kind: GroupKind,
-    pub name: String,
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-pub enum GroupKind {
-    Row(u8),
-    Col(u8),
-    Box(u8),
-    /// 0 = top-left to bottom-right, 1 = top-right to bottom-left
-    Diagonal(u8),
-}
-
-impl std::fmt::Display for GroupKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            GroupKind::Row(r) => write!(f, "row {}", r + 1),
-            GroupKind::Col(c) => write!(f, "column {}", c + 1),
-            GroupKind::Box(b) => write!(f, "box {}", b + 1),
-            GroupKind::Diagonal(0) => write!(f, "the main diagonal"),
-            GroupKind::Diagonal(_) => write!(f, "the anti-diagonal"),
-        }
-    }
-}
-
-impl House {
-    fn new(kind: GroupKind, cells: Vec<CellId>) -> Self {
-        House {
-            cells,
-            name: kind.to_string(),
-            kind,
-        }
-    }
-
-    pub fn row(r: u8) -> Self {
-        House::new(
-            GroupKind::Row(r),
-            (0..9).map(|c| CellId::from_rc(r, c)).collect(),
-        )
-    }
-
-    pub fn col(c: u8) -> Self {
-        House::new(
-            GroupKind::Col(c),
-            (0..9).map(|r| CellId::from_rc(r, c)).collect(),
-        )
-    }
-
-    pub fn box_(b: u8) -> Self {
-        let row_start = b / 3 * 3;
-        let col_start = b % 3 * 3;
-        House::new(
-            GroupKind::Box(b),
-            (0..9)
-                .map(|i| CellId::from_rc(row_start + i / 3, col_start + i % 3))
-                .collect(),
-        )
-    }
-
-    pub fn diagonal(d: u8) -> Self {
-        House::new(
-            GroupKind::Diagonal(d),
-            (0..9)
-                .map(|i| CellId::from_rc(i, if d == 0 { i } else { 8 - i }))
-                .collect(),
-        )
-    }
-}
-
-/// The 27 houses of a standard 9×9 sudoku: 9 rows + 9 columns + 9 boxes.
-pub fn standard_houses() -> Vec<House> {
-    let mut houses = Vec::with_capacity(27);
-    for i in 0..9 {
-        houses.push(House::row(i));
-        houses.push(House::col(i));
-        houses.push(House::box_(i));
-    }
-    houses
 }
 
 /// Cells a fixed set of offsets apart may not repeat a digit
@@ -278,6 +196,7 @@ impl ConstraintSpec {
             return Err(format!("cell {} is out of range", c));
         }
         let ids: Vec<CellId> = cells.iter().map(|&c| CellId(c)).collect();
+        let connected = ids.windows(2).all(|w| adjacent(w[0], w[1]));
         match self {
             ConstraintSpec::Cage { sum, .. } => {
                 if ids.is_empty() || ids.len() > 9 {
@@ -287,20 +206,14 @@ impl ConstraintSpec {
                     return Err("cage sum must be 1 to 45".into());
                 }
             }
-            ConstraintSpec::Line { .. } => {
-                if ids.len() < 2 || !ids.windows(2).all(|w| adjacent(w[0], w[1])) {
-                    return Err("a line needs 2+ cells, each touching the next".into());
-                }
+            ConstraintSpec::Line { .. } if ids.len() < 2 || !connected => {
+                return Err("a line needs 2+ cells, each touching the next".into());
             }
-            ConstraintSpec::Arrow { .. } => {
-                // the shaft can hold at most nine 1s, and the circle at most 9
-                if ids.len() < 2 || ids.len() > 10 || !ids.windows(2).all(|w| adjacent(w[0], w[1]))
-                {
-                    return Err(
-                        "an arrow needs a circle and 1 to 9 shaft cells, each touching the next"
-                            .into(),
-                    );
-                }
+            // the shaft can hold at most nine 1s, and the circle at most 9
+            ConstraintSpec::Arrow { .. } if !(2..=10).contains(&ids.len()) || !connected => {
+                return Err(
+                    "an arrow needs a circle and 1 to 9 shaft cells, each touching the next".into(),
+                );
             }
             ConstraintSpec::Marker { .. } if !orthogonal(ids[0], ids[1]) => {
                 return Err("a marker sits between two orthogonal neighbours".into());

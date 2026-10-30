@@ -236,7 +236,7 @@ pub fn solve_brute(ctx: &SolverContext, givens: &[(CellId, u8)]) -> Option<[u8; 
 }
 
 /// Extract the max strategy difficulty from deductions, ignoring
-/// constraint propagation (difficulty 0).
+/// propagation (difficulty 0).
 fn classify(deductions: &[Deduction]) -> u8 {
     deductions
         .iter()
