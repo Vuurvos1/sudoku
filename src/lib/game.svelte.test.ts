@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { CELL_COLORS } from './color';
-import { Game } from './game.svelte';
+import { Game, type GameOptions } from './game.svelte';
 import { CellSelection } from './selection.svelte';
-import type { MistakeMode } from './stores/settings.svelte';
 import type { Sudoku } from './stores/sudoku.svelte';
 
-function setup(mistakes: MistakeMode = 'solution') {
+function setup(overrides: Partial<GameOptions> = {}) {
+	const options: GameOptions = {
+		mistakes: 'solution',
+		autoCleanNotes: true,
+		highlightSameDigit: true,
+		highlightHouses: true,
+		...overrides
+	};
 	const sudoku: Sudoku = Array.from({ length: 9 }, () =>
 		Array.from({ length: 9 }, () => ({ value: 0, notes: [], colors: [], fixed: false }))
 	);
@@ -28,7 +34,7 @@ function setup(mistakes: MistakeMode = 'solution') {
 		conflicts: async () => [1]
 	};
 	const selection = new CellSelection(() => null);
-	const game = new Game(store, selection, () => mistakes);
+	const game = new Game(store, selection, () => options);
 	const select = (...cells: number[]) => {
 		selection.clear();
 		cells.forEach((c) => selection.cells.add(c));
@@ -37,32 +43,36 @@ function setup(mistakes: MistakeMode = 'solution') {
 }
 
 describe('Game', () => {
-	it('fills a digit and clears the matching notes of its peers when correct', () => {
+	it('fills a digit and clears that note from its peers', () => {
 		const { store, game, select } = setup();
+		store.sudoku[0][1].notes = [2, 4];
 		store.sudoku[0][2].notes = [2, 3];
 		store.sudoku[1][1].notes = [2];
 		select(1);
 		game.enter(2);
 		expect(store.sudoku[0][1].value).toBe(2);
+		expect(store.sudoku[0][1].notes).toEqual([]);
 		expect(store.sudoku[0][2].notes).toEqual([3]);
 		expect(store.sudoku[1][1].notes).toEqual([]);
 	});
 
-	it('leaves peer notes alone unless mistakes are checked against the solution', () => {
-		const { store, game, select } = setup('rules');
-		store.sudoku[0][2].notes = [2];
-		select(1);
-		game.enter(2);
-		expect(store.sudoku[0][2].notes).toEqual([2]);
-	});
-
-	it('leaves peer notes alone for a wrong digit', () => {
-		const { store, game, select } = setup();
+	it('cleans notes for a wrong digit too, so it gives nothing away', () => {
+		const { store, game, select } = setup({ mistakes: 'rules' });
 		store.sudoku[0][2].notes = [3];
 		select(1);
 		game.enter(3);
 		expect(store.sudoku[0][1].value).toBe(3);
-		expect(store.sudoku[0][2].notes).toEqual([3]);
+		expect(store.sudoku[0][2].notes).toEqual([]);
+	});
+
+	it('leaves notes alone when auto-clean is off', () => {
+		const { store, game, select } = setup({ autoCleanNotes: false });
+		store.sudoku[0][1].notes = [4];
+		store.sudoku[0][2].notes = [2];
+		select(1);
+		game.enter(2);
+		expect(store.sudoku[0][1].notes).toEqual([4]);
+		expect(store.sudoku[0][2].notes).toEqual([2]);
 	});
 
 	it('does not change givens', () => {
@@ -136,8 +146,18 @@ describe('Game', () => {
 		expect(game.layer.value!(1)).toEqual({ 'text-red-400': true });
 	});
 
+	it('can turn off the peer and same-digit highlights', () => {
+		const { store, game, select } = setup({ highlightHouses: false, highlightSameDigit: false });
+		store.sudoku[0][1].value = 3;
+		store.sudoku[4][4].value = 3;
+		select(1);
+		expect(game.layer.cell!(1)).toMatchObject({ 'bg-accent/60': true });
+		expect(game.layer.cell!(10)).toMatchObject({ 'bg-accent/20': false });
+		expect(game.layer.cell!(40)).toMatchObject({ 'bg-accent/20': false });
+	});
+
 	it('marks mistakes by rules, by the solution, or not at all', async () => {
-		const rules = setup('rules');
+		const rules = setup({ mistakes: 'rules' });
 		rules.store.sudoku[0][1].value = 2;
 		rules.store.sudoku[0][2].value = 5;
 		expect(rules.game.layer.value!(1)).toEqual({ 'text-red-400': false });
@@ -146,11 +166,11 @@ describe('Game', () => {
 		// wrong by the solution, but no rule says so
 		expect(rules.game.layer.value!(2)).toEqual({ 'text-red-400': false });
 
-		const solution = setup('solution');
+		const solution = setup({ mistakes: 'solution' });
 		solution.store.sudoku[0][2].value = 5;
 		expect(solution.game.layer.value!(2)).toEqual({ 'text-red-400': true });
 
-		const off = setup('off');
+		const off = setup({ mistakes: 'off' });
 		off.store.sudoku[0][2].value = 5;
 		expect(off.game.layer.value!(2)).toEqual({ 'text-red-400': false });
 	});

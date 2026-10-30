@@ -20,7 +20,7 @@
 	import { Game } from '$lib/game.svelte';
 
 	const selection = new CellSelection();
-	const game = new Game(sudokuStore, selection, () => settingsStore.settings.mistakes);
+	const game = new Game(sudokuStore, selection, () => settingsStore.settings);
 
 	$effect(() => {
 		if (settingsStore.settings.mistakes === 'rules') game.checkRules();

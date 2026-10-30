@@ -59,9 +59,9 @@ export function ruleLabel(constraint: ConstraintSpec): string {
 		case 'diagonals':
 			return 'X-sudoku';
 		case 'antiKnight':
-			return 'Anti-knight';
+			return "Knight's move";
 		case 'antiKing':
-			return 'Anti-king';
+			return "King's move";
 		case 'cage':
 			return 'Killer';
 		case 'line':

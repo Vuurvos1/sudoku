@@ -17,6 +17,12 @@ export type Settings = {
 	showTimer: boolean;
 	showRemainingDigits: boolean;
 	mistakes: MistakeMode;
+	/** placing a digit removes that note from the cells it sees */
+	autoCleanNotes: boolean;
+	/** highlight cells with the selected digit, as a value or a note */
+	highlightSameDigit: boolean;
+	/** shade the row, column, box and other cells the selection sees */
+	highlightHouses: boolean;
 	theme: keyof typeof themes;
 };
 
@@ -29,6 +35,9 @@ function createSettingsStore() {
 		showTimer: false,
 		showRemainingDigits: true,
 		mistakes: 'rules',
+		autoCleanNotes: true,
+		highlightSameDigit: true,
+		highlightHouses: true,
 		theme: 'dark'
 	});
 

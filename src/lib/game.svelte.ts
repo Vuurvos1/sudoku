@@ -2,11 +2,24 @@ import type { BoardLayer } from '$lib/board';
 import { CELL_COLORS } from '$lib/color';
 import type { CellSelection } from '$lib/selection.svelte';
 import { HistoryStore } from '$lib/stores/history.svelte';
-import type { MistakeMode } from '$lib/stores/settings.svelte';
+import type { Settings } from '$lib/stores/settings.svelte';
 import type { Sudoku, SudokuStore } from '$lib/stores/sudoku.svelte';
 import { cellPosition } from '$lib/variants/geometry';
 
 export type InputMode = 'fill' | 'note' | 'color';
+
+/** The settings a game follows. */
+export type GameOptions = Pick<
+	Settings,
+	'mistakes' | 'autoCleanNotes' | 'highlightSameDigit' | 'highlightHouses'
+>;
+
+const DEFAULT_OPTIONS: GameOptions = {
+	mistakes: 'rules',
+	autoCleanNotes: true,
+	highlightSameDigit: true,
+	highlightHouses: true
+};
 
 type Store = Pick<
 	SudokuStore,
@@ -28,15 +41,19 @@ export class Game {
 
 	#store: Store;
 	#selection: CellSelection;
-	#mistakes: () => MistakeMode;
+	#options: () => GameOptions;
 	// cells breaking a rule, as of the last `checkRules`
 	#conflicts = $state<number[]>([]);
 	#checks = 0;
 
-	constructor(store: Store, selection: CellSelection, mistakes: () => MistakeMode = () => 'rules') {
+	constructor(
+		store: Store,
+		selection: CellSelection,
+		options: () => GameOptions = () => DEFAULT_OPTIONS
+	) {
 		this.#store = store;
 		this.#selection = selection;
-		this.#mistakes = mistakes;
+		this.#options = options;
 	}
 
 	/**
@@ -88,7 +105,9 @@ export class Game {
 					cells.map((cell) => cell.colors),
 					color
 				);
-				cells.forEach((cell, i) => (cell.colors = colors[i]));
+				cells.forEach((cell, i) => {
+					cell.colors = colors[i];
+				});
 				return;
 			}
 
@@ -98,7 +117,9 @@ export class Game {
 					cells.map((cell) => cell.notes),
 					digit
 				);
-				cells.forEach((cell, i) => (cell.notes = notes[i]));
+				cells.forEach((cell, i) => {
+					cell.notes = notes[i];
+				});
 				return;
 			}
 
@@ -107,10 +128,8 @@ export class Game {
 			if (!cell) return;
 			cell.value = digit;
 
-			// a correct digit clears its own notes and the same note from its peers; only
-			// when mistakes are checked against the solution, as it would give that away
-			const { row, col } = cellPosition(index);
-			if (this.#mistakes() === 'solution' && this.#store.solved?.[row][col] === digit) {
+			// placing a digit, right or wrong, clears its notes and the same note from its peers
+			if (this.#options().autoCleanNotes) {
 				cell.notes = [];
 				for (const peer of this.#store.peerMap?.[index] ?? []) {
 					const peerCell = this.#cell(peer);
@@ -183,7 +202,7 @@ export class Game {
 
 	#isMistake(index: number): boolean {
 		const cell = this.#cell(index);
-		switch (this.#mistakes()) {
+		switch (this.#options().mistakes) {
 			case 'off':
 				return false;
 			case 'rules':
@@ -200,9 +219,10 @@ export class Game {
 	readonly layer: BoardLayer = {
 		cell: (index) => {
 			const cell = this.#cell(index);
-			const value = this.#primaryValue;
+			const { highlightSameDigit, highlightHouses } = this.#options();
+			const value = highlightSameDigit ? this.#primaryValue : 0;
 			const selected = this.#selection.cells.has(index);
-			const peer = this.#peers.includes(index);
+			const peer = highlightHouses && this.#peers.includes(index);
 			const sameDigit = !selected && value > 0 && cell.value === value;
 			const matchingNote = !selected && value > 0 && cell.notes.includes(value);
 			return {
