@@ -3,6 +3,20 @@
 @tailwind utilities;
 
 :root {
+	/* cell colors for color mode, by slot; cells store the default color as the slot's name */
+	--cell-color-1: #f87171;
+	--cell-color-2: #fb923c;
+	--cell-color-3: #facc15;
+	--cell-color-4: #4ade80;
+	--cell-color-5: #22d3ee;
+	--cell-color-6: #60a5fa;
+	--cell-color-7: #a78bfa;
+	--cell-color-8: #f472b6;
+	--cell-color-9: #a8a29e;
+
+	--german-whisper: rgb(34 197 94);
+	--dutch-whisper: rgb(249 115 22);
+
 	/* TODO: move to tailwind config? */
 	font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
 
@@ -42,4 +56,35 @@ body {
 		color: #f6f6f6;
 		background-color: #2f2f2f;
 	}
+}
+
+/* color-blind friendly: the Okabe–Ito colors, which stay apart with the common kinds of
+   color blindness, with two greys to fill the last slots */
+:root[data-color-blind] {
+	--cell-color-1: #d55e00;
+	--cell-color-2: #e69f00;
+	--cell-color-3: #f0e442;
+	--cell-color-4: #009e73;
+	--cell-color-5: #56b4e9;
+	--cell-color-6: #0072b2;
+	--cell-color-7: #cc79a7;
+	--cell-color-8: #dddddd;
+	--cell-color-9: #888888;
+
+	--german-whisper: #56b4e9;
+	--dutch-whisper: #e69f00;
+}
+
+/* mistakes don't rely on color alone */
+:root[data-color-blind] .mistake {
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 0.2em;
+}
+
+:root[data-reduce-motion] *,
+:root[data-reduce-motion] *::before,
+:root[data-reduce-motion] *::after {
+	animation: none !important;
+	transition: none !important;
 }

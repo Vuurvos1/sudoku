@@ -130,6 +130,25 @@ describe('Game', () => {
 		expect(game.mode).toBe('fill');
 	});
 
+	it('fills the notes of empty cells with what their peers allow, as one undo step', () => {
+		const { store, game } = setup();
+		expect(game.hasNotes).toBe(false);
+		// R1C2 sees R1C3 and R2C2
+		store.sudoku[0][2].value = 3;
+		store.sudoku[1][1].value = 7;
+		store.sudoku[0][3].notes = [5];
+		expect(game.hasNotes).toBe(true);
+		game.fillNotes();
+		expect(store.sudoku[0][1].notes).toEqual([1, 2, 4, 5, 6, 8, 9]);
+		expect(store.sudoku[0][3].notes).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+		// filled and given cells keep no notes
+		expect(store.sudoku[0][0].notes).toEqual([]);
+		expect(store.sudoku[0][2].notes).toEqual([]);
+		game.undo();
+		expect(store.sudoku[0][1].notes).toEqual([]);
+		expect(store.sudoku[0][3].notes).toEqual([5]);
+	});
+
 	it('counts the remaining digits', () => {
 		const { game } = setup();
 		expect(game.remaining(1)).toBe(8);
@@ -143,7 +162,7 @@ describe('Game', () => {
 		expect(game.layer.cell!(1)).toMatchObject({ 'bg-accent/60': true });
 		expect(game.layer.cell!(10)).toMatchObject({ 'bg-accent/20': true });
 		expect(game.layer.cell!(40)).toMatchObject({ 'bg-accent/20': false });
-		expect(game.layer.value!(1)).toEqual({ 'text-red-400': true });
+		expect(game.layer.value!(1)).toEqual({ 'mistake text-red-400': true });
 	});
 
 	it('can turn off the peer and same-digit highlights', () => {
@@ -160,18 +179,18 @@ describe('Game', () => {
 		const rules = setup({ mistakes: 'rules' });
 		rules.store.sudoku[0][1].value = 2;
 		rules.store.sudoku[0][2].value = 5;
-		expect(rules.game.layer.value!(1)).toEqual({ 'text-red-400': false });
+		expect(rules.game.layer.value!(1)).toEqual({ 'mistake text-red-400': false });
 		await rules.game.checkRules();
-		expect(rules.game.layer.value!(1)).toEqual({ 'text-red-400': true });
+		expect(rules.game.layer.value!(1)).toEqual({ 'mistake text-red-400': true });
 		// wrong by the solution, but no rule says so
-		expect(rules.game.layer.value!(2)).toEqual({ 'text-red-400': false });
+		expect(rules.game.layer.value!(2)).toEqual({ 'mistake text-red-400': false });
 
 		const solution = setup({ mistakes: 'solution' });
 		solution.store.sudoku[0][2].value = 5;
-		expect(solution.game.layer.value!(2)).toEqual({ 'text-red-400': true });
+		expect(solution.game.layer.value!(2)).toEqual({ 'mistake text-red-400': true });
 
 		const off = setup({ mistakes: 'off' });
 		off.store.sudoku[0][2].value = 5;
-		expect(off.game.layer.value!(2)).toEqual({ 'text-red-400': false });
+		expect(off.game.layer.value!(2)).toEqual({ 'mistake text-red-400': false });
 	});
 });

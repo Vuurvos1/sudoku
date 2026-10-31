@@ -10,16 +10,26 @@ export const CELL_COLORS = [
 	'#a8a29e' // gray
 ];
 
+/**
+ * CSS color for a stored cell color. Known colors go through their palette slot
+ * (`--cell-color-1` to `-9`), so the color-blind friendly palette can swap them.
+ */
+export function cellColor(color: string, opacity = 1): string {
+	const slot = CELL_COLORS.indexOf(color);
+	const value = slot >= 0 ? `var(--cell-color-${slot + 1})` : color;
+	return opacity < 1 ? `color-mix(in srgb, ${value} ${opacity * 100}%, transparent)` : value;
+}
+
 export function cellGradient(colors: string[]): string {
 	if (colors.length === 0) return '';
-	if (colors.length === 1) return `${colors[0]}66`;
+	if (colors.length === 1) return cellColor(colors[0], 0.4);
 
 	const sliceSize = 360 / colors.length;
 	const stops = colors
 		.map((color, i) => {
 			const start = Math.round(sliceSize * i);
 			const end = Math.round(sliceSize * (i + 1));
-			return `${color}66 ${start}deg ${end}deg`;
+			return `${cellColor(color, 0.4)} ${start}deg ${end}deg`;
 		})
 		.join(', ');
 

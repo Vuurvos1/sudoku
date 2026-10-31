@@ -83,11 +83,11 @@ export class Game {
 		return this.#store.sudoku![row][col];
 	}
 
-	/** Runs an edit to the selected cells as one undo step. */
-	#edit(apply: (cells: number[]) => void) {
-		if (!this.#store.sudoku || this.#selection.cells.size === 0) return;
+	/** Runs an edit to the selected cells, or the given ones, as one undo step. */
+	#edit(apply: (cells: number[]) => void, indices = [...this.#selection.cells]) {
+		if (!this.#store.sudoku || indices.length === 0) return;
 		if (this.history.current === undefined) this.history.pushState(this.#store.copy());
-		apply([...this.#selection.cells]);
+		apply(indices);
 		this.history.pushState(this.#store.copy());
 		this.#store.save();
 	}
@@ -153,6 +153,24 @@ export class Game {
 		});
 	}
 
+	/**
+	 * Notes every digit each empty cell could still take: those none of its peers holds.
+	 * Replaces the notes already there, as one undo step.
+	 */
+	fillNotes() {
+		const { peerMap } = this.#store;
+		if (!peerMap) return;
+		const all = Array.from({ length: 81 }, (_, i) => i);
+		this.#edit((indices) => {
+			for (const index of indices) {
+				const cell = this.#cell(index);
+				if (cell.value) continue;
+				const seen = peerMap[index].map((peer) => this.#cell(peer).value);
+				cell.notes = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter((digit) => !seen.includes(digit));
+			}
+		}, all);
+	}
+
 	undo() {
 		const state = this.history.undo();
 		if (state) this.#store.restore(state);
@@ -161,6 +179,11 @@ export class Game {
 	redo() {
 		const state = this.history.redo();
 		if (state) this.#store.restore(state);
+	}
+
+	/** Whether any empty cell has notes, which `fillNotes` would replace. */
+	get hasNotes(): boolean {
+		return !!this.#store.sudoku?.flat().some((cell) => !cell.value && cell.notes.length > 0);
 	}
 
 	/** How many of a digit are still to be placed. */
@@ -231,6 +254,6 @@ export class Game {
 				'bg-accent/10': !selected && !peer && !sameDigit && matchingNote
 			};
 		},
-		value: (index) => ({ 'text-red-400': this.#isMistake(index) })
+		value: (index) => ({ 'mistake text-red-400': this.#isMistake(index) })
 	};
 }

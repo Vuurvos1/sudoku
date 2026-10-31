@@ -8,11 +8,16 @@
 		EraserIcon,
 		SettingsIcon,
 		ChevronLeftIcon,
-		LightbulbIcon
+		LightbulbIcon,
+		InfoIcon,
+		WandSparklesIcon
 	} from '@lucide/svelte';
 	import HintDialog from '$lib/components/HintDialog.svelte';
 	import GameFinishedDialog from '$lib/components/GameFinishedDialog.svelte';
-	import { CELL_COLORS } from '$lib/color';
+	import PuzzleRulesSheet from '$lib/components/PuzzleRulesSheet.svelte';
+	import Menu from '$lib/components/Menu.svelte';
+	import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
+	import { CELL_COLORS, cellColor } from '$lib/color';
 	import { resolve } from '$app/paths';
 	import Sudoku from '$lib/components/Sudoku.svelte';
 	import { ruleLabels } from '$lib/variants';
@@ -27,6 +32,14 @@
 	});
 
 	const constraints = $derived(sudokuStore.puzzle?.constraints ?? []);
+	let rulesOpen = $state(false);
+	let confirmFillOpen = $state(false);
+
+	// filling replaces notes, so ask first when there are some to lose
+	function fillNotes() {
+		if (game.hasNotes) confirmFillOpen = true;
+		else game.fillNotes();
+	}
 
 	let now = $state(Date.now());
 
@@ -120,6 +133,10 @@
 				>
 					<SettingsIcon />
 				</button>
+				<Menu
+					label="more"
+					items={[{ label: 'Fill all notes', icon: WandSparklesIcon, onselect: fillNotes }]}
+				/>
 			</div>
 		</nav>
 	</header>
@@ -129,9 +146,14 @@
 			class="sudoku relative mx-auto h-full max-h-full w-full max-w-screen-lg flex-1 overflow-hidden px-4 py-12 md:px-8"
 		>
 			{#if constraints.length > 0}
-				<p class="absolute inset-x-0 top-4 truncate px-4 text-center text-sm opacity-70">
-					{ruleLabels(constraints).join(' · ')}
-				</p>
+				<!-- opens the rules, to look up how one works mid-puzzle -->
+				<button
+					class="absolute inset-x-0 top-3 mx-auto flex max-w-full items-center justify-center gap-1.5 px-4 py-1 text-sm opacity-70 transition hover:opacity-100"
+					onclick={() => (rulesOpen = true)}
+				>
+					<span class="truncate">{ruleLabels(constraints).join(' · ')}</span>
+					<InfoIcon size={16} class="shrink-0" />
+				</button>
 			{/if}
 			<div class="mx-auto flex aspect-square max-h-full">
 				{#if sudokuStore.sudoku}
@@ -157,12 +179,18 @@
 							game.enter(i + 1);
 						}}
 						class="digit-btn"
-						style:background={game.mode === 'color' ? `${CELL_COLORS[i]}66` : ''}
-						style:border-color={game.mode === 'color' ? CELL_COLORS[i] : ''}
-						class:opacity-60={remaining === 0}
-						disabled={remaining === 0}
+						style:background={game.mode === 'color' ? cellColor(CELL_COLORS[i], 0.4) : ''}
+						style:border-color={game.mode === 'color' ? cellColor(CELL_COLORS[i]) : ''}
+						class:opacity-60={game.mode !== 'color' && remaining === 0}
+						disabled={game.mode !== 'color' && remaining === 0}
+						aria-label={game.mode === 'color' ? `Color ${i + 1}` : undefined}
 					>
-						{#if game.mode !== 'color'}
+						{#if game.mode === 'color'}
+							<!-- numbered, so colors can be told apart without seeing them -->
+							{#if settingsStore.settings.colorBlindFriendly}
+								<span class="font-semibold">{i + 1}</span>
+							{/if}
+						{:else}
 							<span class="relative">
 								{i + 1}
 								{#if settingsStore.settings.showRemainingDigits}
@@ -221,6 +249,14 @@
 
 <HintDialog bind:open={dialogState.hintOpen} hint={sudokuStore.lastHint} />
 <GameFinishedDialog bind:open={dialogState.gameFinishedOpen} />
+<PuzzleRulesSheet bind:open={rulesOpen} {constraints} />
+<ConfirmSheet
+	bind:open={confirmFillOpen}
+	title="Replace your notes?"
+	message="Filling all notes replaces the notes you already have in every empty cell. You can undo it."
+	confirmLabel="Fill notes"
+	onconfirm={() => game.fillNotes()}
+/>
 
 <style lang="postcss">
 	.digits {

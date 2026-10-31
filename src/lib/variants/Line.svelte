@@ -32,13 +32,18 @@
 
 <style>
 	.germanWhisper {
-		stroke: rgb(34 197 94);
+		stroke: var(--german-whisper);
 		opacity: 0.65;
 	}
 
 	.dutchWhisper {
-		stroke: rgb(249 115 22);
+		stroke: var(--dutch-whisper);
 		opacity: 0.65;
+	}
+
+	/* the two whispers also differ in shape, not just color */
+	:global(:root[data-color-blind]) .dutchWhisper {
+		stroke-dasharray: 0.2 0.35;
 	}
 
 	.thermo {

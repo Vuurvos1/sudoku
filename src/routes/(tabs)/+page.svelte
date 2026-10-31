@@ -4,7 +4,7 @@
 	import { ruleLabels } from '$lib/variants';
 	import { formatTime } from '$lib/time';
 	import NewGameSheet, { type GameKind } from '$lib/components/NewGameSheet.svelte';
-	import logo from '$lib/assets/logo.svg';
+	import Logo from '$lib/components/Logo.svelte';
 	import { resolve } from '$app/paths';
 
 	const canContinue = $derived(sudokuStore.sudoku !== null && !sudokuStore.isSolved);
@@ -33,8 +33,8 @@
 
 <div class="flex flex-col gap-4">
 	<div class="mb-4 text-center">
-		<!-- TODO: change to inline svg for better animating -->
-		<img src={logo} alt="" class="mx-auto h-auto w-20" />
+		<!-- the launch splash's logo lands here -->
+		<Logo data-splash-target class="mx-auto h-auto w-20" />
 		<h1 class="mt-2 text-2xl font-bold">One Sudoku</h1>
 	</div>
 

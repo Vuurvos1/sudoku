@@ -57,6 +57,8 @@ export class SudokuStore {
 	peerMap = $state<number[][] | null>(null);
 	startTime = $state<number | null>(null);
 	endTime = $state<number | null>(null);
+	/** whether the saved game has been read, so the launch splash can wait for it */
+	loaded = $state(false);
 
 	get isSolved(): boolean {
 		const { sudoku, solved } = this;
@@ -143,6 +145,14 @@ export class SudokuStore {
 	}
 
 	async load() {
+		try {
+			await this.#load();
+		} finally {
+			this.loaded = true;
+		}
+	}
+
+	async #load() {
 		this.sudoku = (await this.#store.get<Sudoku>('sudoku')) ?? null;
 		this.startTime = (await this.#store.get<number>('startTime')) ?? null;
 		this.endTime = (await this.#store.get<number>('endTime')) ?? null;

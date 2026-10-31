@@ -63,7 +63,7 @@ export function ruleLabel(constraint: ConstraintSpec): string {
 		case 'antiKing':
 			return "King's move";
 		case 'cage':
-			return 'Killer';
+			return 'Cages';
 		case 'line':
 			return {
 				germanWhisper: 'German whispers',

@@ -6,8 +6,72 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<title>One Sudoku</title>
 		%sveltekit.head%
+		<style>
+			/* the launch splash, taken down by hideSplash in src/lib/splash.ts */
+			#splash {
+				position: fixed;
+				inset: 0;
+				z-index: 100;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 24px;
+				background-color: var(--splash-background, #1e1e1e);
+				color: var(--splash-text, #ffffff);
+			}
+
+			#splash svg {
+				width: 212px;
+				height: 212px;
+				/* the logo moves to its place on the page by its top left corner */
+				transform-origin: top left;
+			}
+
+			#splash p {
+				margin: 0;
+				font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+				font-size: 2rem;
+				font-weight: 700;
+			}
+		</style>
 	</head>
 	<body data-sveltekit-preload-data="hover">
+		<div id="splash">
+			<svg viewBox="0 0 256 256" fill="none" aria-hidden="true">
+				<rect width="256" height="256" rx="128" fill="url(#splash-gradient)" />
+				<path
+					d="M54 100.25H202M54 155.75H202M100.25 54V202M155.75 54V202"
+					stroke="white"
+					stroke-width="10"
+					stroke-linecap="round"
+				/>
+				<path d="M122.296 120.4V115.756H130.972V142H125.788V120.4H122.296Z" fill="white" />
+				<defs>
+					<radialGradient
+						id="splash-gradient"
+						cx="0"
+						cy="0"
+						r="1"
+						gradientUnits="userSpaceOnUse"
+						gradientTransform="rotate(45) scale(362.039)"
+					>
+						<stop stop-color="#292929" />
+						<stop offset="0.865" stop-color="#1E1E1E" />
+					</radialGradient>
+				</defs>
+			</svg>
+			<p>One Sudoku</p>
+		</div>
+		<script>
+			// in the theme's colors, saved by the last launch
+			try {
+				const theme = JSON.parse(localStorage.getItem('splash-theme'));
+				const style = document.getElementById('splash').style;
+				if (theme?.background) style.setProperty('--splash-background', theme.background);
+				if (theme?.text) style.setProperty('--splash-text', theme.text);
+			} catch {}
+		</script>
 		<div class="contents">%sveltekit.body%</div>
 	</body>
 </html>

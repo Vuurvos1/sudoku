@@ -84,9 +84,9 @@ export const rules: Rule[] = [
 		}
 	},
 	{
-		slug: 'killer',
+		slug: 'cages',
 		glyph: 'cage',
-		name: 'Killer cage',
+		name: 'Cages',
 		summary: "Digits in a cage add up to its small number and don't repeat.",
 		tips: [
 			'Some sums have one combination: 3 is 1+2, 4 is 1+3, 16 is 7+9, 17 is 8+9.',
@@ -339,6 +339,16 @@ export const techniques: Technique[] = [
 		]
 	}
 ];
+
+/** The rule with a `ruleLabel` from $lib/variants, e.g. "German whispers". */
+export function findRule(label: string): Rule | undefined {
+	return rules.find(({ name }) => name === label);
+}
+
+/** The technique behind a solver strategy, e.g. "hidden single"; variant rules have none. */
+export function findTechnique(strategy: string): Technique | undefined {
+	return techniques.find(({ name }) => name.toLowerCase() === strategy.toLowerCase());
+}
 
 /** Easy to Expert, from the solver's 1–7 rating. */
 export function techniqueLevel(difficulty: number): string {

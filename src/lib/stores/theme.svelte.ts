@@ -1,5 +1,6 @@
 import { hexToHSL } from '$lib/color';
 import { settingsStore } from '$lib/stores';
+import { saveSplashTheme } from '$lib/splash';
 
 export type Theme = {
 	id: number;
@@ -48,6 +49,7 @@ function createThemeStore() {
 		if (themes[key]) {
 			theme = { ...themes[key] };
 			settingsStore.settings.theme = key;
+			saveSplashTheme(theme);
 		} else {
 			console.error(`Theme key ${key} not found`);
 		}

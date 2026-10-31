@@ -72,4 +72,20 @@
 			/>
 		</div>
 	</section>
+
+	<section class="mt-7">
+		<h3 class="text-xs font-semibold uppercase tracking-wider opacity-60">Accessibility</h3>
+		<div class="divide-y divide-text/10">
+			<Switch
+				label="Color-blind friendly"
+				hint="Colors that stay apart with color blindness. Dutch whispers are dashed, mistakes underlined and color buttons numbered."
+				bind:checked={settingsStore.settings.colorBlindFriendly}
+			/>
+			<Switch
+				label="Reduce motion"
+				hint="Skips the solved animation and sliding sheets."
+				bind:checked={settingsStore.settings.reduceMotion}
+			/>
+		</div>
+	</section>
 </Sheet>
