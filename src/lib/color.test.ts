@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cellGradient, CELL_COLORS } from './color';
+import { cellColor, cellGradient, CELL_COLORS } from './color';
 
 describe('CELL_COLORS', () => {
 	it('has exactly 9 colors', () => {
@@ -13,6 +13,19 @@ describe('CELL_COLORS', () => {
 	});
 });
 
+describe('cellColor', () => {
+	it('uses the palette slot, so the palette can be swapped', () => {
+		expect(cellColor('#4ade80')).toBe('var(--cell-color-4)');
+		expect(cellColor('#4ade80', 0.4)).toBe(
+			'color-mix(in srgb, var(--cell-color-4) 40%, transparent)'
+		);
+	});
+
+	it('keeps colors outside the palette as they are', () => {
+		expect(cellColor('#123456')).toBe('#123456');
+	});
+});
+
 describe('cellGradient', () => {
 	it('returns empty string for no colors', () => {
 		expect(cellGradient([])).toBe('');
@@ -20,14 +33,14 @@ describe('cellGradient', () => {
 
 	it('returns solid background for one color', () => {
 		const result = cellGradient(['#f87171']);
-		expect(result).toBe('#f8717166');
+		expect(result).toBe('color-mix(in srgb, var(--cell-color-1) 40%, transparent)');
 	});
 
 	it('returns conic-gradient for two colors', () => {
 		const result = cellGradient(['#f87171', '#60a5fa']);
 		expect(result).toContain('conic-gradient');
-		expect(result).toContain('#f8717166');
-		expect(result).toContain('#60a5fa66');
+		expect(result).toContain('var(--cell-color-1) 40%');
+		expect(result).toContain('var(--cell-color-6) 40%');
 		expect(result).toContain('180deg');
 	});
 

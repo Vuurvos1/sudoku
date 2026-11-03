@@ -1,7 +1,6 @@
 use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
 use sudoku_solver::{
     board::Board,
-    constraint::standard_constraints,
     solver::{SolveResult, Solver, SolverContext},
     strategies::{BoxLineReduction, HiddenSingle, NakedSingle, PointingPairs},
     strategy::Strategy,
@@ -42,11 +41,8 @@ fn assert_solvable(label: &str, puzzle: &[u8; 81], solver: &Solver, ctx: &Solver
 }
 
 fn bench_solve(c: &mut Criterion) {
-    let constraints = standard_constraints();
     let solver = build_solver();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
 
     // Sanity check: bail out loudly if a puzzle isn't solvable with the current
     // strategy set, so a "stuck" run can't masquerade as a fast solve.

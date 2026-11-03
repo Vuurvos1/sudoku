@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
     solver::SolverContext,
     strategies::HiddenSingle,
     strategy::Strategy,
@@ -27,16 +26,11 @@ fn finds_hidden_single_in_row() {
         .collect();
 
     let mut board = Board::new(&givens);
-    let constraints = standard_constraints();
+    let ctx = SolverContext::standard();
 
     // Run propagation so candidate sets reflect the givens.
-    for c in &constraints {
-        c.propagate(&mut board);
-    }
+    ctx.propagate(&mut board);
 
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
     let deduction = HiddenSingle
         .find(&board, &ctx)
         .expect("expected to find a hidden single for 9 at R1C1");

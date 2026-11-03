@@ -2,37 +2,25 @@
 	import { themeStore, themes } from '$lib/stores';
 </script>
 
-<div class="my-4 flex flex-row flex-wrap gap-4">
-	{#each Object.entries(themes) as [key, value] (key)}
+<div role="radiogroup" aria-label="Theme" class="grid grid-cols-4 gap-2">
+	{#each Object.entries(themes) as [key, theme] (key)}
+		{@const active = themeStore.get().id === theme.id}
 		<button
-			class:active={themeStore.get().id === value.id}
-			style="background:{value.background}"
-			class="grid h-8 w-8 place-items-center rounded-full transition duration-200"
-			onclick={() => {
-				themeStore.setTheme(key);
-			}}
-			aria-label="select theme"
+			role="radio"
+			aria-checked={active}
+			onclick={() => themeStore.setTheme(key)}
+			class="flex flex-col items-center gap-2 py-1 text-sm capitalize"
 		>
-			<div
-				style="background:{value.accent}"
-				class="grid h-4 w-4 place-items-center rounded-full outline-0 transition duration-200"
+			<span
+				class={[
+					'grid h-11 w-11 place-items-center rounded-full transition',
+					active ? 'ring-2 ring-accent ring-offset-2 ring-offset-background' : 'ring-1 ring-text/30'
+				]}
+				style:background={theme.background}
 			>
-				<div
-					style="background:{value.background}"
-					class="h-4 w-4 scale-0 rounded-full transition duration-200"
-				></div>
-			</div>
+				<span class="h-4 w-4 rounded-full" style:background={theme.accent}></span>
+			</span>
+			<span class={active ? 'font-semibold' : 'opacity-70'}>{key}</span>
 		</button>
 	{/each}
 </div>
-
-<style lang="postcss">
-	button.active > div {
-		box-shadow: 0 0 0 12px var(--color-accent);
-	}
-
-	button.active > div > div {
-		transform: scale(1);
-		transition-delay: 0.075s;
-	}
-</style>

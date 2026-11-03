@@ -1,0 +1,40 @@
+{
+	"id": "variants",
+	"name": "Variants",
+	"description": "Classic rules with something extra on top.",
+	"puzzles": [
+		{
+			"id": "variants-1",
+			"title": "Crossroads",
+			"difficulty": "medium",
+			"givens": "...87..9663.........1......8.........4.3..2....5...........6.29.1.7......5.......",
+			"constraints": [
+				{
+					"type": "diagonals"
+				}
+			]
+		},
+		{
+			"id": "variants-2",
+			"title": "Knight moves",
+			"difficulty": "medium",
+			"givens": ".....6.....6..............1.5.......7..........831..9...2...8.......3...4....9...",
+			"constraints": [
+				{
+					"type": "antiKnight"
+				}
+			]
+		},
+		{
+			"id": "variants-3",
+			"title": "Royal guard",
+			"difficulty": "medium",
+			"givens": ".....76....9...85..83.4...1...719.6....3..........6..572....4...4...2.....6......",
+			"constraints": [
+				{
+					"type": "antiKing"
+				}
+			]
+		}
+	]
+}

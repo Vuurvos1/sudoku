@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
     solver::SolverContext,
     strategies::HiddenSubset,
     strategy::Strategy,
@@ -24,10 +23,7 @@ fn finds_hidden_pair_in_row() {
         board.remove_candidate(CellId::from_rc(0, c), 7);
     }
 
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
 
     let deduction = HiddenSubset::<2>
         .find(&board, &ctx)

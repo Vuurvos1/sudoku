@@ -2,8 +2,7 @@ use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
 
-use crate::board::{Board, CellId};
-use crate::constraint::standard_constraints;
+use crate::board::{Board, Candidates, CellId};
 use crate::solver::{SolveResult, Solver, SolverContext};
 use crate::strategy::Deduction;
 
@@ -43,6 +42,12 @@ pub struct Generator {
     rng: SmallRng,
 }
 
+impl Default for Generator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Generator {
     pub fn new() -> Self {
         Generator {
@@ -56,23 +61,32 @@ impl Generator {
         }
     }
 
-    /// Fill an empty 9x9 grid using backtracking with randomized candidates.
+    /// Fill an empty standard 9x9 grid with randomized digits.
     /// Returns a flat array of 81 digits (1-9).
     pub fn fill_grid(&mut self) -> [u8; 81] {
-        let mut grid = [0u8; 81];
-        fill_recursive(&mut grid, 0, &mut self.rng);
-        grid
+        self.fill_grid_for(&SolverContext::standard())
+    }
+
+    /// Fill an empty grid that satisfies all of `ctx`'s rules.
+    pub fn fill_grid_for(&mut self, ctx: &SolverContext) -> [u8; 81] {
+        let rng = &mut self.rng;
+        let mut solution = None;
+        search(ctx, &mut [0u8; 81], &mut |d| d.shuffle(rng), &mut |grid| {
+            solution = Some(*grid);
+            true
+        });
+        solution.expect("rules admit no complete grid")
     }
 
     pub fn generate(&mut self, difficulty: Difficulty) -> Board {
-        let constraints = standard_constraints();
-        let ctx = SolverContext {
-            constraints: &constraints,
-        };
+        self.generate_for(difficulty, &SolverContext::standard())
+    }
+
+    pub fn generate_for(&mut self, difficulty: Difficulty, ctx: &SolverContext) -> Board {
         let solver = Solver::default();
 
         loop {
-            let grid = self.fill_grid();
+            let grid = self.fill_grid_for(ctx);
 
             // Build list of all givens (all 81 cells initially)
             let mut givens: Vec<Option<u8>> = grid.iter().copied().map(Some).collect();
@@ -93,14 +107,14 @@ impl Generator {
                     .collect();
 
                 // Check uniqueness
-                if count_solutions(&current, 2) != 1 {
+                if count_solutions_for(ctx, &current, 2) != 1 {
                     givens[pos] = Some(digit);
                     continue;
                 }
 
                 // Check difficulty ceiling
                 let mut board = Board::new(&current);
-                match solver.solve(&mut board, &ctx) {
+                match solver.solve(&mut board, ctx) {
                     SolveResult::Solved(ref deductions) => {
                         if classify(deductions) > difficulty.ceiling() {
                             givens[pos] = Some(digit);
@@ -121,7 +135,7 @@ impl Generator {
                 .collect();
 
             let mut board = Board::new(&final_givens);
-            if let SolveResult::Solved(ref deductions) = solver.solve(&mut board, &ctx) {
+            if let SolveResult::Solved(ref deductions) = solver.solve(&mut board, ctx) {
                 let max_diff = classify(deductions);
                 if max_diff >= difficulty.floor() {
                     return Board::new(&final_givens);
@@ -132,98 +146,97 @@ impl Generator {
     }
 }
 
-fn fill_recursive(grid: &mut [u8; 81], pos: usize, rng: &mut SmallRng) -> bool {
-    if pos == 81 {
-        return true;
-    }
-
-    let mut digits: [u8; 9] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    digits.shuffle(rng);
-
-    for d in digits {
-        if is_valid_placement(grid, pos, d) {
-            grid[pos] = d;
-            if fill_recursive(grid, pos + 1, rng) {
-                return true;
+/// Depth-first search, always branching on the empty cell with the fewest
+/// legal digits. `order` arranges each cell's digits before trying them;
+/// `on_solution` sees every complete grid and returns true to stop.
+/// Returns true if the search was stopped.
+fn search<O, F>(
+    ctx: &SolverContext,
+    grid: &mut [u8; 81],
+    order: &mut O,
+    on_solution: &mut F,
+) -> bool
+where
+    O: FnMut(&mut [u8]),
+    F: FnMut(&[u8; 81]) -> bool,
+{
+    let mut best: Option<(usize, Candidates)> = None;
+    for i in 0..81 {
+        if grid[i] != 0 {
+            continue;
+        }
+        let legal = ctx.legal_digits(grid, CellId(i as u8));
+        if legal.count() == 0 {
+            return false;
+        }
+        if best.is_none_or(|(_, b)| legal.count() < b.count()) {
+            best = Some((i, legal));
+            if legal.count() == 1 {
+                break;
             }
-            grid[pos] = 0;
         }
     }
 
+    let Some((pos, legal)) = best else {
+        return on_solution(grid);
+    };
+
+    let mut digits: Vec<u8> = legal.iter().collect();
+    order(&mut digits);
+    for d in digits {
+        grid[pos] = d;
+        if search(ctx, grid, order, on_solution) {
+            grid[pos] = 0;
+            return true;
+        }
+    }
+    grid[pos] = 0;
     false
 }
 
-fn is_valid_placement(grid: &[u8; 81], pos: usize, digit: u8) -> bool {
-    let row = pos / 9;
-    let col = pos % 9;
-
-    // Check row
-    for c in 0..9 {
-        if grid[row * 9 + c] == digit {
-            return false;
-        }
-    }
-
-    // Check column
-    for r in 0..9 {
-        if grid[r * 9 + col] == digit {
-            return false;
-        }
-    }
-
-    // Check 3x3 box
-    let box_row = (row / 3) * 3;
-    let box_col = (col / 3) * 3;
-    for r in box_row..box_row + 3 {
-        for c in box_col..box_col + 3 {
-            if grid[r * 9 + c] == digit {
-                return false;
-            }
-        }
-    }
-
-    true
-}
-
-/// Count solutions for a puzzle up to `limit` using backtracking.
-/// Returns as soon as `limit` solutions are found.
-pub fn count_solutions(givens: &[(CellId, u8)], limit: usize) -> usize {
+/// Place the givens on an empty grid, or `None` if they break a rule.
+fn grid_from_givens(ctx: &SolverContext, givens: &[(CellId, u8)]) -> Option<[u8; 81]> {
     let mut grid = [0u8; 81];
     for &(cell, digit) in givens {
+        if !ctx.legal_digits(&grid, cell).contains(digit) {
+            return None;
+        }
         grid[cell.0 as usize] = digit;
     }
+    Some(grid)
+}
+
+/// Count solutions of a standard puzzle, stopping once `limit` are found.
+pub fn count_solutions(givens: &[(CellId, u8)], limit: usize) -> usize {
+    count_solutions_for(&SolverContext::standard(), givens, limit)
+}
+
+/// Count solutions under `ctx`'s rules, stopping once `limit` are found.
+pub fn count_solutions_for(ctx: &SolverContext, givens: &[(CellId, u8)], limit: usize) -> usize {
+    let Some(mut grid) = grid_from_givens(ctx, givens) else {
+        return 0;
+    };
     let mut count = 0;
-    count_recursive(&mut grid, 0, &mut count, limit);
+    search(ctx, &mut grid, &mut |_| {}, &mut |_| {
+        count += 1;
+        count >= limit
+    });
     count
 }
 
-fn count_recursive(grid: &mut [u8; 81], pos: usize, count: &mut usize, limit: usize) {
-    if *count >= limit {
-        return;
-    }
-    if pos == 81 {
-        *count += 1;
-        return;
-    }
-    if grid[pos] != 0 {
-        count_recursive(grid, pos + 1, count, limit);
-        return;
-    }
-
-    for d in 1..=9 {
-        if is_valid_placement(grid, pos, d) {
-            grid[pos] = d;
-            count_recursive(grid, pos + 1, count, limit);
-            grid[pos] = 0;
-            if *count >= limit {
-                return;
-            }
-        }
-    }
+/// First solution under `ctx`'s rules found by brute force, if any.
+pub fn solve_brute(ctx: &SolverContext, givens: &[(CellId, u8)]) -> Option<[u8; 81]> {
+    let mut grid = grid_from_givens(ctx, givens)?;
+    let mut solution = None;
+    search(ctx, &mut grid, &mut |_| {}, &mut |g| {
+        solution = Some(*g);
+        true
+    });
+    solution
 }
 
 /// Extract the max strategy difficulty from deductions, ignoring
-/// constraint propagation (difficulty 0).
+/// propagation (difficulty 0).
 fn classify(deductions: &[Deduction]) -> u8 {
     deductions
         .iter()

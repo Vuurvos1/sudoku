@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
     solver::SolverContext,
     strategies::PointingPairs,
     strategy::Strategy,
@@ -17,10 +16,7 @@ fn finds_pointing_pair_in_box_locked_to_row() {
         board.remove_candidate(CellId::from_rc(1, c), 5);
     }
 
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
 
     let deduction = PointingPairs
         .find(&board, &ctx)

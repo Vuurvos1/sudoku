@@ -1,23 +1,20 @@
 <script lang="ts">
-	import Dialog from '$lib/components/Dialog.svelte';
+	import { TrophyIcon } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import Sheet from '$lib/components/Sheet.svelte';
 	import { sudokuStore } from '$lib/stores';
+	import { puzzleRules } from '$lib/variants';
+	import { formatTime } from '$lib/time';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
-
-	function formatTime(ms: number): string {
-		const totalSeconds = Math.floor(ms / 1000);
-		const minutes = Math.floor(totalSeconds / 60);
-		const seconds = totalSeconds % 60;
-		return `${minutes}m ${seconds}s`;
-	}
 
 	const elapsed = $derived(
 		sudokuStore.startTime && sudokuStore.endTime
 			? sudokuStore.endTime - sudokuStore.startTime
 			: null
 	);
+	const kind = $derived(puzzleRules(sudokuStore.puzzle?.constraints ?? []).join(' · '));
 
 	function handleNewGame() {
 		open = false;
@@ -26,19 +23,30 @@
 	}
 </script>
 
-<Dialog bind:open>
-	<div class="flex flex-col items-center gap-6 py-4">
-		<h2 class="text-2xl font-semibold">Puzzle Complete</h2>
+<Sheet bind:open title="Solved">
+	<div class="flex flex-col items-center text-center">
+		<span class="grid h-16 w-16 place-items-center rounded-full bg-accent/15 text-accent">
+			<TrophyIcon size={30} />
+		</span>
 
 		{#if elapsed !== null}
-			<p class="text-lg">{formatTime(elapsed)}</p>
+			<p class="mt-4 text-5xl font-bold tabular-nums">{formatTime(elapsed)}</p>
 		{/if}
+		<p class="mt-2 text-sm opacity-70">{kind}</p>
+	</div>
 
+	<div class="mt-8 grid grid-cols-2 gap-3">
 		<button
-			onclick={handleNewGame}
-			class="rounded-full border-2 border-accent px-6 py-2 font-medium transition hover:bg-accent hover:text-background"
+			class="rounded-full py-2.5 font-semibold ring-1 ring-inset ring-text/20 transition hover:bg-text/5"
+			onclick={() => (open = false)}
 		>
-			New Game
+			View board
+		</button>
+		<button
+			class="rounded-full bg-accent py-2.5 font-semibold text-background transition hover:opacity-90"
+			onclick={handleNewGame}
+		>
+			New game
 		</button>
 	</div>
-</Dialog>
+</Sheet>

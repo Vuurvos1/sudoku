@@ -1,21 +1,39 @@
 mod types;
 
-use sudoku::Sudoku;
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::{all_peers, standard_constraints},
-    generator::{Difficulty, Generator},
+    constraint::ConstraintSpec,
+    generator::{solve_brute, Difficulty, Generator},
     solver::{SolveResult, Solver, SolverContext},
 };
 
-use crate::types::hint_response_from;
+use crate::types::{hint_response_from, Puzzle};
 
 fn is_valid_sudoku_line(s: &str) -> bool {
     s.len() == 81 && s.chars().all(|c| matches!(c, '0'..='9' | '.'))
 }
 
+fn parse_board(puzzle: &Puzzle) -> Result<Board, String> {
+    if !is_valid_sudoku_line(&puzzle.givens) {
+        return Err("Invalid puzzle string".to_string());
+    }
+    Ok(Board::from_line(&puzzle.givens))
+}
+
+fn build_context(constraints: &[ConstraintSpec]) -> Result<SolverContext, String> {
+    for spec in constraints {
+        spec.validate()?;
+    }
+    Ok(SolverContext::new(constraints))
+}
+
+// generate, solve and hint are async: Tauri runs those off the main thread, so
+// slow work doesn't freeze the window
 #[tauri::command]
-fn generate_sudoku(difficulty: u8) -> Result<String, String> {
+async fn generate_sudoku(
+    difficulty: u8,
+    constraints: Option<Vec<ConstraintSpec>>,
+) -> Result<Puzzle, String> {
     let diff = match difficulty {
         1 => Difficulty::Easy,
         2 => Difficulty::Medium,
@@ -24,10 +42,11 @@ fn generate_sudoku(difficulty: u8) -> Result<String, String> {
         _ => return Err(format!("Invalid difficulty: {}", difficulty)),
     };
 
-    let mut gen = Generator::new();
-    let board = gen.generate(diff);
+    let constraints = constraints.unwrap_or_default();
+    let ctx = build_context(&constraints)?;
+    let board = Generator::new().generate_for(diff, &ctx);
 
-    let line: String = (0..81)
+    let givens: String = (0..81)
         .map(|i| {
             board
                 .value(CellId(i))
@@ -36,63 +55,67 @@ fn generate_sudoku(difficulty: u8) -> Result<String, String> {
         })
         .collect();
 
-    Ok(line)
+    Ok(Puzzle {
+        givens,
+        constraints,
+    })
 }
 
 #[tauri::command]
-fn solve_sudoku(sudoku_line: String) -> Result<Vec<u8>, String> {
-    if !is_valid_sudoku_line(&sudoku_line) {
-        return Err("Invalid puzzle string".to_string());
-    }
+async fn solve_sudoku(puzzle: Puzzle) -> Result<Vec<u8>, String> {
+    let mut board = parse_board(&puzzle)?;
+    let ctx = build_context(&puzzle.constraints)?;
 
-    let mut board = Board::from_line(&sudoku_line);
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
-    let solver = Solver::default();
-
-    if let SolveResult::Solved(_) = solver.solve(&mut board, &ctx) {
+    if let SolveResult::Solved(_) = Solver::default().solve(&mut board, &ctx) {
         return Ok((0..81u8)
             .map(|i| board.value(CellId(i)).unwrap_or(0))
             .collect());
     }
 
-    // Fallback: external crate brute-force solver
-    let sudoku =
-        Sudoku::from_str_line(&sudoku_line).map_err(|e| format!("Invalid puzzle: {}", e))?;
-    match sudoku.solution() {
-        Some(solution) => Ok(solution.to_bytes().to_vec()),
+    // Fallback: brute-force search under the same rules
+    let givens: Vec<(CellId, u8)> = puzzle
+        .givens
+        .bytes()
+        .enumerate()
+        .filter(|&(_, b)| matches!(b, b'1'..=b'9'))
+        .map(|(i, b)| (CellId(i as u8), b - b'0'))
+        .collect();
+    match solve_brute(&ctx, &givens) {
+        Some(solution) => Ok(solution.to_vec()),
         None => Err("No solution found".to_string()),
     }
 }
 
 #[tauri::command]
-fn hint_sudoku(sudoku_line: String) -> Result<types::HintResponse, String> {
-    if !is_valid_sudoku_line(&sudoku_line) {
-        return Err("Invalid puzzle string".to_string());
-    }
+async fn hint_sudoku(puzzle: Puzzle) -> Result<types::HintResponse, String> {
+    let mut board = parse_board(&puzzle)?;
+    let ctx = build_context(&puzzle.constraints)?;
 
-    let mut board = Board::from_line(&sudoku_line);
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
-    let solver = Solver::default();
-
-    match solver.hint(&mut board, &ctx) {
+    match Solver::default().hint(&mut board, &ctx) {
         Some(deduction) => Ok(hint_response_from(&deduction)),
         None => Err("No hint available".to_string()),
     }
 }
 
 #[tauri::command]
-fn get_peers() -> Vec<Vec<u8>> {
-    let constraints = standard_constraints();
-    all_peers(&constraints)
-        .into_iter()
-        .map(|peers| peers.into_iter().map(|c| c.0).collect())
-        .collect()
+fn get_peers(constraints: Vec<ConstraintSpec>) -> Result<Vec<Vec<u8>>, String> {
+    let ctx = build_context(&constraints)?;
+    Ok((0..81u8)
+        .map(|i| ctx.peers(CellId(i)).iter().map(|c| c.0).collect())
+        .collect())
+}
+
+/// Filled cells that break a rule, for highlighting mistakes without the solution.
+#[tauri::command]
+fn find_conflicts(constraints: Vec<ConstraintSpec>, grid: Vec<u8>) -> Result<Vec<u8>, String> {
+    let ctx = build_context(&constraints)?;
+    let grid: [u8; 81] = grid
+        .try_into()
+        .map_err(|_| "grid must have 81 cells".to_string())?;
+    if grid.iter().any(|&d| d > 9) {
+        return Err("grid digits must be 0 to 9".to_string());
+    }
+    Ok(ctx.conflicts(&grid).iter().map(|c| c.0).collect())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -104,7 +127,8 @@ pub fn run() {
             generate_sudoku,
             solve_sudoku,
             hint_sudoku,
-            get_peers
+            get_peers,
+            find_conflicts
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

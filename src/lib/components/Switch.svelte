@@ -1,33 +1,33 @@
 <script lang="ts">
 	interface Props {
 		checked?: boolean;
-		label?: string;
-		id?: string;
+		label: string;
+		/** a line under the label explaining the setting */
+		hint?: string;
 	}
 
-	let { checked = $bindable(false), label = '', id }: Props = $props();
+	let { checked = $bindable(false), label, hint }: Props = $props();
 </script>
 
-<div class="switch">
-	<label class="flex items-center gap-4 pr-4 text-text">
-		{#if label}
-			<span class="leading-none">
-				{label}
-			</span>
+<!-- a settings row: label on the left, the switch lined up on the right -->
+<div class="flex items-center gap-4 py-3">
+	<div class="flex-1">
+		<p>{label}</p>
+		{#if hint}
+			<p class="mt-0.5 text-sm opacity-60">{hint}</p>
 		{/if}
+	</div>
 
-		<button
-			onclick={() => {
-				checked = !checked;
-			}}
-			data-state={checked ? 'checked' : 'unchecked'}
-			class="relative h-6 cursor-pointer rounded-full bg-gray-500 transition-colors data-[state=checked]:bg-accent"
-			aria-label="toggle"
-		>
-			<span class="thumb block rounded-full bg-white transition"></span>
-		</button>
-		<input bind:checked type="checkbox" class="sr-only" {id} />
-	</label>
+	<button
+		role="switch"
+		aria-checked={checked}
+		aria-label={label}
+		onclick={() => (checked = !checked)}
+		data-state={checked ? 'checked' : 'unchecked'}
+		class="relative h-6 shrink-0 cursor-pointer rounded-full bg-gray-500 transition-colors data-[state=checked]:bg-accent"
+	>
+		<span class="thumb block rounded-full bg-white transition"></span>
+	</button>
 </div>
 
 <style>

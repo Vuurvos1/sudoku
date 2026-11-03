@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::Board,
-    constraint::standard_constraints,
     solver::{SolveResult, Solver, SolverContext},
 };
 
@@ -8,10 +7,7 @@ use sudoku_solver::{
 fn default_solver_solves_easy_puzzle() {
     let line = "53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79";
     let mut board = Board::from_line(line);
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
     let solver = Solver::default();
 
     match solver.solve(&mut board, &ctx) {
@@ -27,10 +23,7 @@ fn default_solver_solves_easy_puzzle() {
 fn hint_returns_deduction_for_easy_puzzle() {
     let line = "53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79";
     let mut board = Board::from_line(line);
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
     let solver = Solver::default();
 
     let hint = solver.hint(&mut board, &ctx);
@@ -48,10 +41,7 @@ fn hint_returns_none_for_solved_board() {
         2, 8, 4, 2, 8, 7, 4, 1, 9, 6, 3, 5, 3, 4, 5, 2, 8, 6, 1, 7, 9,
     ];
     let mut board = Board::from_array(&solved);
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
     let solver = Solver::default();
 
     let hint = solver.hint(&mut board, &ctx);

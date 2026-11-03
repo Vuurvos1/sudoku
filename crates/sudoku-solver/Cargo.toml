@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 description = "Constraint-based Sudoku solver with hint generation"
 license = "MIT"
+repository = "https://github.com/Vuurvos1/sudoku"
+readme = "README.md"
+keywords = ["sudoku", "solver", "puzzle", "hints"]
+categories = ["games", "algorithms"]
 
 [features]
 default = []

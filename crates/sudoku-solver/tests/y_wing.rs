@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
     solver::SolverContext,
     strategies::YWing,
     strategy::Strategy,
@@ -23,10 +22,7 @@ fn finds_y_wing() {
         board.remove_candidate(CellId::from_rc(3, 0), d);
     }
 
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
 
     let deduction = YWing
         .find(&board, &ctx)

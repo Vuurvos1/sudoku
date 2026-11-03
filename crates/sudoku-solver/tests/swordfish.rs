@@ -1,6 +1,5 @@
 use sudoku_solver::{
     board::{Board, CellId},
-    constraint::standard_constraints,
     solver::SolverContext,
     strategies::Fish,
     strategy::Strategy,
@@ -26,10 +25,7 @@ fn finds_swordfish_in_rows() {
     remove_from(&mut board, 3, [1, 7]);
     remove_from(&mut board, 6, [4, 7]);
 
-    let constraints = standard_constraints();
-    let ctx = SolverContext {
-        constraints: &constraints,
-    };
+    let ctx = SolverContext::standard();
 
     let deduction = Fish::<3>
         .find(&board, &ctx)
