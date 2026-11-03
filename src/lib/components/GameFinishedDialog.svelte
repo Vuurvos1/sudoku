@@ -4,7 +4,7 @@
 	import { resolve } from '$app/paths';
 	import Sheet from '$lib/components/Sheet.svelte';
 	import { sudokuStore } from '$lib/stores';
-	import { ruleLabels } from '$lib/variants';
+	import { puzzleRules } from '$lib/variants';
 	import { formatTime } from '$lib/time';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
@@ -14,10 +14,7 @@
 			? sudokuStore.endTime - sudokuStore.startTime
 			: null
 	);
-	const kind = $derived.by(() => {
-		const constraints = sudokuStore.puzzle?.constraints ?? [];
-		return constraints.length > 0 ? ruleLabels(constraints).join(' · ') : 'Classic';
-	});
+	const kind = $derived(puzzleRules(sudokuStore.puzzle?.constraints ?? []).join(' · '));
 
 	function handleNewGame() {
 		open = false;

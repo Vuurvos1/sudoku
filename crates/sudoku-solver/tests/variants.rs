@@ -7,6 +7,8 @@ use sudoku_solver::{
     strategy::Strategy,
 };
 
+mod showcase;
+
 fn rc(r: u8, c: u8) -> CellId {
     CellId::from_rc(r, c)
 }
@@ -284,11 +286,8 @@ fn invalid_specs_are_rejected() {
     assert!(arrow(vec![0, 2]).validate().is_err());
 }
 
-#[cfg(feature = "showcase")]
 #[test]
 fn showcase_is_valid_unique_and_solvable() {
-    use sudoku_solver::showcase;
-
     let specs = showcase::constraints();
     for spec in &specs {
         spec.validate().unwrap();

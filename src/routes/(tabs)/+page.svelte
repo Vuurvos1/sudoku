@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { ChevronRightIcon, Grid3x3Icon, PlayIcon, SplineIcon } from '@lucide/svelte';
 	import { sudokuStore } from '$lib/stores';
-	import { ruleLabels } from '$lib/variants';
+	import { puzzleRules } from '$lib/variants';
 	import { formatTime } from '$lib/time';
-	import NewGameSheet, { type GameKind } from '$lib/components/NewGameSheet.svelte';
+	import NewGameSheet from '$lib/components/NewGameSheet.svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import { resolve } from '$app/paths';
 
@@ -11,24 +11,12 @@
 
 	// the game in progress, e.g. "12:40 · Knight's move"; time first, a long rule list gets cut off
 	const continueDetail = $derived.by(() => {
-		const constraints = sudokuStore.puzzle?.constraints ?? [];
-		const kind = constraints.length > 0 ? ruleLabels(constraints).join(', ') : 'Classic';
+		const kind = puzzleRules(sudokuStore.puzzle?.constraints ?? []).join(', ');
 		const { startTime } = sudokuStore;
 		return startTime ? `${formatTime(Date.now() - startTime)} · ${kind}` : kind;
 	});
 
 	let sheetOpen = $state(false);
-	let sheetKind = $state<GameKind>('classic');
-
-	function newGame(kind: GameKind) {
-		sheetKind = kind;
-		sheetOpen = true;
-	}
-
-	const kinds = [
-		{ kind: 'classic', title: 'Classic', detail: 'The rules you know', icon: Grid3x3Icon },
-		{ kind: 'variants', title: 'Variants', detail: 'Extra rules', icon: SplineIcon }
-	] as const;
 </script>
 
 <div class="flex flex-col gap-4">
@@ -56,20 +44,21 @@
 	{/if}
 
 	<div class="grid grid-cols-2 gap-3">
-		{#each kinds as { kind, title, detail, icon: Icon } (kind)}
-			<button
-				onclick={() => newGame(kind)}
-				class="flex flex-col items-start gap-3 rounded-2xl bg-text/5 p-4 text-left transition hover:bg-text/10"
-			>
-				<span class="grid h-11 w-11 place-items-center rounded-xl bg-text/10 text-accent">
-					<Icon size={22} />
-				</span>
-				<span>
-					<span class="block text-lg font-semibold">{title}</span>
-					<span class="block text-sm opacity-70">{detail}</span>
-				</span>
-			</button>
-		{/each}
+		<!-- a new classic game is generated, variants are picked from the ready-made ones -->
+		<button onclick={() => (sheetOpen = true)} class="tile">
+			<span class="tile-icon"><Grid3x3Icon size={22} /></span>
+			<span>
+				<span class="block text-lg font-semibold">Classic</span>
+				<span class="block text-sm opacity-70">The rules you know</span>
+			</span>
+		</button>
+		<a href="{resolve('/puzzles')}?section=variants" class="tile">
+			<span class="tile-icon"><SplineIcon size={22} /></span>
+			<span>
+				<span class="block text-lg font-semibold">Variants</span>
+				<span class="block text-sm opacity-70">Extra rules</span>
+			</span>
+		</a>
 	</div>
 
 	<a
@@ -78,10 +67,20 @@
 	>
 		<div class="flex-1">
 			<p class="text-lg font-semibold">Puzzles</p>
-			<p class="text-sm opacity-70">Hand-made packs and imports</p>
+			<p class="text-sm opacity-70">Classic and variant puzzles</p>
 		</div>
 		<ChevronRightIcon class="opacity-50" />
 	</a>
 </div>
 
-<NewGameSheet bind:open={sheetOpen} kind={sheetKind} />
+<NewGameSheet bind:open={sheetOpen} />
+
+<style lang="postcss">
+	.tile {
+		@apply flex flex-col items-start gap-3 rounded-2xl bg-text/5 p-4 text-left transition hover:bg-text/10;
+	}
+
+	.tile-icon {
+		@apply grid h-11 w-11 place-items-center rounded-xl bg-text/10 text-accent;
+	}
+</style>

@@ -12,8 +12,6 @@ categories = ["games", "algorithms"]
 [features]
 default = []
 serde = ["dep:serde"]
-# A hand-made puzzle using every variant, for demos and rendering tests.
-showcase = []
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }

@@ -4,7 +4,6 @@ use sudoku_solver::{
     board::{Board, CellId},
     constraint::ConstraintSpec,
     generator::{solve_brute, Difficulty, Generator},
-    showcase,
     solver::{SolveResult, Solver, SolverContext},
 };
 
@@ -119,15 +118,6 @@ fn find_conflicts(constraints: Vec<ConstraintSpec>, grid: Vec<u8>) -> Result<Vec
     Ok(ctx.conflicts(&grid).iter().map(|c| c.0).collect())
 }
 
-/// Hand-made puzzle using every variant marker, for testing.
-#[tauri::command]
-fn showcase_puzzle() -> Puzzle {
-    Puzzle {
-        givens: showcase::GIVENS.to_string(),
-        constraints: showcase::constraints(),
-    }
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -138,8 +128,7 @@ pub fn run() {
             solve_sudoku,
             hint_sudoku,
             get_peers,
-            find_conflicts,
-            showcase_puzzle
+            find_conflicts
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

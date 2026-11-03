@@ -1,11 +1,10 @@
-//! A hand-made test puzzle that uses every variant marker, for trying out
-//! rendering and solving.
+//! A hand-made test puzzle that uses every variant marker.
 
 use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
 
-use crate::{
+use sudoku_solver::{
     board::{Board, CellId},
     constraint::{ConstraintSpec, LineKind, MarkerKind},
     generator::count_solutions_for,

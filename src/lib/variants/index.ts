@@ -83,3 +83,8 @@ export function ruleLabel(constraint: ConstraintSpec): string {
 export function ruleLabels(constraints: ConstraintSpec[]): string[] {
 	return [...new Set(constraints.map(ruleLabel))];
 }
+
+/** The rules of a puzzle, "Classic" when it has no variant rules. */
+export function puzzleRules(constraints: ConstraintSpec[]): string[] {
+	return constraints.length > 0 ? ruleLabels(constraints) : ['Classic'];
+}

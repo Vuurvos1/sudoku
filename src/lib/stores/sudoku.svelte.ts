@@ -32,7 +32,30 @@ export type Puzzle = {
 	/** 81 chars, digits for givens and `.` for empty cells */
 	givens: string;
 	constraints: ConstraintSpec[];
+	/** set on ready-made puzzles, whose progress is kept */
+	id?: string;
 };
+
+/** Where a ready-made puzzle was left. */
+export type Progress = {
+	sudoku: Sudoku;
+	/** time played so far, in ms */
+	elapsed: number;
+	/** this board is solved, playing again starts over */
+	completed: boolean;
+	/** solved at some point, it stays solved when played again */
+	solved: boolean;
+};
+
+/** The starting board of a puzzle: its givens fixed, every other cell empty. */
+export function givenCells(givens: string): Sudoku {
+	return Array.from({ length: 9 }, (_, row) =>
+		Array.from({ length: 9 }, (_, col) => {
+			const value = Number(givens[row * 9 + col]) || 0;
+			return { value, notes: [], colors: [], fixed: value > 0 };
+		})
+	);
+}
 
 export type HintResponse = {
 	strategy: string;
@@ -57,6 +80,8 @@ export class SudokuStore {
 	peerMap = $state<number[][] | null>(null);
 	startTime = $state<number | null>(null);
 	endTime = $state<number | null>(null);
+	/** ready-made puzzles by id, kept across games */
+	progress = $state<Record<string, Progress>>({});
 	/** whether the saved game has been read, so the launch splash can wait for it */
 	loaded = $state(false);
 
@@ -66,23 +91,34 @@ export class SudokuStore {
 		return sudoku.every((row, i) => row.every((cell, j) => cell.value === solved[i][j]));
 	}
 
+	/** A generated game in progress, which is lost when another one starts. */
+	get hasUnsavedGame(): boolean {
+		return this.sudoku !== null && !this.puzzle?.id && !this.isSolved;
+	}
+
 	constructor() {
 		this.load();
 	}
 
-	async generate(difficulty: number, constraints: ConstraintSpec[] = []) {
-		console.info('generate', difficulty, constraints);
+	/** Start a new classic puzzle; variant ones are only ready-made. */
+	async generate(difficulty: number) {
 		this.reset();
-
-		const puzzle = await invoke<Puzzle>('generate_sudoku', { difficulty, constraints });
-		console.info('puzzle', puzzle);
-		return this.start(puzzle);
+		return this.start(await invoke<Puzzle>('generate_sudoku', { difficulty }));
 	}
 
-	/** Start the hand-made test puzzle that uses every variant marker. */
-	async showcase() {
+	/** Start a ready-made puzzle, carrying on where it was left unless it was finished. */
+	async play({ id, givens, constraints }: Required<Puzzle>) {
 		this.reset();
-		return this.start(await invoke<Puzzle>('showcase_puzzle'));
+		const puzzle = { id, givens, constraints };
+		const saved = this.progress[id];
+		if (!saved || saved.completed) return this.start(puzzle);
+
+		await this.prepare(puzzle);
+		this.sudoku = $state.snapshot(saved.sudoku);
+		// the clock carries on from where it stopped, not from when the puzzle was first opened
+		this.startTime = Date.now() - saved.elapsed;
+		this.save();
+		return this.sudoku;
 	}
 
 	private reset() {
@@ -96,33 +132,9 @@ export class SudokuStore {
 	private async start(puzzle: Puzzle) {
 		await this.prepare(puzzle);
 
-		const grid: Sudoku = Array.from({ length: 9 }, () =>
-			Array(9)
-				.fill(0)
-				.map(() => {
-					return {
-						value: 0,
-						notes: [],
-						colors: [],
-						fixed: false
-					};
-				})
-		);
-
-		const digits = puzzle.givens.split('');
-
-		for (let i = 0; i < digits.length; i++) {
-			if (digits[i] === '.') continue;
-
-			const row = Math.floor(i / 9);
-			const col = i % 9;
-			grid[row][col].value = parseInt(digits[i]);
-			grid[row][col].fixed = true;
-		}
-
-		this.sudoku = grid;
+		this.sudoku = givenCells(puzzle.givens);
 		this.save();
-		return grid;
+		return this.sudoku;
 	}
 
 	/** Solve the puzzle and fetch its peer table. */
@@ -137,10 +149,27 @@ export class SudokuStore {
 	}
 
 	async save() {
-		await this.#store.set('puzzle', this.puzzle);
-		await this.#store.set('sudoku', this.sudoku);
-		await this.#store.set('startTime', this.startTime);
-		await this.#store.set('endTime', this.endTime);
+		const { puzzle, sudoku, startTime, endTime } = this;
+		const writes = [
+			this.#store.set('puzzle', puzzle),
+			this.#store.set('sudoku', sudoku),
+			this.#store.set('startTime', startTime),
+			this.#store.set('endTime', endTime)
+		];
+
+		// a ready-made puzzle also keeps its own entry, so it survives starting another game
+		if (puzzle?.id && sudoku && startTime) {
+			const completed = this.isSolved;
+			const progress: Progress = {
+				sudoku: $state.snapshot(sudoku),
+				elapsed: (endTime ?? Date.now()) - startTime,
+				completed,
+				solved: completed || this.progress[puzzle.id]?.solved === true
+			};
+			this.progress[puzzle.id] = progress;
+			writes.push(this.#store.set(`progress:${puzzle.id}`, progress));
+		}
+		await Promise.all(writes);
 		await this.#store.save();
 	}
 
@@ -153,6 +182,12 @@ export class SudokuStore {
 	}
 
 	async #load() {
+		const entries = await this.#store.entries<Progress>();
+		this.progress = Object.fromEntries(
+			entries
+				.filter(([key]) => key.startsWith('progress:'))
+				.map(([key, progress]) => [key.slice('progress:'.length), progress])
+		);
 		this.sudoku = (await this.#store.get<Sudoku>('sudoku')) ?? null;
 		this.startTime = (await this.#store.get<number>('startTime')) ?? null;
 		this.endTime = (await this.#store.get<number>('endTime')) ?? null;
