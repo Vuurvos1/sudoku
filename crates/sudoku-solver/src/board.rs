@@ -82,15 +82,25 @@ impl Cell {
     }
 }
 
+#[derive(Clone)]
 pub struct Board {
     cells: [Cell; 81],
+    /// Bit `i` is set once cell `i`'s digit has been removed from its peers,
+    /// so propagation only has to look at newly decided cells. Anything that
+    /// changes a cell's digit has to clear its bit.
+    propagated: u128,
 }
 
 impl Board {
-    pub fn new(givens: &[(CellId, u8)]) -> Self {
-        let mut board = Board {
+    fn empty() -> Self {
+        Board {
             cells: [Cell::blank(); 81],
-        };
+            propagated: 0,
+        }
+    }
+
+    pub fn new(givens: &[(CellId, u8)]) -> Self {
+        let mut board = Self::empty();
 
         for &(id, digit) in givens {
             board.set_given(id, digit);
@@ -100,9 +110,7 @@ impl Board {
     }
 
     pub fn from_array(array: &[u8; 81]) -> Self {
-        let mut board = Board {
-            cells: [Cell::blank(); 81],
-        };
+        let mut board = Self::empty();
 
         for (i, &digit) in array.iter().enumerate() {
             if digit != 0 {
@@ -135,6 +143,7 @@ impl Board {
         let cell = &mut self.cells[id.0 as usize];
         cell.candidates = Candidates::single(digit);
         cell.state = CellState::Placed;
+        self.propagated &= !(1 << id.0);
     }
 
     /// Lock in a digit from the original puzzle, Immutable
@@ -142,6 +151,7 @@ impl Board {
         let cell = &mut self.cells[id.0 as usize];
         cell.candidates = Candidates::single(digit);
         cell.state = CellState::Given;
+        self.propagated &= !(1 << id.0);
     }
 
     pub fn remove_candidate(&mut self, id: CellId, digit: u8) {
@@ -168,6 +178,15 @@ impl Board {
         } else {
             None
         }
+    }
+
+    /// Whether this cell's digit has been removed from its peers.
+    pub(crate) fn is_propagated(&self, id: CellId) -> bool {
+        self.propagated >> id.0 & 1 == 1
+    }
+
+    pub(crate) fn mark_propagated(&mut self, id: CellId) {
+        self.propagated |= 1 << id.0;
     }
 
     /// True when every cell has been decided (Given or Placed)

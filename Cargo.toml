@@ -1,3 +1,7 @@
 [workspace]
 members = ["src-tauri", "crates/sudoku-solver"]
 resolver = "2"
+
+# The generator is too slow unoptimized; keep debug builds (`tauri dev`) usable
+[profile.dev.package.sudoku-solver]
+opt-level = 3

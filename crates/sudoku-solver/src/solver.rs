@@ -101,6 +101,18 @@ impl SolverContext {
         for p in self.peers(cell) {
             legal.remove(grid[p.0 as usize]);
         }
+        self.constrain(grid, cell, legal)
+    }
+
+    /// `candidates` minus the digits a constraint on `cell` rules out, given
+    /// the digits in `grid` (0 = empty). Peers aren't checked.
+    pub(crate) fn constrain(
+        &self,
+        grid: &[u8; 81],
+        cell: CellId,
+        candidates: Candidates,
+    ) -> Candidates {
+        let mut legal = candidates;
         for &i in &self.constraints_at[cell.0 as usize] {
             for d in legal.iter() {
                 if !self.constraints[i].allows(grid, cell, d) {
@@ -127,22 +139,65 @@ impl SolverContext {
             .collect()
     }
 
-    /// Strip impossible candidates: every decided cell removes its digit from
-    /// its peers, then each constraint runs its own propagation.
+    /// Place `digit` at `cell` and remove it from the cell's peers. Returns
+    /// false when that leaves a peer without candidates.
+    pub(crate) fn place(&self, board: &mut Board, cell: CellId, digit: u8) -> bool {
+        board.set_value(cell, digit);
+        self.eliminate_from_peers(board, cell, digit, |_| {})
+    }
+
+    /// Remove a decided cell's digit from its peers, calling `removed` for
+    /// every peer that still had it. Returns false when that leaves a peer
+    /// without candidates; only those peers can have changed, so this is
+    /// cheaper than `Board::has_contradiction`.
+    fn eliminate_from_peers(
+        &self,
+        board: &mut Board,
+        source: CellId,
+        digit: u8,
+        mut removed: impl FnMut(CellId),
+    ) -> bool {
+        board.mark_propagated(source);
+        let mut ok = true;
+        for &peer in self.peers(source) {
+            if board.candidates(peer).contains(digit) {
+                board.remove_candidate(peer, digit);
+                ok &= board.candidates(peer).count() > 0;
+                removed(peer);
+            }
+        }
+        ok
+    }
+
+    /// Strip impossible candidates: every newly decided cell removes its digit
+    /// from its peers, then each constraint runs its own propagation.
     pub fn propagate(&self, board: &mut Board) -> Vec<Deduction> {
+        self.propagate_with(board, true)
+    }
+
+    /// `propagate` without building the deductions, for when only the
+    /// candidates matter.
+    pub fn propagate_quietly(&self, board: &mut Board) {
+        self.propagate_with(board, false);
+    }
+
+    /// `propagate`, building the deductions only when `record` is set.
+    fn propagate_with(&self, board: &mut Board, record: bool) -> Vec<Deduction> {
         let mut deductions = Vec::new();
         for i in 0..81u8 {
             let source = CellId(i);
+            if board.is_propagated(source) {
+                continue;
+            }
             let Some(digit) = board.value(source) else {
                 continue;
             };
             let mut eliminations = Vec::new();
-            for &peer in self.peers(source) {
-                if board.candidates(peer).contains(digit) {
-                    board.remove_candidate(peer, digit);
-                    eliminations.push((peer, digit));
+            self.eliminate_from_peers(board, source, digit, |peer| {
+                if record {
+                    eliminations.push((peer, digit))
                 }
-            }
+            });
             if !eliminations.is_empty() {
                 deductions.push(Deduction {
                     strategy: "peer elimination",
@@ -154,7 +209,10 @@ impl SolverContext {
             }
         }
         for c in &self.constraints {
-            deductions.extend(c.propagate(board));
+            let found = c.propagate(board);
+            if record {
+                deductions.extend(found);
+            }
         }
         deductions
     }
@@ -191,7 +249,7 @@ impl Solver {
     /// Returns `None` if the board is solved (including by propagation) or
     /// has a contradiction or no strategy applies.
     pub fn hint(&self, board: &mut Board, ctx: &SolverContext) -> Option<Deduction> {
-        ctx.propagate(board);
+        ctx.propagate_quietly(board);
         if board.is_solved() || board.has_contradiction() {
             return None;
         }
@@ -200,10 +258,20 @@ impl Solver {
 
     /// Solve the puzzle, returning all deductions made (propagation + strategies)
     pub fn solve(&self, board: &mut Board, ctx: &SolverContext) -> SolveResult {
+        self.run(board, ctx, true)
+    }
+
+    /// `solve` with only the strategy steps: propagation, which is always
+    /// difficulty 0, isn't recorded or explained, which makes it cheaper.
+    pub fn solve_quietly(&self, board: &mut Board, ctx: &SolverContext) -> SolveResult {
+        self.run(board, ctx, false)
+    }
+
+    fn run(&self, board: &mut Board, ctx: &SolverContext, record: bool) -> SolveResult {
         let mut steps = Vec::new();
         loop {
             // Peer elimination and constraint propagation strip impossible candidates
-            steps.extend(ctx.propagate(board));
+            steps.extend(ctx.propagate_with(board, record));
 
             if board.has_contradiction() {
                 return SolveResult::Invalid(steps);
