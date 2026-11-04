@@ -63,3 +63,7 @@ cargo bench --package sudoku-solver --bench solve
 ```
 
 Re-runs compare against the previous run stored in `target/criterion/`, so regressions are reported automatically.
+
+## License
+
+The app ([`src`](src), [`src-tauri`](src-tauri)) is licensed under the [GNU General Public License v3.0 or later](LICENSE). The solver crate ([`crates/sudoku-solver`](crates/sudoku-solver)) is licensed under the [MIT License](crates/sudoku-solver/LICENSE).
