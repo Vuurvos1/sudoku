@@ -7,7 +7,7 @@ use crate::{
 
 /// A rule on top of the houses. Houses already cover "each digit once per
 /// row/column/box"; constraints add everything else a variant needs.
-pub trait Constraint {
+pub trait Constraint: Send + Sync {
     fn name(&self) -> &str;
 
     /// Every cell this constraint touches.

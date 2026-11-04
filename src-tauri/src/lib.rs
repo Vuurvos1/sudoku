@@ -44,7 +44,12 @@ async fn generate_sudoku(
 
     let constraints = constraints.unwrap_or_default();
     let ctx = build_context(&constraints)?;
-    let board = Generator::new().generate_for(diff, &ctx);
+    // generation keeps every core busy for a moment, so it gets a thread of its
+    // own rather than one of the async runtime's
+    let board =
+        tauri::async_runtime::spawn_blocking(move || Generator::new().generate_for(diff, &ctx))
+            .await
+            .map_err(|e| e.to_string())?;
 
     let givens: String = (0..81)
         .map(|i| {
