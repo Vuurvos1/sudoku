@@ -2,7 +2,7 @@
 	"name": "one-sudoku",
 	"version": "0.1.0",
 	"description": "",
-	"license": "MIT",
+	"license": "GPL-3.0-or-later",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
