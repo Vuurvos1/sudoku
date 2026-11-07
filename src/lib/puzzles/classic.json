@@ -1,4 +1,5 @@
 {
+	"$schema": "./puzzles.schema.json",
 	"id": "classic",
 	"name": "Classic",
 	"description": "Every row, column and box holds 1 to 9 once.",
@@ -66,6 +67,23 @@
 			"author": "Philip Newman",
 			"difficulty": "expert",
 			"givens": "...........98....7.8..6..5..5..4..3...79....2...........27....9.4..5..6.3....62..",
+			"constraints": []
+		},
+		{
+			"id": "classic-10",
+			"title": "Delirium",
+			"author": "Sam Cappleman-Lynes",
+			"difficulty": "expert",
+			"givens": "...........8.4.1...1.2.3.9...4...6...7.....2...1...5...2.3.7.1...5.6.4...........",
+			"solution": "942671385738945162516283794854729631673514928291836547429357816385162479167498253",
+			"constraints": []
+		},
+		{
+			"id": "classic-11",
+			"title": "Classic Sudoku",
+			"author": "Sam Cappleman-Lynes",
+			"difficulty": "medium",
+			"givens": "1234.....4..5.....6..7.....8913...................4371.....8..3.....2..9.....3148",
 			"constraints": []
 		}
 	]

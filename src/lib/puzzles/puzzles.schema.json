@@ -1,0 +1,117 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Puzzle section",
+	"description": "A section of ready-made puzzles. Keep in sync with `ReadyPuzzle` in ./index.ts and `ConstraintSpec` in $lib/stores.",
+	"type": "object",
+	"required": ["id", "name", "description", "puzzles"],
+	"additionalProperties": false,
+	"properties": {
+		"$schema": { "type": "string" },
+		"id": { "type": "string" },
+		"name": { "type": "string" },
+		"description": { "type": "string" },
+		"puzzles": { "type": "array", "items": { "$ref": "#/definitions/puzzle" } }
+	},
+	"definitions": {
+		"cell": {
+			"description": "Cell index 0..80, row * 9 + col (r1c1 = 0, r1c9 = 8, r9c9 = 80).",
+			"type": "integer",
+			"minimum": 0,
+			"maximum": 80
+		},
+		"cells": { "type": "array", "items": { "$ref": "#/definitions/cell" }, "minItems": 1 },
+		"puzzle": {
+			"type": "object",
+			"required": ["id", "title", "difficulty", "givens", "constraints"],
+			"additionalProperties": false,
+			"properties": {
+				"id": {
+					"description": "Stable across releases, e.g. \"variants-3\"; progress is saved under it.",
+					"type": "string"
+				},
+				"title": { "type": "string" },
+				"difficulty": { "enum": ["easy", "medium", "hard", "expert"] },
+				"author": { "description": "Who set the puzzle.", "type": "string" },
+				"givens": {
+					"description": "81 chars, row by row: a digit for a given, `.` for an empty cell.",
+					"type": "string",
+					"pattern": "^[1-9.]{81}$"
+				},
+				"solution": {
+					"description": "81 digits, row by row. Optional; saves the app solving the puzzle itself, which can take minutes on hard ones.",
+					"type": "string",
+					"pattern": "^[1-9]{81}$"
+				},
+				"constraints": { "type": "array", "items": { "$ref": "#/definitions/constraint" } }
+			}
+		},
+		"constraint": {
+			"type": "object",
+			"required": ["type"],
+			"properties": {
+				"type": { "enum": ["diagonals", "antiKnight", "antiKing", "cage", "line", "marker", "arrow"] }
+			},
+			"oneOf": [
+				{
+					"description": "X-sudoku: both main diagonals hold 1-9.",
+					"properties": { "type": { "const": "diagonals" } },
+					"additionalProperties": false
+				},
+				{
+					"description": "Cells a knight's move apart can't hold the same digit.",
+					"properties": { "type": { "const": "antiKnight" } },
+					"additionalProperties": false
+				},
+				{
+					"description": "Diagonally touching cells can't hold the same digit.",
+					"properties": { "type": { "const": "antiKing" } },
+					"additionalProperties": false
+				},
+				{
+					"description": "Killer cage; `sum` is null for an unlabelled cage.",
+					"required": ["cells", "sum"],
+					"additionalProperties": false,
+					"properties": {
+						"type": { "const": "cage" },
+						"cells": { "$ref": "#/definitions/cells" },
+						"sum": { "type": ["integer", "null"], "minimum": 1, "maximum": 45 }
+					}
+				},
+				{
+					"description": "A line through adjacent cells, in order. Thermos start at the bulb.",
+					"required": ["kind", "cells"],
+					"additionalProperties": false,
+					"properties": {
+						"type": { "const": "line" },
+						"kind": { "enum": ["germanWhisper", "dutchWhisper", "thermo"] },
+						"cells": { "$ref": "#/definitions/cells" }
+					}
+				},
+				{
+					"description": "A marker between two orthogonally adjacent cells. `chevron`: the first cell is greater.",
+					"required": ["kind", "cells"],
+					"additionalProperties": false,
+					"properties": {
+						"type": { "const": "marker" },
+						"kind": { "enum": ["white", "black", "x", "chevron"] },
+						"cells": {
+							"type": "array",
+							"items": { "$ref": "#/definitions/cell" },
+							"minItems": 2,
+							"maxItems": 2
+						}
+					}
+				},
+				{
+					"description": "The shaft's digits add up to the circle's. Circle first, then the shaft up to the arrowhead.",
+					"required": ["cells"],
+					"additionalProperties": false,
+					"properties": {
+						"type": { "const": "arrow" },
+						"cells": { "$ref": "#/definitions/cells", "minItems": 2 }
+					}
+				}
+			]
+		}
+	}
+}

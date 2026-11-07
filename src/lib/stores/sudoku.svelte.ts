@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { LazyStore } from '@tauri-apps/plugin-store';
+import { sections } from '$lib/puzzles';
 
 export type Cell = {
 	value: number;
@@ -34,6 +35,8 @@ export type Puzzle = {
 	constraints: ConstraintSpec[];
 	/** set on ready-made puzzles, whose progress is kept */
 	id?: string;
+	/** 81 digits; ready-made puzzles can ship it so the app doesn't have to solve them */
+	solution?: string;
 };
 
 /** Where a ready-made puzzle was left. */
@@ -45,6 +48,14 @@ export type Progress = {
 	completed: boolean;
 	/** solved at some point, it stays solved when played again */
 	solved: boolean;
+};
+
+/** The generated game, kept in its own slot so playing a ready-made puzzle doesn't lose it. */
+export type GeneratedGame = {
+	puzzle: Puzzle;
+	sudoku: Sudoku;
+	/** time played so far, in ms */
+	elapsed: number;
 };
 
 /** The starting board of a puzzle: its givens fixed, every other cell empty. */
@@ -82,6 +93,8 @@ export class SudokuStore {
 	endTime = $state<number | null>(null);
 	/** ready-made puzzles by id, kept across games */
 	progress = $state<Record<string, Progress>>({});
+	/** the generated game in progress, if any; there's only room for one */
+	generated = $state<GeneratedGame | null>(null);
 	/** whether the saved game has been read, so the launch splash can wait for it */
 	loaded = $state(false);
 
@@ -91,9 +104,14 @@ export class SudokuStore {
 		return sudoku.every((row, i) => row.every((cell, j) => cell.value === solved[i][j]));
 	}
 
-	/** A generated game in progress, which is lost when another one starts. */
+	/** A generated game in progress, which is lost when another one is generated. */
 	get hasUnsavedGame(): boolean {
-		return this.sudoku !== null && !this.puzzle?.id && !this.isSolved;
+		return this.generated !== null;
+	}
+
+	/** The game on the board is the generated one, not a ready-made puzzle. */
+	get isGenerated(): boolean {
+		return this.sudoku !== null && !this.puzzle?.id;
 	}
 
 	constructor() {
@@ -107,12 +125,27 @@ export class SudokuStore {
 	}
 
 	/** Start a ready-made puzzle, carrying on where it was left unless it was finished. */
-	async play({ id, givens, constraints }: Required<Puzzle>) {
+	async play({ id, givens, constraints, solution }: Puzzle & { id: string }) {
+		// put the current game away with its time up to now, it's picked up again later
+		if (this.sudoku) await this.save();
 		this.reset();
-		const puzzle = { id, givens, constraints };
+		const puzzle = { id, givens, constraints, solution };
 		const saved = this.progress[id];
 		if (!saved || saved.completed) return this.start(puzzle);
+		return this.resume(puzzle, saved);
+	}
 
+	/** Carry on with the generated game after playing ready-made puzzles. */
+	async continueGenerated() {
+		const saved = this.generated;
+		if (!saved) return null;
+		if (this.isGenerated) return this.sudoku;
+		if (this.sudoku) await this.save();
+		this.reset();
+		return this.resume(saved.puzzle, saved);
+	}
+
+	private async resume(puzzle: Puzzle, saved: { sudoku: Sudoku; elapsed: number }) {
 		await this.prepare(puzzle);
 		this.sudoku = $state.snapshot(saved.sudoku);
 		// the clock carries on from where it stopped, not from when the puzzle was first opened
@@ -141,7 +174,9 @@ export class SudokuStore {
 	async prepare(puzzle: Puzzle) {
 		this.puzzle = puzzle;
 		const [solvedRes, peers] = await Promise.all([
-			invoke<number[]>('solve_sudoku', { puzzle }),
+			puzzle.solution
+				? puzzle.solution.split('').map(Number)
+				: invoke<number[]>('solve_sudoku', { puzzle }),
 			invoke<number[][]>('get_peers', { constraints: puzzle.constraints })
 		]);
 		this.solved = Array.from({ length: 9 }, (_, i) => solvedRes.slice(i * 9, i * 9 + 9));
@@ -168,6 +203,16 @@ export class SudokuStore {
 			};
 			this.progress[puzzle.id] = progress;
 			writes.push(this.#store.set(`progress:${puzzle.id}`, progress));
+		} else if (puzzle && sudoku && startTime) {
+			// a finished generated game has nothing left to come back to
+			this.generated = this.isSolved
+				? null
+				: {
+						puzzle: $state.snapshot(puzzle),
+						sudoku: $state.snapshot(sudoku),
+						elapsed: (endTime ?? Date.now()) - startTime
+					};
+			writes.push(this.#store.set('generated', this.generated));
 		}
 		await Promise.all(writes);
 		await this.#store.save();
@@ -188,6 +233,7 @@ export class SudokuStore {
 				.filter(([key]) => key.startsWith('progress:'))
 				.map(([key, progress]) => [key.slice('progress:'.length), progress])
 		);
+		this.generated = (await this.#store.get<GeneratedGame>('generated')) ?? null;
 		this.sudoku = (await this.#store.get<Sudoku>('sudoku')) ?? null;
 		this.startTime = (await this.#store.get<number>('startTime')) ?? null;
 		this.endTime = (await this.#store.get<number>('endTime')) ?? null;
@@ -195,13 +241,27 @@ export class SudokuStore {
 		if (!this.sudoku) return;
 
 		// saves from before variants only stored the grid; rebuild from its fixed cells
-		const puzzle = (await this.#store.get<Puzzle>('puzzle')) ?? {
+		const saved = (await this.#store.get<Puzzle>('puzzle')) ?? {
 			givens: this.sudoku
 				.map((row) => row.map((cell) => (cell.fixed ? cell.value : '.')).join(''))
 				.join(''),
 			constraints: []
 		};
-		await this.prepare(puzzle);
+		// a ready-made puzzle is taken from the app, which may know its solution by now
+		const ready = saved.id
+			? sections.flatMap((s) => s.puzzles).find((p) => p.id === saved.id)
+			: undefined;
+		const puzzle: Puzzle = ready
+			? { id: ready.id, givens: ready.givens, constraints: ready.constraints, solution: ready.solution }
+			: saved;
+
+		// solving can take a while on hard puzzles, so it doesn't hold up the launch
+		this.prepare(puzzle)
+			.then(() => {
+				// saves from before the generated game had its own slot
+				if (this.isGenerated && !this.generated && !this.isSolved) this.save();
+			})
+			.catch((e) => console.warn('Could not solve the saved puzzle:', e));
 	}
 
 	clear() {

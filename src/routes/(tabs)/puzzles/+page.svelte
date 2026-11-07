@@ -3,31 +3,22 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
 	import FilterChips from '$lib/components/FilterChips.svelte';
 	import Sudoku from '$lib/components/Sudoku.svelte';
 	import { givenCells, sudokuStore } from '$lib/stores';
 	import { difficulties, sections, type ReadyPuzzle } from '$lib/puzzles';
-	import { puzzleRules, ruleLabels } from '$lib/variants';
+	import RuleIcon from '$lib/components/RuleIcon.svelte';
+	import { puzzleRules, ruleIcons } from '$lib/variants';
 
-	// a ready-made puzzle keeps its progress, a generated one would be lost
-	let pending = $state<ReadyPuzzle | null>(null);
-	let confirmOpen = $state(false);
-
+	// every game keeps its own progress, so nothing is lost by switching
 	function play(puzzle: ReadyPuzzle) {
-		pending = puzzle;
-		if (sudokuStore.hasUnsavedGame) confirmOpen = true;
-		else start(puzzle);
-	}
-
-	function start(puzzle: ReadyPuzzle) {
 		sudokuStore.play(puzzle);
 		goto(resolve('/game'));
 	}
 
-	// e.g. "Medium · Knight's move · by Someone"
-	function details({ difficulty, constraints, author }: ReadyPuzzle): string {
-		return [difficulties[difficulty], ...ruleLabels(constraints), author && `by ${author}`]
+	// e.g. "Medium · by Someone"; the rules are shown as icons
+	function details({ difficulty, author }: ReadyPuzzle): string {
+		return [difficulties[difficulty], author && `by ${author}`]
 			.filter(Boolean)
 			.join(' · ');
 	}
@@ -42,7 +33,15 @@
 	const ruleOptions = $derived(
 		[...new Set(visible.flatMap((section) => section.puzzles.flatMap(rules)))]
 			.sort((a, b) => Number(b === 'Classic') - Number(a === 'Classic') || a.localeCompare(b))
-			.map((rule) => ({ value: rule, label: rule }))
+			.map((rule) => ({ value: rule, label: rule, glyph: glyphs.get(rule) }))
+	);
+	// each rule's icon, by name; classic has none
+	const glyphs = $derived(
+		new Map(
+			ruleIcons(visible.flatMap((s) => s.puzzles.flatMap((p) => p.constraints))).map(
+				({ label, glyph }) => [label, glyph]
+			)
+		)
 	);
 	const difficultyOptions = $derived(
 		Object.entries(difficulties)
@@ -131,6 +130,15 @@
 						{#if progress && !progress.solved}
 							<span class="block text-sm font-medium text-accent">In progress</span>
 						{/if}
+						{#if puzzle.constraints.length > 0}
+							<span class="mt-1 flex flex-wrap gap-1.5 opacity-70">
+								{#each ruleIcons(puzzle.constraints) as { glyph, label } (label)}
+									<span role="img" aria-label={label} title={label}>
+										<RuleIcon {glyph} size={16} />
+									</span>
+								{/each}
+							</span>
+						{/if}
 						<span class="line-clamp-2 block text-sm opacity-60">{details(puzzle)}</span>
 					</button>
 				</li>
@@ -138,11 +146,3 @@
 		</ul>
 	</section>
 {/each}
-
-<ConfirmSheet
-	bind:open={confirmOpen}
-	title="Discard current game?"
-	message="Opening this puzzle throws away the generated game you're playing now."
-	confirmLabel="Discard"
-	onconfirm={() => pending && start(pending)}
-/>

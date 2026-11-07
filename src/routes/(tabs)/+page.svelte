@@ -6,6 +6,7 @@
 	import NewGameSheet from '$lib/components/NewGameSheet.svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 
 	const canContinue = $derived(sudokuStore.sudoku !== null && !sudokuStore.isSolved);
 
@@ -15,6 +16,20 @@
 		const { startTime } = sudokuStore;
 		return startTime ? `${formatTime(Date.now() - startTime)} · ${kind}` : kind;
 	});
+
+	// the generated game waits in its own slot while a ready-made puzzle is on the board
+	const generatedAside = $derived(sudokuStore.generated !== null && !sudokuStore.isGenerated);
+	const generatedDetail = $derived.by(() => {
+		const { generated } = sudokuStore;
+		if (!generated) return '';
+		const kind = puzzleRules(generated.puzzle.constraints).join(', ');
+		return `${formatTime(generated.elapsed)} · ${kind}`;
+	});
+
+	async function continueGenerated() {
+		await sudokuStore.continueGenerated();
+		goto(resolve('/game'));
+	}
 
 	let sheetOpen = $state(false);
 </script>
@@ -41,6 +56,21 @@
 				<PlayIcon size={20} class="fill-current" />
 			</span>
 		</a>
+	{/if}
+
+	{#if generatedAside}
+		<button
+			onclick={continueGenerated}
+			class="flex items-center gap-4 rounded-2xl bg-text/5 p-4 text-left transition hover:bg-text/10"
+		>
+			<div class="min-w-0 flex-1">
+				<p class="text-lg font-semibold">Continue classic game</p>
+				<p class="truncate text-sm opacity-70">{generatedDetail}</p>
+			</div>
+			<span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-text/10 text-accent">
+				<PlayIcon size={20} class="fill-current" />
+			</span>
+		</button>
 	{/if}
 
 	<div class="grid grid-cols-2 gap-3">

@@ -1,6 +1,10 @@
 <script lang="ts">
+	import RuleIcon from '$lib/components/RuleIcon.svelte';
+	import type { RuleGlyph } from '$lib/learn';
+
 	interface Props {
-		options: { value: string; label: string }[];
+		/** `glyph` draws the rule's icon before its name */
+		options: { value: string; label: string; glyph?: RuleGlyph }[];
 		/** the options picked; none means everything */
 		selected: string[];
 		/** names the group for screen readers */
@@ -31,7 +35,12 @@
 	</button>
 	{#each options as option (option.value)}
 		{@const active = selected.includes(option.value)}
-		<button aria-pressed={active} onclick={() => toggle(option.value)} class={chip(active)}>
+		<button
+			aria-pressed={active}
+			onclick={() => toggle(option.value)}
+			class={[chip(active), 'flex items-center gap-1.5']}
+		>
+			{#if option.glyph}<RuleIcon glyph={option.glyph} size={16} />{/if}
 			{option.label}
 		</button>
 	{/each}

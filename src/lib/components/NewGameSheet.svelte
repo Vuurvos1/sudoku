@@ -53,8 +53,8 @@
 
 <ConfirmSheet
 	bind:open={confirmOpen}
-	title="Discard current game?"
-	message="Starting a new puzzle throws away the game you're playing now."
+	title="Discard classic game?"
+	message="Starting a new classic game throws away the one you have in progress."
 	confirmLabel="Discard"
 	onconfirm={newGame}
 />

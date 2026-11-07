@@ -1,5 +1,6 @@
 import type { Component } from 'svelte';
 import type { ConstraintSpec } from '$lib/stores';
+import type { RuleGlyph } from '$lib/learn';
 import Arrow from './Arrow.svelte';
 import Cage from './Cage.svelte';
 import Diagonals from './Diagonals.svelte';
@@ -87,4 +88,25 @@ export function ruleLabels(constraints: ConstraintSpec[]): string[] {
 /** The rules of a puzzle, "Classic" when it has no variant rules. */
 export function puzzleRules(constraints: ConstraintSpec[]): string[] {
 	return constraints.length > 0 ? ruleLabels(constraints) : ['Classic'];
+}
+
+/** The icon drawn for a rule, see `RuleIcon`. */
+export function ruleGlyph(constraint: ConstraintSpec): RuleGlyph {
+	switch (constraint.type) {
+		case 'line':
+			return constraint.kind === 'thermo' ? 'thermo' : 'whisper';
+		case 'marker':
+			return { white: 'kropki', black: 'kropki', x: 'xv', chevron: 'chevron' }[
+				constraint.kind
+			] as RuleGlyph;
+		default:
+			return constraint.type;
+	}
+}
+
+/** One icon per distinct rule, with its name for screen readers, in first-seen order. */
+export function ruleIcons(constraints: ConstraintSpec[]): { glyph: RuleGlyph; label: string }[] {
+	const seen = new Map<string, RuleGlyph>();
+	for (const c of constraints) if (!seen.has(ruleLabel(c))) seen.set(ruleLabel(c), ruleGlyph(c));
+	return [...seen].map(([label, glyph]) => ({ glyph, label }));
 }

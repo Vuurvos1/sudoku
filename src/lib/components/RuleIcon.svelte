@@ -2,18 +2,18 @@
 	import { ChessKingIcon, ChessKnightIcon } from '@lucide/svelte';
 	import type { RuleGlyph } from '$lib/learn';
 
-	let { glyph }: { glyph: RuleGlyph } = $props();
+	let { glyph, size = 24 }: { glyph: RuleGlyph; size?: number } = $props();
 </script>
 
 <!-- a small drawing of a rule, in the style of the board -->
 {#if glyph === 'antiKnight'}
-	<ChessKnightIcon size={22} />
+	<ChessKnightIcon size={size - 2} />
 {:else if glyph === 'antiKing'}
-	<ChessKingIcon size={22} />
+	<ChessKingIcon size={size - 2} />
 {:else}
 	<svg
-		width="24"
-		height="24"
+		width={size}
+		height={size}
 		viewBox="0 0 24 24"
 		fill="none"
 		stroke="currentColor"

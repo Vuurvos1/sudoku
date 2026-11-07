@@ -17,6 +17,14 @@ describe('ready-made puzzles', () => {
 		}
 	});
 
+	it('ship a solution that fits their givens', () => {
+		for (const { id, givens, solution } of all) {
+			if (!solution) continue;
+			expect(solution, id).toMatch(/^[1-9]{81}$/);
+			for (let i = 0; i < 81; i++) if (givens[i] !== '.') expect(solution[i], id).toBe(givens[i]);
+		}
+	});
+
 	it('are in the section matching their rules', () => {
 		for (const puzzle of classic.puzzles) expect(puzzle.constraints, puzzle.id).toEqual([]);
 		for (const puzzle of variants.puzzles) expect(puzzle.constraints, puzzle.id).not.toEqual([]);

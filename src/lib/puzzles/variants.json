@@ -1,4 +1,5 @@
 {
+	"$schema": "./puzzles.schema.json",
 	"id": "variants",
 	"name": "Variants",
 	"description": "Classic rules with something extra on top.",
@@ -33,6 +34,528 @@
 			"constraints": [
 				{
 					"type": "antiKing"
+				}
+			]
+		},
+		{
+			"id": "variants-4",
+			"title": "Border Thermos",
+			"difficulty":"medium",
+			"author": "Aad van de Wetering",
+			"givens": "....................3..........................................................5.",
+			"solution": "461529873582743619793168542826497135357812964149356728235681497914275386678934251",
+			"constraints": [
+				{
+					"type": "antiKing"
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [0, 9, 18, 27]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [2, 11, 20, 29]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [4, 13, 22]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [8, 7, 6, 5]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [26, 25, 24, 23]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [36, 37, 38]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [44, 43, 42]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [54, 55, 56, 57]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [72, 73, 74, 75]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [76, 67, 58]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [78, 69, 60, 51]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [80, 71, 62, 53]
+				}
+			]
+		},{
+			"id": "variants-5",
+			"title": "Fireworks",
+			"difficulty":"medium",
+			"author": "SamuPiano",
+			"givens": "..............3...............6.................................................1",
+			"solution": "789542163164793528235186497413678952627951384958234716372815649841369275596427831",
+			"constraints": [
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [10, 0]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [11, 3]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [14, 4]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [15, 7]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [19, 27]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [20, 30]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [21, 29]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [24, 23, 31]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [24, 34]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [46, 36]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [47, 39]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [50, 40]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [55, 63]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [56, 66, 75]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [59, 67]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [60, 51, 43]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [60, 70]
+				}
+			]
+		},
+		{
+			"id": "variants-6",
+			"title": "White Room",
+			"author": "Philip Newman",
+			"difficulty": "expert",
+			"givens": ".................................................................................",
+			"solution": "693154872815672394742398516927485163381267945456913728139826457278549631564731289",
+			"constraints": [
+				{
+					"type": "cage",
+					"cells": [10, 19, 28],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [14, 15],
+					"sum": 5
+				},
+				{
+					"type": "cage",
+					"cells": [24, 25],
+					"sum": 6
+				},
+				{
+					"type": "cage",
+					"cells": [32, 33],
+					"sum": 6
+				},
+				{
+					"type": "cage",
+					"cells": [47, 48, 57],
+					"sum": 23
+				},
+				{
+					"type": "cage",
+					"cells": [56, 65],
+					"sum": 17
+				},
+				{
+					"type": "cage",
+					"cells": [53, 62],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [77, 78],
+					"sum": 3
+				}
+			]
+		},
+		{
+			"id": "variants-7",
+			"title": "Double Thermos",
+			"author": "Aad van de Wetering",
+			"difficulty": "expert",
+			"givens": ".................................................................................",
+			"solution": "584293671367185924219647538195368247842571369736924815673459182928716453451832796",
+			"constraints": [
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [36, 28]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [37, 29, 21, 13]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [37, 45]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [38, 30, 22, 14, 6]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [38, 46, 54]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [39, 31, 23, 15]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [39, 47, 55, 63]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [40, 32]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [40, 48]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [41, 33, 25, 17]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [41, 49, 57, 65]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [42, 34, 26]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [42, 50, 58, 66]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [43, 35]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [43, 51, 59]
+				}
+			]
+		},
+		{
+			"id": "variants-8",
+			"title": "Partial Killer",
+			"author": "Phistomefel",
+			"difficulty": "expert",
+			"givens": ".................................................................................",
+			"constraints": [
+				{
+					"type": "cage",
+					"cells": [0, 1],
+					"sum": 5
+				},
+				{
+					"type": "cage",
+					"cells": [8, 17],
+					"sum": 5
+				},
+				{
+					"type": "cage",
+					"cells": [13, 22],
+					"sum": 12
+				},
+				{
+					"type": "cage",
+					"cells": [20, 21],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [24, 33],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [25, 26],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [30, 39, 48],
+					"sum": 22
+				},
+				{
+					"type": "cage",
+					"cells": [31, 32],
+					"sum": 8
+				},
+				{
+					"type": "cage",
+					"cells": [35, 43, 44],
+					"sum": 18
+				},
+				{
+					"type": "cage",
+					"cells": [37, 46],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [40, 41],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [47, 56],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [49, 50],
+					"sum": 8
+				},
+				{
+					"type": "cage",
+					"cells": [59, 60],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [63, 72],
+					"sum": 5
+				},
+				{
+					"type": "cage",
+					"cells": [65, 74],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [79, 80],
+					"sum": 5
+				},
+				{
+					"type": "cage",
+					"cells": [75],
+					"sum": null
+				}
+			]
+		},
+		{
+			"id": "variants-9",
+			"title": "Antiknight Sudoku",
+			"author": "Jonas Gleim",
+			"difficulty": "expert",
+			"givens": ".1.........2.........3.....1...4.....7...5.....8...6.....4...1..........9.7......",
+			"constraints": [
+				{
+					"type": "antiKnight"
+				}
+			]
+		},
+		{
+			"id": "variants-10",
+			"title": "Thermo Sudoku",
+			"author": "Mitchell Lee",
+			"difficulty": "expert",
+			"givens": ".................................................................................",
+			"constraints": [
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [27, 18, 9, 0]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [28, 19, 10, 1]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [3, 12, 11]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [31, 22, 13, 4]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [33, 32]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [25, 16, 7]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [17, 26, 35, 44]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [63, 54, 45, 36]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [55, 64, 73]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [56, 57]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [49, 58, 67, 76]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [59, 68, 69]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [52, 61, 70, 79]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [53, 62, 71, 80]
+				}
+			]
+		},
+		{
+			"id": "variants-11",
+			"title": "Hooked on Sudoku",
+			"author": "Blashyrkh",
+			"difficulty": "expert",
+			"givens": ".................................................................................",
+			"solution": "678913452539824617421567389284179563763258941915436728192345876347682195856791234",
+			"constraints": [
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [27, 18, 9, 0, 1, 2, 3]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [16, 24, 14, 22, 31, 41, 42]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [30, 39, 49, 58, 66, 65, 55]
+				},
+				{
+					"type": "line",
+					"kind": "thermo",
+					"cells": [77, 78, 79, 80, 71, 62, 53]
 				}
 			]
 		}
