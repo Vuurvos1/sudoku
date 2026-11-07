@@ -7,9 +7,9 @@ use crate::{
 /// A rule between two cells `a` and `b`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Relation {
-    /// |a - b| = 1 (white dot)
+    /// |a - b| = 1 (hollow dot)
     Consecutive,
-    /// one is double the other (black dot)
+    /// one is double the other (filled dot)
     Ratio2,
     /// a + b = n (X = 10)
     Sum(u8),

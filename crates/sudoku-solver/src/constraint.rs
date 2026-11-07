@@ -265,8 +265,8 @@ pub(crate) fn build(spec: &ConstraintSpec, houses: &mut Vec<House>) -> Option<Bo
         ConstraintSpec::Marker { kind, cells } => {
             let (a, b) = (CellId(cells[0]), CellId(cells[1]));
             let (name, rel) = match kind {
-                MarkerKind::White => ("white dot", Relation::Consecutive),
-                MarkerKind::Black => ("black dot", Relation::Ratio2),
+                MarkerKind::White => ("hollow dot", Relation::Consecutive),
+                MarkerKind::Black => ("filled dot", Relation::Ratio2),
                 MarkerKind::X => ("X", Relation::Sum(10)),
                 MarkerKind::Chevron => ("chevron", Relation::Greater),
             };

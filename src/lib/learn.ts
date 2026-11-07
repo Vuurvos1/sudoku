@@ -171,8 +171,8 @@ export const rules: Rule[] = [
 		slug: 'kropki',
 		glyph: 'kropki',
 		name: 'Kropki',
-		summary: 'A white dot joins consecutive digits, a black dot a digit and its double.',
-		tips: ['Black dots only fit 1–2, 2–4, 3–6 and 4–8.', '1 and 2 can sit on either kind of dot.'],
+		summary: 'A hollow dot joins consecutive digits, a filled dot a digit and its double.',
+		tips: ['Filled dots only fit 1–2, 2–4, 3–6 and 4–8.', '1 and 2 can sit on either kind of dot.'],
 		example: {
 			constraints: [
 				{ type: 'marker', kind: 'white', cells: [10, 11] },
