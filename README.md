@@ -35,10 +35,10 @@ pnpm tauri dev
 
 ## Screenshots
 
-The screenshots above are taken with Playwright against the Vite dev server, with Tauri's IPC mocked and a game in progress seeded (see [`scripts/screenshots.ts`](scripts/screenshots.ts)):
+The screenshots above are taken with Playwright against the Vite dev server, with Tauri's IPC mocked and a game in progress seeded (see [`packages/scripts/screenshots.ts`](packages/scripts/screenshots.ts)). Playwright is a dependency of that package only, so the app doesn't pull it in:
 
 ```sh
-pnpm exec playwright install chromium # once
+pnpm --filter @one-sudoku/scripts exec playwright install chromium # once
 pnpm screenshots
 ```
 

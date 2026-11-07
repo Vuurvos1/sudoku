@@ -21,7 +21,7 @@
 		"fmt:check": "oxfmt --check",
 		"tauri": "tauri",
 		"test": "vitest run",
-		"screenshots": "node scripts/screenshots.ts",
+		"screenshots": "pnpm --filter @one-sudoku/scripts screenshots",
 		"gen:icon": "tauri icon ./app-icon.png"
 	},
 	"dependencies": {
@@ -45,7 +45,6 @@
 		"globals": "^17.14.0",
 		"oxfmt": "^0.77.0",
 		"oxlint": "~1.90.0",
-		"playwright": "^1.65.0",
 		"postcss": "^8.5.32",
 		"svelte": "^5.57.3",
 		"svelte-check": "^4.7.8",

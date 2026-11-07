@@ -4,15 +4,20 @@
 // the store plugin is kept in memory and seeded with a game in progress, and the solver
 // commands are answered by a small backtracking solver below (classic rules + diagonals).
 //
-//   pnpm exec playwright install chromium   # once
+//   pnpm --filter @one-sudoku/scripts exec playwright install chromium   # once
 //   pnpm screenshots
 
 import { mkdir } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { chromium, type Page } from 'playwright';
 import { createServer } from 'vite';
-import classic from '../src/lib/puzzles/classic.json' with { type: 'json' };
+import classic from '../../src/lib/puzzles/classic.json' with { type: 'json' };
 
-const OUT_DIR = 'docs/screenshots';
+// the app lives at the repo root; this runs from its own package
+const ROOT = resolve(import.meta.dirname, '../..');
+const OUT_DIR = join(ROOT, 'docs/screenshots');
+// Tailwind and PostCSS look for their config in the working directory
+process.chdir(ROOT);
 const VIEWPORT = { width: 390, height: 844 };
 
 type Constraint = { type: string };
@@ -214,6 +219,8 @@ async function open(page: Page, url: string) {
 
 async function main() {
 	const server = await createServer({
+		root: ROOT,
+		configFile: join(ROOT, 'vite.config.js'),
 		server: { port: 5199, strictPort: false },
 		logLevel: 'warn'
 	});
