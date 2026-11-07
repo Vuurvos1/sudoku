@@ -559,6 +559,309 @@
 					"cells": [77, 78, 79, 80, 71, 62, 53]
 				}
 			]
+		},
+		{
+			"id": "variants-12",
+			"title": "Confiable",
+			"difficulty": "expert",
+			"author": "James Sinclair",
+			"givens": ".................................................................................",
+			"constraints": [
+				{
+					"type": "cage",
+					"cells": [0, 1, 9],
+					"sum": 20
+				},
+				{
+					"type": "cage",
+					"cells": [30, 31, 39, 40],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [33, 34, 42, 43],
+					"sum": 16
+				},
+				{
+					"type": "cage",
+					"cells": [57, 58, 66, 67],
+					"sum": 16
+				},
+				{
+					"type": "cage",
+					"cells": [71, 79, 80],
+					"sum": 22
+				},
+				{
+					"type": "marker",
+					"kind": "black",
+					"cells": [1, 10]
+				},
+				{
+					"type": "arrow",
+					"cells": [2, 3, 4]
+				},
+				{
+					"type": "arrow",
+					"cells": [18, 27, 36]
+				},
+				{
+					"type": "arrow",
+					"cells": [23, 31, 30]
+				},
+				{
+					"type": "arrow",
+					"cells": [26, 34, 42]
+				},
+				{
+					"type": "arrow",
+					"cells": [47, 39, 40]
+				},
+				{
+					"type": "arrow",
+					"cells": [53, 62, 71]
+				},
+				{
+					"type": "arrow",
+					"cells": [74, 66, 58]
+				},
+				{
+					"type": "arrow",
+					"cells": [77, 78, 79]
+				}
+			]
+		},
+		{
+			"id": "variants-13",
+			"title": "Wickerwork",
+			"difficulty": "expert",
+			"author": "Phistomefel",
+			"givens": "................4...............................................4................",
+			"constraints": [
+				{
+					"type": "cage",
+					"cells": [2, 3],
+					"sum": 6
+				},
+				{
+					"type": "cage",
+					"cells": [5, 6],
+					"sum": 11
+				},
+				{
+					"type": "cage",
+					"cells": [18, 27],
+					"sum": 5
+				},
+				{
+					"type": "cage",
+					"cells": [20, 21, 29, 30],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [23, 24, 33],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [26, 35],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [45, 54],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [47, 56, 57],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [50, 51, 59, 60],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [53, 62],
+					"sum": 5
+				},
+				{
+					"type": "cage",
+					"cells": [74, 75],
+					"sum": 6
+				},
+				{
+					"type": "cage",
+					"cells": [77, 78],
+					"sum": 14
+				}
+			]
+		},
+		{
+			"id": "variants-14",
+			"title": "Beetle, Beetle",
+			"difficulty": "expert",
+			"author": "Walter Grönholm",
+			"givens": "....................2............................................................",
+			"constraints": [
+				{
+					"type": "cage",
+					"cells": [0, 1, 9],
+					"sum": 21
+				},
+				{
+					"type": "cage",
+					"cells": [7, 8, 17],
+					"sum": 21
+				},
+				{
+					"type": "cage",
+					"cells": [12, 13, 22],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [23, 24, 32],
+					"sum": null
+				},
+				{
+					"type": "cage",
+					"cells": [28, 37, 38],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [30, 31, 39],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [42, 43, 44],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [47, 48, 56],
+					"sum": 13
+				},
+				{
+					"type": "cage",
+					"cells": [51, 59, 60],
+					"sum": 11
+				},
+				{
+					"type": "cage",
+					"cells": [58, 67, 76],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [63, 72, 73],
+					"sum": 21
+				},
+				{
+					"type": "cage",
+					"cells": [71, 79, 80],
+					"sum": 21
+				}
+			]
+		},
+		{
+			"id": "variants-15",
+			"title": "Just a Killer",
+			"difficulty": "expert",
+			"author": "Adem Jaziri",
+			"givens": ".................................................................................",
+			"constraints": [
+				{
+					"type": "cage",
+					"cells": [0, 9],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [5, 6],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [8, 17],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [11, 20],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [12, 21],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [13, 14],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [27, 28, 29],
+					"sum": 21
+				},
+				{
+					"type": "cage",
+					"cells": [34, 43],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [36, 45],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [39, 40, 41],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [51, 52, 53],
+					"sum": 21
+				},
+				{
+					"type": "cage",
+					"cells": [56, 57],
+					"sum": 12
+				},
+				{
+					"type": "cage",
+					"cells": [59, 60],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [64, 73],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [65, 74],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [71, 80],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [76, 77],
+					"sum": 7
+				}
+			]
 		}
 	]
 }
