@@ -7,6 +7,8 @@ export type Cell = {
 	notes: number[];
 	colors: string[];
 	fixed: boolean; // one of the original/base digits
+	/** notes shown centered (true) or in their corners (false); unset follows the setting */
+	centered?: boolean;
 };
 
 export type Sudoku = Cell[][];
@@ -66,6 +68,30 @@ export function givenCells(givens: string): Sudoku {
 			return { value, notes: [], colors: [], fixed: value > 0 };
 		})
 	);
+}
+
+/**
+ * A saved board laid over the puzzle's givens. The givens always come from the puzzle,
+ * so a save can't add, move or drop one; it only brings back what the player added:
+ * digits and notes in the other cells, and colors anywhere.
+ */
+export function withGivens(givens: string, saved: Sudoku): Sudoku {
+	return givenCells(givens).map((row, i) =>
+		row.map((cell, j) => {
+			const old = saved[i]?.[j];
+			if (!old) return cell;
+			const colors = [...old.colors];
+			const centered = old.centered;
+			// a digit the save had as a given isn't one the player entered
+			if (cell.fixed || old.fixed) return { ...cell, colors, centered };
+			return { ...cell, value: old.value, notes: [...old.notes], colors, centered };
+		})
+	);
+}
+
+/** 81 digits as 9 rows of 9. */
+function toRows(digits: number[]): number[][] {
+	return Array.from({ length: 9 }, (_, i) => digits.slice(i * 9, i * 9 + 9));
 }
 
 export type HintResponse = {
@@ -146,8 +172,9 @@ export class SudokuStore {
 	}
 
 	private async resume(puzzle: Puzzle, saved: { sudoku: Sudoku; elapsed: number }) {
-		await this.prepare(puzzle);
-		this.sudoku = $state.snapshot(saved.sudoku);
+		// another game was opened while this one loaded, don't save over it
+		if (!(await this.prepare(puzzle))) return null;
+		this.sudoku = withGivens(puzzle.givens, $state.snapshot(saved.sudoku));
 		// the clock carries on from where it stopped, not from when the puzzle was first opened
 		this.startTime = Date.now() - saved.elapsed;
 		this.save();
@@ -163,24 +190,39 @@ export class SudokuStore {
 	}
 
 	private async start(puzzle: Puzzle) {
-		await this.prepare(puzzle);
-
+		// another game was opened while this one loaded, don't save over it
+		if (!(await this.prepare(puzzle))) return null;
 		this.sudoku = givenCells(puzzle.givens);
 		this.save();
 		return this.sudoku;
 	}
 
-	/** Solve the puzzle and fetch its peer table. */
-	async prepare(puzzle: Puzzle) {
+	/** Counts calls to `prepare`, so a load that was overtaken by a newer one can tell. */
+	#loads = 0;
+
+	/**
+	 * Fetch the puzzle's peer table, and its solution if it ships one. Otherwise the
+	 * solution is worked out in the background, which can take minutes on hard
+	 * variants, so the board doesn't wait for it; `solved` stays null until then.
+	 * Resolves to false if another puzzle was prepared in the meantime.
+	 */
+	async prepare(puzzle: Puzzle): Promise<boolean> {
+		const load = ++this.#loads;
+		const current = () => load === this.#loads;
 		this.puzzle = puzzle;
-		const [solvedRes, peers] = await Promise.all([
-			puzzle.solution
-				? puzzle.solution.split('').map(Number)
-				: invoke<number[]>('solve_sudoku', { puzzle }),
-			invoke<number[][]>('get_peers', { constraints: puzzle.constraints })
-		]);
-		this.solved = Array.from({ length: 9 }, (_, i) => solvedRes.slice(i * 9, i * 9 + 9));
+		if (puzzle.solution) {
+			this.solved = toRows(puzzle.solution.split('').map(Number));
+		} else {
+			invoke<number[]>('solve_sudoku', { puzzle })
+				.then((res) => {
+					if (current()) this.solved = toRows(res);
+				})
+				.catch((e) => console.warn('Could not solve the puzzle:', e));
+		}
+		const peers = await invoke<number[][]>('get_peers', { constraints: puzzle.constraints });
+		if (!current()) return false;
 		this.peerMap = peers;
+		return true;
 	}
 
 	async save() {
@@ -234,15 +276,16 @@ export class SudokuStore {
 				.map(([key, progress]) => [key.slice('progress:'.length), progress])
 		);
 		this.generated = (await this.#store.get<GeneratedGame>('generated')) ?? null;
-		this.sudoku = (await this.#store.get<Sudoku>('sudoku')) ?? null;
+		const sudoku = (await this.#store.get<Sudoku>('sudoku')) ?? null;
+		this.sudoku = sudoku;
 		this.startTime = (await this.#store.get<number>('startTime')) ?? null;
 		this.endTime = (await this.#store.get<number>('endTime')) ?? null;
 
-		if (!this.sudoku) return;
+		if (!sudoku) return;
 
 		// saves from before variants only stored the grid; rebuild from its fixed cells
 		const saved = (await this.#store.get<Puzzle>('puzzle')) ?? {
-			givens: this.sudoku
+			givens: sudoku
 				.map((row) => row.map((cell) => (cell.fixed ? cell.value : '.')).join(''))
 				.join(''),
 			constraints: []
@@ -259,6 +302,7 @@ export class SudokuStore {
 					solution: ready.solution
 				}
 			: saved;
+		this.sudoku = withGivens(puzzle.givens, sudoku);
 
 		// solving can take a while on hard puzzles, so it doesn't hold up the launch
 		this.prepare(puzzle)
@@ -303,6 +347,15 @@ export class SudokuStore {
 
 	restore(sudoku: Sudoku) {
 		this.sudoku = sudoku;
+		this.save();
+	}
+
+	/** Start the puzzle over from its givens, with the clock back at zero. */
+	restart() {
+		if (!this.puzzle) return;
+		this.sudoku = givenCells(this.puzzle.givens);
+		this.startTime = Date.now();
+		this.endTime = null;
 		this.save();
 	}
 }

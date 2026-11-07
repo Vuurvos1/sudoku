@@ -2,8 +2,8 @@ import type { BoardLayer } from '#lib/board.ts';
 import { CELL_COLORS } from '#lib/color.ts';
 import type { CellSelection } from '#lib/selection.svelte.ts';
 import { HistoryStore } from '#lib/stores/history.svelte.ts';
-import type { Settings } from '#lib/stores/settings.svelte.ts';
-import type { Sudoku, SudokuStore } from '#lib/stores/sudoku.svelte.ts';
+import type { NoteStyle, Settings } from '#lib/stores/settings.svelte.ts';
+import type { Cell, Sudoku, SudokuStore } from '#lib/stores/sudoku.svelte.ts';
 import { cellPosition } from '#lib/variants/geometry.ts';
 
 export type InputMode = 'fill' | 'note' | 'color';
@@ -11,15 +11,22 @@ export type InputMode = 'fill' | 'note' | 'color';
 /** The settings a game follows. */
 export type GameOptions = Pick<
 	Settings,
-	'mistakes' | 'autoCleanNotes' | 'highlightSameDigit' | 'highlightHouses'
+	'mistakes' | 'autoCleanNotes' | 'highlightSameDigit' | 'highlightHouses' | 'noteStyle'
 >;
 
 const DEFAULT_OPTIONS: GameOptions = {
 	mistakes: 'rules',
 	autoCleanNotes: true,
 	highlightSameDigit: true,
-	highlightHouses: true
+	highlightHouses: true,
+	noteStyle: 'corner'
 };
+
+/** The note style a cell shows: its own if it was switched, the default otherwise. */
+export function noteStyleOf(cell: Cell, fallback: NoteStyle): NoteStyle {
+	if (cell.centered === undefined) return fallback;
+	return cell.centered ? 'center' : 'corner';
+}
 
 type Store = Pick<
 	SudokuStore,
@@ -153,6 +160,30 @@ export class Game {
 		});
 	}
 
+	/** The note style that isn't the default, which `toggleNoteStyle` switches cells to. */
+	get otherNoteStyle(): NoteStyle {
+		return this.#options().noteStyle === 'center' ? 'corner' : 'center';
+	}
+
+	/**
+	 * Switches the selected cells' notes to the style that isn't the default, or back to
+	 * the default if they all already show the other one. Cells on the default style keep
+	 * following the setting.
+	 */
+	toggleNoteStyle() {
+		const fallback = this.#options().noteStyle;
+		const other = this.otherNoteStyle;
+		this.#edit((indices) => {
+			const cells = indices.map((i) => this.#cell(i));
+			const target = cells.every((cell) => noteStyleOf(cell, fallback) === other)
+				? fallback
+				: other;
+			for (const cell of cells) {
+				cell.centered = target === fallback ? undefined : target === 'center';
+			}
+		});
+	}
+
 	/**
 	 * Notes every digit each empty cell could still take: those none of its peers holds.
 	 * Replaces the notes already there, as one undo step.
@@ -179,6 +210,15 @@ export class Game {
 	redo() {
 		const state = this.history.redo();
 		if (state) this.#store.restore(state);
+	}
+
+	/** The note style the selected cells share; the default when they differ or none are. */
+	get selectionNoteStyle(): NoteStyle {
+		const fallback = this.#options().noteStyle;
+		const styles = new Set(
+			[...this.#selection.cells].map((i) => noteStyleOf(this.#cell(i), fallback))
+		);
+		return styles.size === 1 ? [...styles][0] : fallback;
 	}
 
 	/** Whether any empty cell has notes, which `fillNotes` would replace. */

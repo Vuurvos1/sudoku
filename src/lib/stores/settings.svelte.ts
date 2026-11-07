@@ -1,10 +1,8 @@
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { themeStore, themes } from '#lib/stores/theme.svelte.ts';
 
-export enum NoteStyles {
-	Grid,
-	Row
-}
+/** How notes sit in a cell: each digit in its own spot, or in a row across the middle. */
+export type NoteStyle = 'corner' | 'center';
 
 /**
  * Which digits are marked as mistakes: none, ones that break a rule given the digits
@@ -13,7 +11,8 @@ export enum NoteStyles {
 export type MistakeMode = 'off' | 'rules' | 'solution';
 
 export type Settings = {
-	noteStyle: NoteStyles;
+	/** how notes are shown, unless a cell was switched to the other style */
+	noteStyle: NoteStyle;
 	showTimer: boolean;
 	showRemainingDigits: boolean;
 	mistakes: MistakeMode;
@@ -35,7 +34,7 @@ function createSettingsStore() {
 
 	// TODO: add theme
 	const settings = $state<Settings>({
-		noteStyle: NoteStyles.Grid,
+		noteStyle: 'corner',
 		showTimer: false,
 		showRemainingDigits: true,
 		mistakes: 'rules',
@@ -58,6 +57,9 @@ function createSettingsStore() {
 					// @ts-expect-error - this is fine
 					settings[key] = val[key];
 				}
+
+				// an older build stored this as an unused number
+				if (settings.noteStyle !== 'center') settings.noteStyle = 'corner';
 
 				themeStore.setTheme(val.theme);
 			}

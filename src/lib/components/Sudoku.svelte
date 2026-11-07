@@ -1,7 +1,13 @@
 <script lang="ts">
 	import type { BoardLayer } from '#lib/board.ts';
 	import { cellGradient } from '#lib/color.ts';
-	import type { ConstraintSpec, Sudoku } from '#lib/stores/index.ts';
+	import { noteStyleOf } from '#lib/game.svelte.ts';
+	import {
+		settingsStore,
+		type ConstraintSpec,
+		type NoteStyle,
+		type Sudoku
+	} from '#lib/stores/index.ts';
 	import ConstraintShapes from '#lib/variants/ConstraintShapes.svelte';
 	import CutoutMask from '#lib/variants/CutoutMask.svelte';
 	import { cellPosition, regionOutline } from '#lib/variants/geometry.ts';
@@ -12,6 +18,7 @@
 		layers = [],
 		selected,
 		celebrate = false,
+		noteStyle,
 		oncellpointerdown,
 		onpointermove
 	}: {
@@ -23,10 +30,14 @@
 		selected?: ReadonlySet<number>;
 		/** play the solved animation */
 		celebrate?: boolean;
+		/** how notes are shown in cells that weren't switched; the setting by default */
+		noteStyle?: NoteStyle;
 		/** makes the board interactive */
 		oncellpointerdown?: (ev: PointerEvent, index: number) => void;
 		onpointermove?: (ev: PointerEvent) => void;
 	} = $props();
+
+	const defaultNoteStyle = $derived(noteStyle ?? settingsStore.settings.noteStyle);
 
 	// mask ids must be unique per document, and a hint can show a second board
 	const id = $props.id();
@@ -108,6 +119,22 @@
 						>
 							{digit}
 						</span>
+					{:else if noteStyleOf(cell(i), defaultNoteStyle) === 'center'}
+						<!-- in a row, shrinking as it fills up so all nine still fit -->
+						<div
+							class={[
+								'flex flex-wrap items-center justify-center px-[0.3cqw] leading-none',
+								notes.length <= 4
+									? 'text-[3cqw]'
+									: notes.length <= 6
+										? 'text-[2.3cqw]'
+										: 'text-[1.8cqw]'
+							]}
+						>
+							{#each [...notes].sort((a, b) => a - b) as note (note)}
+								<span class={layers.map((l) => l.note?.(i, note))}>{note}</span>
+							{/each}
+						</div>
 					{:else}
 						<div
 							class="grid h-full w-full grid-cols-3 grid-rows-3 place-items-center text-[3cqw] leading-none"

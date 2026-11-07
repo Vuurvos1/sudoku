@@ -10,8 +10,11 @@
 		ChevronLeftIcon,
 		LightbulbIcon,
 		InfoIcon,
-		WandSparklesIcon
+		WandSparklesIcon,
+		RotateCcwIcon
 	} from '@lucide/svelte';
+	import CenterNotesIcon from '#lib/components/CenterNotesIcon.svelte';
+	import CornerNotesIcon from '#lib/components/CornerNotesIcon.svelte';
 	import HintDialog from '#lib/components/HintDialog.svelte';
 	import GameFinishedDialog from '#lib/components/GameFinishedDialog.svelte';
 	import PuzzleRulesSheet from '#lib/components/PuzzleRulesSheet.svelte';
@@ -34,6 +37,29 @@
 	const constraints = $derived(sudokuStore.puzzle?.constraints ?? []);
 	let rulesOpen = $state(false);
 	let confirmFillOpen = $state(false);
+	let confirmRestartOpen = $state(false);
+
+	// the button switches cells to the style that isn't the default
+	const otherNoteStyle = $derived(
+		game.otherNoteStyle === 'center'
+			? { label: 'Center notes', icon: CenterNotesIcon }
+			: { label: 'Corner notes', icon: CornerNotesIcon }
+	);
+
+	// only worth asking when there's something to lose
+	function hasProgress() {
+		return !!sudokuStore.sudoku
+			?.flat()
+			.some((cell) => !cell.fixed && (cell.value || cell.notes.length || cell.colors.length));
+	}
+
+	// back to the givens; the old moves can't be undone into the new game
+	function restart() {
+		sudokuStore.restart();
+		game.history.clear();
+		selection.clear();
+		boardSolved = false;
+	}
 
 	// filling replaces notes, so ask first when there are some to lose
 	function fillNotes() {
@@ -78,9 +104,15 @@
 			return;
 		}
 
+		if (ev.altKey) return;
+		const key = ev.key.toLowerCase();
 		const digit = parseInt(ev.key);
 		if (digit >= 1 && digit <= 9) game.enter(digit);
 		else if (ev.key === 'Backspace' || ev.key === 'Delete') game.clear();
+		// the same toggles as the buttons: pressing again goes back to filling in digits
+		else if (key === 'n') game.toggleMode('note');
+		else if (key === 'c') game.toggleMode('color');
+		else if (key === 'm') game.toggleNoteStyle();
 	}
 
 	let boardSolved = $state(false);
@@ -135,7 +167,19 @@
 				</button>
 				<Menu
 					label="more"
-					items={[{ label: 'Fill all notes', icon: WandSparklesIcon, onselect: fillNotes }]}
+					items={[
+						{ label: 'Fill all notes', icon: WandSparklesIcon, onselect: fillNotes },
+						{
+							label: `${otherNoteStyle.label} (M)`,
+							icon: otherNoteStyle.icon,
+							onselect: () => game.toggleNoteStyle()
+						},
+						{
+							label: 'Restart puzzle',
+							icon: RotateCcwIcon,
+							onselect: () => (hasProgress() ? (confirmRestartOpen = true) : restart())
+						}
+					]}
 				/>
 			</div>
 		</nav>
@@ -171,7 +215,7 @@
 		</div>
 
 		<div>
-			<div class="digits mx-auto mb-8 grid w-min gap-4">
+			<div class="digits mx-auto mb-8 grid w-min gap-x-2.5 gap-y-3 sm:gap-4">
 				{#each { length: 9 } as _, i (i)}
 					{@const remaining = game.remaining(i + 1)}
 					<button
@@ -201,8 +245,22 @@
 					</button>
 				{/each}
 
-				<button class="digit-btn" onclick={() => game.clear()}>
+				<button class="digit-btn" aria-label="erase" onclick={() => game.clear()}>
 					<EraserIcon size="22" />
+				</button>
+
+				<button
+					class="digit-btn"
+					aria-label="note style: {game.selectionNoteStyle}"
+					title="Note style: {game.selectionNoteStyle} (M)"
+					onclick={() => game.toggleNoteStyle()}
+				>
+					<!-- the style the selected cells have now; pressing switches it -->
+					{#if game.selectionNoteStyle === 'center'}
+						<CenterNotesIcon size={22} />
+					{:else}
+						<CornerNotesIcon size={22} />
+					{/if}
 				</button>
 			</div>
 
@@ -210,6 +268,7 @@
 				<button
 					class={['option-btn', game.mode === 'color' && 'border-accent bg-accent text-background']}
 					aria-label="coloring"
+					title="Coloring (C)"
 					onclick={() => game.toggleMode('color')}
 				>
 					<PaintBucketIcon class="transition" />
@@ -218,6 +277,7 @@
 				<button
 					class={['option-btn', game.mode === 'note' && 'border-accent bg-accent text-background']}
 					aria-label="note"
+					title="Notes (N)"
 					onclick={() => game.toggleMode('note')}
 				>
 					<PencilIcon class="transition" />
@@ -257,14 +317,21 @@
 	confirmLabel="Fill notes"
 	onconfirm={() => game.fillNotes()}
 />
+<ConfirmSheet
+	bind:open={confirmRestartOpen}
+	title="Restart this puzzle?"
+	message="Clears every digit, note and color you've added and resets the timer. This can't be undone."
+	confirmLabel="Restart"
+	onconfirm={restart}
+/>
 
 <style lang="postcss">
 	.digits {
-		grid-template-columns: repeat(5, min-content);
+		grid-template-columns: repeat(6, min-content);
 	}
 
 	.digit-btn {
-		@apply grid h-12 w-12 place-items-center rounded-full border border-text bg-transparent;
+		@apply grid h-11 w-11 place-items-center rounded-full border border-text bg-transparent sm:h-12 sm:w-12;
 	}
 
 	.option-btn {

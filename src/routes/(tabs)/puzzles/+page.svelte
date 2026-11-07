@@ -5,7 +5,7 @@
 	import { page } from '$app/state';
 	import FilterChips from '#lib/components/FilterChips.svelte';
 	import Sudoku from '#lib/components/Sudoku.svelte';
-	import { givenCells, sudokuStore } from '#lib/stores/index.ts';
+	import { givenCells, sudokuStore, withGivens } from '#lib/stores/index.ts';
 	import { difficulties, sections, type ReadyPuzzle } from '#lib/puzzles/index.ts';
 	import RuleIcon from '#lib/components/RuleIcon.svelte';
 	import { puzzleRules, ruleIcons } from '#lib/variants/index.ts';
@@ -116,7 +116,9 @@
 						<!-- the board as it was left, or as it starts, drawn with the game's own renderer -->
 						<span class="block aspect-square rounded-lg bg-text/5 p-1.5" aria-hidden="true">
 							<Sudoku
-								cells={progress?.sudoku ?? givenCells(puzzle.givens)}
+								cells={progress
+									? withGivens(puzzle.givens, progress.sudoku)
+									: givenCells(puzzle.givens)}
 								constraints={puzzle.constraints}
 							/>
 						</span>

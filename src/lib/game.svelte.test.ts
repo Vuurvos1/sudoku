@@ -10,6 +10,7 @@ function setup(overrides: Partial<GameOptions> = {}) {
 		autoCleanNotes: true,
 		highlightSameDigit: true,
 		highlightHouses: true,
+		noteStyle: 'corner',
 		...overrides
 	};
 	const sudoku: Sudoku = Array.from({ length: 9 }, () =>
@@ -147,6 +148,30 @@ describe('Game', () => {
 		game.undo();
 		expect(store.sudoku[0][1].notes).toEqual([]);
 		expect(store.sudoku[0][3].notes).toEqual([5]);
+	});
+
+	it('switches notes to the other style and back, as one undo step', () => {
+		const { store, game, select } = setup();
+		store.sudoku[0][2].centered = true;
+		select(1, 2);
+		game.toggleNoteStyle();
+		expect(store.sudoku[0][1].centered).toBe(true);
+		expect(store.sudoku[0][2].centered).toBe(true);
+		expect(game.selectionNoteStyle).toBe('center');
+		// back to the default, so they follow the setting again
+		game.toggleNoteStyle();
+		expect(store.sudoku[0][1].centered).toBeUndefined();
+		expect(store.sudoku[0][2].centered).toBeUndefined();
+		game.undo();
+		expect(store.sudoku[0][1].centered).toBe(true);
+	});
+
+	it('switches to corner notes when center is the default', () => {
+		const { store, game, select } = setup({ noteStyle: 'center' });
+		select(1);
+		expect(game.otherNoteStyle).toBe('corner');
+		game.toggleNoteStyle();
+		expect(store.sudoku[0][1].centered).toBe(false);
 	});
 
 	it('counts the remaining digits', () => {

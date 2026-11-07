@@ -3,7 +3,14 @@
 	import Sheet from '#lib/components/Sheet.svelte';
 	import Switch from '#lib/components/Switch.svelte';
 	import ThemeSelect from '#lib/components/ThemeSelect.svelte';
-	import { settingsStore, type MistakeMode } from '#lib/stores/index.ts';
+	import CenterNotesIcon from '#lib/components/CenterNotesIcon.svelte';
+	import CornerNotesIcon from '#lib/components/CornerNotesIcon.svelte';
+	import { settingsStore, type MistakeMode, type NoteStyle } from '#lib/stores/index.ts';
+
+	const noteStyles: { value: NoteStyle; label: string; icon: typeof CornerNotesIcon }[] = [
+		{ value: 'corner', label: 'Corner', icon: CornerNotesIcon },
+		{ value: 'center', label: 'Center', icon: CenterNotesIcon }
+	];
 
 	let { open = $bindable(true) }: { open?: boolean } = $props();
 
@@ -42,6 +49,15 @@
 				bind:checked={settingsStore.settings.showRemainingDigits}
 			/>
 		</div>
+		<p class="mb-2 mt-3">Note style</p>
+		<Segmented
+			label="Note style"
+			options={noteStyles}
+			bind:value={settingsStore.settings.noteStyle}
+		/>
+		<p class="mt-2 text-sm opacity-60">
+			How new notes are shown. Single cells can still be switched to the other style.
+		</p>
 	</section>
 
 	<section class="mt-7">

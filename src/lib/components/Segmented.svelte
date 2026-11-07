@@ -1,6 +1,9 @@
 <script lang="ts" generics="T extends string | number">
+	import type { Component } from 'svelte';
+
 	interface Props {
-		options: { value: T; label: string }[];
+		/** an icon is shown before the label */
+		options: { value: T; label: string; icon?: Component<{ size?: number }> }[];
 		value: T;
 		/** names the group for screen readers */
 		label: string;
@@ -21,10 +24,13 @@
 			aria-checked={active}
 			onclick={() => (value = option.value)}
 			class={[
-				'rounded-full px-3 py-1.5 text-sm font-medium transition',
+				'flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition',
 				active ? 'bg-accent text-background shadow' : 'opacity-70 hover:opacity-100'
 			]}
 		>
+			{#if option.icon}
+				<option.icon size={18} />
+			{/if}
 			{option.label}
 		</button>
 	{/each}
