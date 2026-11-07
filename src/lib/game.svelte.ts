@@ -215,10 +215,9 @@ export class Game {
 	/** The note style the selected cells share; the default when they differ or none are. */
 	get selectionNoteStyle(): NoteStyle {
 		const fallback = this.#options().noteStyle;
-		const styles = new Set(
-			[...this.#selection.cells].map((i) => noteStyleOf(this.#cell(i), fallback))
-		);
-		return styles.size === 1 ? [...styles][0] : fallback;
+		const styles = [...this.#selection.cells].map((i) => noteStyleOf(this.#cell(i), fallback));
+		const [first] = styles;
+		return first && styles.every((style) => style === first) ? first : fallback;
 	}
 
 	/** Whether any empty cell has notes, which `fillNotes` would replace. */
