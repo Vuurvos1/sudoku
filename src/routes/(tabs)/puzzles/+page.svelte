@@ -18,9 +18,7 @@
 
 	// e.g. "Medium · by Someone"; the rules are shown as icons
 	function details({ difficulty, author }: ReadyPuzzle): string {
-		return [difficulties[difficulty], author && `by ${author}`]
-			.filter(Boolean)
-			.join(' · ');
+		return [difficulties[difficulty], author && `by ${author}`].filter(Boolean).join(' · ');
 	}
 
 	const rules = (puzzle: ReadyPuzzle) => puzzleRules(puzzle.constraints);

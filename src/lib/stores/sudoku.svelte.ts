@@ -252,7 +252,12 @@ export class SudokuStore {
 			? sections.flatMap((s) => s.puzzles).find((p) => p.id === saved.id)
 			: undefined;
 		const puzzle: Puzzle = ready
-			? { id: ready.id, givens: ready.givens, constraints: ready.constraints, solution: ready.solution }
+			? {
+					id: ready.id,
+					givens: ready.givens,
+					constraints: ready.constraints,
+					solution: ready.solution
+				}
 			: saved;
 
 		// solving can take a while on hard puzzles, so it doesn't hold up the launch

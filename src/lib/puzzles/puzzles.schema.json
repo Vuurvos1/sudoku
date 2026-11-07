@@ -49,7 +49,9 @@
 			"type": "object",
 			"required": ["type"],
 			"properties": {
-				"type": { "enum": ["diagonals", "antiKnight", "antiKing", "cage", "line", "marker", "arrow"] }
+				"type": {
+					"enum": ["diagonals", "antiKnight", "antiKing", "cage", "line", "marker", "arrow"]
+				}
 			},
 			"oneOf": [
 				{
