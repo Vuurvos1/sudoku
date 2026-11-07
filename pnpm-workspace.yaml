@@ -1,0 +1,4 @@
+# The app lives at the root; shared or custom packages go in packages/<name>,
+# each with its own package.json. Depend on one with "<name>": "workspace:*".
+packages:
+  - 'packages/*'

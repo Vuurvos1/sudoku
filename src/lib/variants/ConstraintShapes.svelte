@@ -1,7 +1,7 @@
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import type { ConstraintSpec } from '$lib/stores';
+	import type { ConstraintSpec } from '#lib/stores/index.ts';
 	import { rendererFor, type Layer } from '.';
 
 	let { constraints, layer }: { constraints: ConstraintSpec[]; layer: Layer } = $props();

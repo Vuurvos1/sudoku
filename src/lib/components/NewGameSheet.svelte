@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
-	import Segmented from '$lib/components/Segmented.svelte';
-	import Sheet from '$lib/components/Sheet.svelte';
-	import { difficulties as labels } from '$lib/puzzles';
-	import { sudokuStore } from '$lib/stores';
+	import ConfirmSheet from '#lib/components/ConfirmSheet.svelte';
+	import Segmented from '#lib/components/Segmented.svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import { difficulties as labels } from '#lib/puzzles/index.ts';
+	import { sudokuStore } from '#lib/stores/index.ts';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
@@ -23,7 +23,7 @@
 
 	function newGame() {
 		sudokuStore.generate(difficulty);
-		goto(resolve('/game'));
+		goto(resolve('game'));
 	}
 </script>
 
@@ -42,12 +42,10 @@
 		</button>
 
 		<a
-			href="{resolve('/puzzles')}?section=classic"
+			href="{resolve('/(tabs)/puzzles')}?section=classic"
 			class="-mt-2 text-center text-sm font-medium text-accent transition hover:opacity-80"
-			onclick={() => (open = false)}
+			onclick={() => (open = false)}>Or pick a ready-made puzzle</a
 		>
-			Or pick a ready-made puzzle
-		</a>
 	</div>
 </Sheet>
 

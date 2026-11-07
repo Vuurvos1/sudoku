@@ -1,7 +1,7 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"title": "Puzzle section",
-	"description": "A section of ready-made puzzles. Keep in sync with `ReadyPuzzle` in ./index.ts and `ConstraintSpec` in $lib/stores.",
+	"description": "A section of ready-made puzzles. Keep in sync with `ReadyPuzzle` in ./index.ts and `ConstraintSpec` in #lib/stores.",
 	"type": "object",
 	"required": ["id", "name", "description", "puzzles"],
 	"additionalProperties": false,

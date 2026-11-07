@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { settingsStore, dialogState, sudokuStore } from '$lib/stores';
+	import { settingsStore, dialogState, sudokuStore } from '#lib/stores/index.ts';
 	import {
 		UndoIcon,
 		RedoIcon,
@@ -12,17 +12,17 @@
 		InfoIcon,
 		WandSparklesIcon
 	} from '@lucide/svelte';
-	import HintDialog from '$lib/components/HintDialog.svelte';
-	import GameFinishedDialog from '$lib/components/GameFinishedDialog.svelte';
-	import PuzzleRulesSheet from '$lib/components/PuzzleRulesSheet.svelte';
-	import Menu from '$lib/components/Menu.svelte';
-	import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
-	import { CELL_COLORS, cellColor } from '$lib/color';
+	import HintDialog from '#lib/components/HintDialog.svelte';
+	import GameFinishedDialog from '#lib/components/GameFinishedDialog.svelte';
+	import PuzzleRulesSheet from '#lib/components/PuzzleRulesSheet.svelte';
+	import Menu from '#lib/components/Menu.svelte';
+	import ConfirmSheet from '#lib/components/ConfirmSheet.svelte';
+	import { CELL_COLORS, cellColor } from '#lib/color.ts';
 	import { resolve } from '$app/paths';
-	import Sudoku from '$lib/components/Sudoku.svelte';
-	import { ruleLabels } from '$lib/variants';
-	import { CellSelection } from '$lib/selection.svelte';
-	import { Game } from '$lib/game.svelte';
+	import Sudoku from '#lib/components/Sudoku.svelte';
+	import { ruleLabels } from '#lib/variants/index.ts';
+	import { CellSelection } from '#lib/selection.svelte.ts';
+	import { Game } from '#lib/game.svelte.ts';
 
 	const selection = new CellSelection();
 	const game = new Game(sudokuStore, selection, () => settingsStore.settings);
@@ -106,7 +106,7 @@
 	<header class="py-3">
 		<nav class="container flex flex-row items-center justify-between">
 			<div class="flex w-32 flex-row items-center gap-4">
-				<a href={resolve('/')} aria-label="back">
+				<a href={resolve('/(tabs)')} aria-label="back">
 					<ChevronLeftIcon />
 				</a>
 			</div>

@@ -1,5 +1,5 @@
 import { LazyStore } from '@tauri-apps/plugin-store';
-import { themeStore, themes } from '$lib/stores/theme.svelte';
+import { themeStore, themes } from '#lib/stores/theme.svelte.ts';
 
 export enum NoteStyles {
 	Grid,

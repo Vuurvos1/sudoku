@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { BoardLayer } from '$lib/board';
-	import { cellGradient } from '$lib/color';
-	import type { ConstraintSpec, Sudoku } from '$lib/stores';
-	import ConstraintShapes from '$lib/variants/ConstraintShapes.svelte';
-	import CutoutMask from '$lib/variants/CutoutMask.svelte';
-	import { cellPosition, regionOutline } from '$lib/variants/geometry';
+	import type { BoardLayer } from '#lib/board.ts';
+	import { cellGradient } from '#lib/color.ts';
+	import type { ConstraintSpec, Sudoku } from '#lib/stores/index.ts';
+	import ConstraintShapes from '#lib/variants/ConstraintShapes.svelte';
+	import CutoutMask from '#lib/variants/CutoutMask.svelte';
+	import { cellPosition, regionOutline } from '#lib/variants/geometry.ts';
 
 	let {
 		cells,

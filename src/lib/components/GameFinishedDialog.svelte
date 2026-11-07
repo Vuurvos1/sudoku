@@ -2,10 +2,10 @@
 	import { TrophyIcon } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import Sheet from '$lib/components/Sheet.svelte';
-	import { sudokuStore } from '$lib/stores';
-	import { puzzleRules } from '$lib/variants';
-	import { formatTime } from '$lib/time';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import { sudokuStore } from '#lib/stores/index.ts';
+	import { puzzleRules } from '#lib/variants/index.ts';
+	import { formatTime } from '#lib/time.ts';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
 
@@ -19,7 +19,7 @@
 	function handleNewGame() {
 		open = false;
 		sudokuStore.clear();
-		goto(resolve('/'));
+		goto(resolve('/(tabs)'));
 	}
 </script>
 

@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { rules } from '$lib/learn';
+import { rules } from '#lib/learn.ts';
 import type { EntryGenerator, PageLoad } from './$types';
 
 export const entries: EntryGenerator = () => rules.map(({ slug }) => ({ slug }));

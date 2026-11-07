@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { themeStore, themes } from '$lib/stores';
+	import { themeStore, themes } from '#lib/stores/index.ts';
 </script>
 
 <div role="radiogroup" aria-label="Theme" class="grid grid-cols-4 gap-2">

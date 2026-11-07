@@ -1,7 +1,7 @@
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import type { ConstraintSpec } from '$lib/stores';
+	import type { ConstraintSpec } from '#lib/stores/index.ts';
 	import { cellCenter } from './geometry';
 
 	let { constraint }: { constraint: Extract<ConstraintSpec, { type: 'line' }> } = $props();

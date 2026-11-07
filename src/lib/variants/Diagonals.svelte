@@ -1,7 +1,7 @@
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import type { ConstraintSpec } from '$lib/stores';
+	import type { ConstraintSpec } from '#lib/stores/index.ts';
 
 	let { constraint: _ }: { constraint: Extract<ConstraintSpec, { type: 'diagonals' }> } = $props();
 </script>

@@ -1,6 +1,6 @@
 import type { Component } from 'svelte';
-import type { ConstraintSpec } from '$lib/stores';
-import type { RuleGlyph } from '$lib/learn';
+import type { ConstraintSpec } from '#lib/stores/index.ts';
+import type { RuleGlyph } from '#lib/learn.ts';
 import Arrow from './Arrow.svelte';
 import Cage from './Cage.svelte';
 import Diagonals from './Diagonals.svelte';

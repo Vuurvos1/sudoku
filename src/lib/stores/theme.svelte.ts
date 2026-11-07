@@ -1,6 +1,6 @@
-import { hexToHSL } from '$lib/color';
-import { settingsStore } from '$lib/stores';
-import { saveSplashTheme } from '$lib/splash';
+import { hexToHSL } from '#lib/color.ts';
+import { settingsStore } from '#lib/stores/index.ts';
+import { saveSplashTheme } from '#lib/splash.ts';
 
 export type Theme = {
 	id: number;

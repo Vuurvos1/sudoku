@@ -1,0 +1,28 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["eslint", "typescript", "unicorn", "oxc"],
+	"categories": {
+		"correctness": "error"
+	},
+	"env": {
+		"browser": true,
+		"node": true
+	},
+	"rules": {
+		"no-unused-vars": [
+			"error",
+			{
+				"argsIgnorePattern": "^_",
+				"varsIgnorePattern": "^_",
+				"destructuredArrayIgnorePattern": "^_"
+			}
+		]
+	},
+	"overrides": [
+		{
+			"files": ["src/lib/index.ts"],
+			"rules": { "unicorn/no-empty-file": "off" }
+		}
+	],
+	"ignorePatterns": ["build/", ".svelte-kit/", "dist/", "src-tauri/", "target/"]
+}

@@ -1,10 +1,10 @@
-import type { BoardLayer } from '$lib/board';
-import { CELL_COLORS } from '$lib/color';
-import type { CellSelection } from '$lib/selection.svelte';
-import { HistoryStore } from '$lib/stores/history.svelte';
-import type { Settings } from '$lib/stores/settings.svelte';
-import type { Sudoku, SudokuStore } from '$lib/stores/sudoku.svelte';
-import { cellPosition } from '$lib/variants/geometry';
+import type { BoardLayer } from '#lib/board.ts';
+import { CELL_COLORS } from '#lib/color.ts';
+import type { CellSelection } from '#lib/selection.svelte.ts';
+import { HistoryStore } from '#lib/stores/history.svelte.ts';
+import type { Settings } from '#lib/stores/settings.svelte.ts';
+import type { Sudoku, SudokuStore } from '#lib/stores/sudoku.svelte.ts';
+import { cellPosition } from '#lib/variants/geometry.ts';
 
 export type InputMode = 'fill' | 'note' | 'color';
 

@@ -1,7 +1,7 @@
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import type { ConstraintSpec } from '$lib/stores';
+	import type { ConstraintSpec } from '#lib/stores/index.ts';
 	import { gridCutouts } from '.';
 
 	// a separate id per layer, since each layer is its own <svg>

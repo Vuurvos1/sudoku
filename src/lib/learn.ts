@@ -1,5 +1,5 @@
-import type { BoardLayer } from '$lib/board';
-import type { ConstraintSpec, Sudoku } from '$lib/stores';
+import type { BoardLayer } from '#lib/board.ts';
+import type { ConstraintSpec, Sudoku } from '#lib/stores/index.ts';
 
 export type RuleGlyph =
 	| 'diagonals'
@@ -16,7 +16,7 @@ export type RuleGlyph =
 export type Rule = {
 	slug: string;
 	glyph: RuleGlyph;
-	/** matches `ruleLabel` in $lib/variants */
+	/** matches `ruleLabel` in #lib/variants */
 	name: string;
 	summary: string;
 	tips: string[];

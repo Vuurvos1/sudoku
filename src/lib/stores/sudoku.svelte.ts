@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { LazyStore } from '@tauri-apps/plugin-store';
-import { sections } from '$lib/puzzles';
+import { sections } from '#lib/puzzles/index.ts';
 
 export type Cell = {
 	value: number;

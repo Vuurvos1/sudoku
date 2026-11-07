@@ -1,5 +1,5 @@
-import type { BoardLayer } from '$lib/board';
-import type { HintResponse } from '$lib/stores';
+import type { BoardLayer } from '#lib/board.ts';
+import type { HintResponse } from '#lib/stores/index.ts';
 
 // key → role, keeping the first role seen per key unless a later one is "focus".
 // Map keeps the last entry per key, so the entries are reversed and focus entries appended.

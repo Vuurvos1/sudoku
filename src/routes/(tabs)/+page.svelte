@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { ChevronRightIcon, Grid3x3Icon, PlayIcon, SplineIcon } from '@lucide/svelte';
-	import { sudokuStore } from '$lib/stores';
-	import { puzzleRules } from '$lib/variants';
-	import { formatTime } from '$lib/time';
-	import NewGameSheet from '$lib/components/NewGameSheet.svelte';
-	import Logo from '$lib/components/Logo.svelte';
+	import { sudokuStore } from '#lib/stores/index.ts';
+	import { puzzleRules } from '#lib/variants/index.ts';
+	import { formatTime } from '#lib/time.ts';
+	import NewGameSheet from '#lib/components/NewGameSheet.svelte';
+	import Logo from '#lib/components/Logo.svelte';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 
@@ -28,7 +28,7 @@
 
 	async function continueGenerated() {
 		await sudokuStore.continueGenerated();
-		goto(resolve('/game'));
+		goto(resolve('game'));
 	}
 
 	let sheetOpen = $state(false);
@@ -43,7 +43,7 @@
 
 	{#if canContinue}
 		<a
-			href={resolve('/game')}
+			href={resolve('game')}
 			class="flex items-center gap-4 rounded-2xl bg-accent/15 p-4 ring-1 ring-inset ring-accent/50 transition hover:bg-accent/20"
 		>
 			<div class="min-w-0 flex-1">
@@ -82,7 +82,7 @@
 				<span class="block text-sm opacity-70">The rules you know</span>
 			</span>
 		</button>
-		<a href="{resolve('/puzzles')}?section=variants" class="tile">
+		<a href="{resolve('/(tabs)/puzzles')}?section=variants" class="tile">
 			<span class="tile-icon"><SplineIcon size={22} /></span>
 			<span>
 				<span class="block text-lg font-semibold">Variants</span>
@@ -92,7 +92,7 @@
 	</div>
 
 	<a
-		href={resolve('/puzzles')}
+		href={resolve('/(tabs)/puzzles')}
 		class="flex items-center gap-4 rounded-2xl bg-text/5 p-4 transition hover:bg-text/10"
 	>
 		<div class="flex-1">

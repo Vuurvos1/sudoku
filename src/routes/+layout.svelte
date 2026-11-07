@@ -1,7 +1,7 @@
 <script lang="ts">
-	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
-	import { dialogState, settingsStore, sudokuStore } from '$lib/stores';
-	import { hideSplash } from '$lib/splash';
+	import SettingsDialog from '#lib/components/SettingsDialog.svelte';
+	import { dialogState, settingsStore, sudokuStore } from '#lib/stores/index.ts';
+	import { hideSplash } from '#lib/splash.ts';
 	import type { Snippet } from 'svelte';
 	import '../main.css';
 

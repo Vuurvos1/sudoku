@@ -1,6 +1,6 @@
 <script lang="ts">
-	import RuleIcon from '$lib/components/RuleIcon.svelte';
-	import type { RuleGlyph } from '$lib/learn';
+	import RuleIcon from '#lib/components/RuleIcon.svelte';
+	import type { RuleGlyph } from '#lib/learn.ts';
 
 	interface Props {
 		/** `glyph` draws the rule's icon before its name */

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { ChevronRightIcon } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
-	import Sheet from '$lib/components/Sheet.svelte';
-	import Sudoku from '$lib/components/Sudoku.svelte';
-	import { hintLayer } from '$lib/hint';
-	import { findTechnique, techniqueLevel } from '$lib/learn';
-	import type { HintResponse } from '$lib/stores/sudoku.svelte';
-	import { sudokuStore } from '$lib/stores/sudoku.svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import Sudoku from '#lib/components/Sudoku.svelte';
+	import { hintLayer } from '#lib/hint.ts';
+	import { findTechnique, techniqueLevel } from '#lib/learn.ts';
+	import type { HintResponse } from '#lib/stores/sudoku.svelte.ts';
+	import { sudokuStore } from '#lib/stores/sudoku.svelte.ts';
 
 	let { open = $bindable(false), hint = null }: { open?: boolean; hint?: HintResponse | null } =
 		$props();

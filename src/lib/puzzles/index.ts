@@ -1,4 +1,4 @@
-import type { Puzzle } from '$lib/stores';
+import type { Puzzle } from '#lib/stores/index.ts';
 import classic from './classic.json';
 import variants from './variants.json';
 

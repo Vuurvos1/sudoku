@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { ChevronRightIcon } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
-	import RuleIcon from '$lib/components/RuleIcon.svelte';
-	import { rules, techniqueLevel, techniques } from '$lib/learn';
+	import RuleIcon from '#lib/components/RuleIcon.svelte';
+	import { rules, techniqueLevel, techniques } from '#lib/learn.ts';
 </script>
 
 <h1 class="mb-6 text-3xl font-bold">Learn</h1>

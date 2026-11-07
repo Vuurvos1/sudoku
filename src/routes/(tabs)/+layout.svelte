@@ -3,14 +3,14 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { BookOpenIcon, HouseIcon, LayoutGridIcon, SettingsIcon } from '@lucide/svelte';
-	import { dialogState } from '$lib/stores';
+	import { dialogState } from '#lib/stores/index.ts';
 
 	let { children }: { children?: Snippet } = $props();
 
 	const tabs = [
-		{ path: '/', label: 'Home', icon: HouseIcon },
-		{ path: '/puzzles', label: 'Puzzles', icon: LayoutGridIcon },
-		{ path: '/learn', label: 'Learn', icon: BookOpenIcon }
+		{ path: '/(tabs)', label: 'Home', icon: HouseIcon },
+		{ path: '/(tabs)/puzzles', label: 'Puzzles', icon: LayoutGridIcon },
+		{ path: '/(tabs)/learn', label: 'Learn', icon: BookOpenIcon }
 	] as const;
 </script>
 
@@ -35,7 +35,7 @@
 			<!-- a tab stays active on its subpages, e.g. a rule under Learn -->
 			{@const active =
 				page.url.pathname === resolve(path) ||
-				(path !== '/' && page.url.pathname.startsWith(`${resolve(path)}/`))}
+				(path !== '/(tabs)' && page.url.pathname.startsWith(`${resolve(path)}/`))}
 			<a
 				href={resolve(path)}
 				aria-current={active ? 'page' : undefined}

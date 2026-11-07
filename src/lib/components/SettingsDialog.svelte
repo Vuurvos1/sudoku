@@ -1,9 +1,9 @@
 <script lang="ts">
-	import Segmented from '$lib/components/Segmented.svelte';
-	import Sheet from '$lib/components/Sheet.svelte';
-	import Switch from '$lib/components/Switch.svelte';
-	import ThemeSelect from '$lib/components/ThemeSelect.svelte';
-	import { settingsStore, type MistakeMode } from '$lib/stores';
+	import Segmented from '#lib/components/Segmented.svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import Switch from '#lib/components/Switch.svelte';
+	import ThemeSelect from '#lib/components/ThemeSelect.svelte';
+	import { settingsStore, type MistakeMode } from '#lib/stores/index.ts';
 
 	let { open = $bindable(true) }: { open?: boolean } = $props();
 

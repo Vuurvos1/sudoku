@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ChessKingIcon, ChessKnightIcon } from '@lucide/svelte';
-	import type { RuleGlyph } from '$lib/learn';
+	import type { RuleGlyph } from '#lib/learn.ts';
 
 	let { glyph, size = 24 }: { glyph: RuleGlyph; size?: number } = $props();
 </script>

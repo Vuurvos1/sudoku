@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { ChevronLeftIcon, ChevronRightIcon } from '@lucide/svelte';
-	import RuleDetail from '$lib/components/RuleDetail.svelte';
-	import RuleIcon from '$lib/components/RuleIcon.svelte';
-	import Sheet from '$lib/components/Sheet.svelte';
-	import { findRule, type Rule } from '$lib/learn';
-	import type { ConstraintSpec } from '$lib/stores';
-	import { ruleLabels } from '$lib/variants';
+	import RuleDetail from '#lib/components/RuleDetail.svelte';
+	import RuleIcon from '#lib/components/RuleIcon.svelte';
+	import Sheet from '#lib/components/Sheet.svelte';
+	import { findRule, type Rule } from '#lib/learn.ts';
+	import type { ConstraintSpec } from '#lib/stores/index.ts';
+	import { ruleLabels } from '#lib/variants/index.ts';
 
 	let { open = $bindable(false), constraints }: { open?: boolean; constraints: ConstraintSpec[] } =
 		$props();

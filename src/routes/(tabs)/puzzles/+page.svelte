@@ -3,17 +3,17 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import FilterChips from '$lib/components/FilterChips.svelte';
-	import Sudoku from '$lib/components/Sudoku.svelte';
-	import { givenCells, sudokuStore } from '$lib/stores';
-	import { difficulties, sections, type ReadyPuzzle } from '$lib/puzzles';
-	import RuleIcon from '$lib/components/RuleIcon.svelte';
-	import { puzzleRules, ruleIcons } from '$lib/variants';
+	import FilterChips from '#lib/components/FilterChips.svelte';
+	import Sudoku from '#lib/components/Sudoku.svelte';
+	import { givenCells, sudokuStore } from '#lib/stores/index.ts';
+	import { difficulties, sections, type ReadyPuzzle } from '#lib/puzzles/index.ts';
+	import RuleIcon from '#lib/components/RuleIcon.svelte';
+	import { puzzleRules, ruleIcons } from '#lib/variants/index.ts';
 
 	// every game keeps its own progress, so nothing is lost by switching
 	function play(puzzle: ReadyPuzzle) {
 		sudokuStore.play(puzzle);
-		goto(resolve('/game'));
+		goto(resolve('game'));
 	}
 
 	// e.g. "Medium · by Someone"; the rules are shown as icons
@@ -41,6 +41,7 @@
 			)
 		)
 	);
+
 	const difficultyOptions = $derived(
 		Object.entries(difficulties)
 			.filter(([value]) => visible.some((s) => s.puzzles.some((p) => p.difficulty === value)))
@@ -131,9 +132,9 @@
 						{#if puzzle.constraints.length > 0}
 							<span class="mt-1 flex flex-wrap gap-1.5 opacity-70">
 								{#each ruleIcons(puzzle.constraints) as { glyph, label } (label)}
-									<span role="img" aria-label={label} title={label}>
-										<RuleIcon {glyph} size={16} />
-									</span>
+									<span role="img" aria-label={label} title={label}
+										><RuleIcon {glyph} size={16} /></span
+									>
 								{/each}
 							</span>
 						{/if}

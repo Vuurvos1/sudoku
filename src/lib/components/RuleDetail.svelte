@@ -1,7 +1,7 @@
 <script lang="ts">
-	import RuleIcon from '$lib/components/RuleIcon.svelte';
-	import Sudoku from '$lib/components/Sudoku.svelte';
-	import { exampleCells, highlightLayer, type Rule } from '$lib/learn';
+	import RuleIcon from '#lib/components/RuleIcon.svelte';
+	import Sudoku from '#lib/components/Sudoku.svelte';
+	import { exampleCells, highlightLayer, type Rule } from '#lib/learn.ts';
 
 	let { rule }: { rule: Rule } = $props();
 </script>
