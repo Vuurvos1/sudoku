@@ -424,18 +424,13 @@
 				},
 				{
 					"type": "cage",
-					"cells": [65, 74],
+					"cells": [65, 74, 75],
 					"sum": 15
 				},
 				{
 					"type": "cage",
 					"cells": [79, 80],
 					"sum": 5
-				},
-				{
-					"type": "cage",
-					"cells": [75],
-					"sum": null
 				}
 			]
 		},
