@@ -19,6 +19,7 @@
 		selected,
 		celebrate = false,
 		noteStyle,
+		showNotes = true,
 		oncellpointerdown,
 		onpointermove
 	}: {
@@ -32,6 +33,8 @@
 		celebrate?: boolean;
 		/** how notes are shown in cells that weren't switched; the setting by default */
 		noteStyle?: NoteStyle;
+		/** draw pencil marks; previews leave them out */
+		showNotes?: boolean;
 		/** makes the board interactive */
 		oncellpointerdown?: (ev: PointerEvent, index: number) => void;
 		onpointermove?: (ev: PointerEvent) => void;
@@ -119,6 +122,8 @@
 						>
 							{digit}
 						</span>
+					{:else if !showNotes}
+						<!-- no pencil marks -->
 					{:else if noteStyleOf(cell(i), defaultNoteStyle) === 'center'}
 						<!-- in a row, shrinking as it fills up so all nine still fit -->
 						<div

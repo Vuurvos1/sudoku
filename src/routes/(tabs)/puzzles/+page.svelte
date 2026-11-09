@@ -120,6 +120,7 @@
 									? withGivens(puzzle.givens, progress.sudoku)
 									: givenCells(puzzle.givens)}
 								constraints={puzzle.constraints}
+								showNotes={false}
 							/>
 						</span>
 						<span class="mt-2 flex items-center gap-1.5 font-medium">
