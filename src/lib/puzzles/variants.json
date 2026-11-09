@@ -857,6 +857,196 @@
 					"sum": 7
 				}
 			]
+		},
+		{
+			"id": "variants-16",
+			"title": "Hourglass",
+			"author": "Aad van de Wetering",
+			"difficulty": "expert",
+			"givens": "9.......4...............................9...............................2.......6",
+			"solution": "951627384342581697768934152826475931417398265539162478685213749194756823273849516",
+			"constraints": [
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [0, 1, 2, 3, 4, 5, 6, 7, 8]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [0, 10, 20, 30, 40, 50, 60, 70, 80]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [8, 16, 24, 32, 40, 48, 56, 64, 72]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [72, 73, 74, 75, 76, 77, 78, 79, 80]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [13, 22, 31]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [49, 58, 67]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [37, 38, 39]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [41, 42, 43]
+				}
+			]
+		},
+		{
+			"id": "variants-17",
+			"title": "Cube",
+			"author": "Aad van de Wetering",
+			"difficulty": "expert",
+			"givens": "...3....2............................................5..................1....2...",
+			"solution": "468395172537241689912876453826159347395724861741638295274963518683517924159482736",
+			"constraints": [
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [3, 4, 5, 6, 7, 8]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [3, 11, 19, 27]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [27, 28, 29, 30, 31, 32]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [32, 24, 16, 8]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [8, 17, 26, 35, 44, 53]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [27, 36, 45, 54, 63, 72]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [72, 73, 74, 75, 76, 77]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [32, 41, 50, 59, 68, 77]
+				},
+				{
+					"type": "line",
+					"kind": "dutchWhisper",
+					"cells": [77, 69, 61, 53]
+				}
+			]
+		},
+		{
+			"id": "variants-18",
+			"title": "Entanglement",
+			"difficulty": "expert",
+			"author": "Jay Dyer",
+			"givens": ".................................................................................",
+			"solution": "965231874873645192241978365516827943329164587784359216132786459497513628658492731",
+			"constraints": [
+				{
+					"type": "cage",
+					"cells": [0, 1, 9],
+					"sum": 23
+				},
+				{
+					"type": "cage",
+					"cells": [3, 12, 11, 19, 20],
+					"sum": 16
+				},
+				{
+					"type": "cage",
+					"cells": [5, 14],
+					"sum": 6
+				},
+				{
+					"type": "cage",
+					"cells": [24, 33],
+					"sum": 12
+				},
+				{
+					"type": "cage",
+					"cells": [25, 34],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [26, 35],
+					"sum": 8
+				},
+				{
+					"type": "cage",
+					"cells": [27, 28],
+					"sum": 6
+				},
+				{
+					"type": "cage",
+					"cells": [30, 31],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [45, 54],
+					"sum": 8
+				},
+				{
+					"type": "cage",
+					"cells": [47, 56],
+					"sum": 6
+				},
+				{
+					"type": "cage",
+					"cells": [51, 52, 60],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [61, 62, 71],
+					"sum": 22
+				},
+				{
+					"type": "cage",
+					"cells": [68, 69],
+					"sum": 9
+				},
+				{
+					"type": "cage",
+					"cells": [77, 78],
+					"sum": 9
+				},
+				{
+					"type": "cage",
+					"cells": [73, 74],
+					"sum": 13
+				}
+			]
 		}
 	]
 }
