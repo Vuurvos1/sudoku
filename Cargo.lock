@@ -3242,6 +3242,8 @@ dependencies = [
  "criterion",
  "rand",
  "serde",
+ "serde_json",
+ "sudoku-solver",
 ]
 
 [[package]]

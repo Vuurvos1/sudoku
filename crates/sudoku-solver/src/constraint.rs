@@ -1,7 +1,7 @@
 use crate::{
     board::{Board, CellId},
     house::House,
-    strategy::Deduction,
+    strategy::{Deduction, Explanation},
     variants::{Arrow, Cage, Relation, RelationConstraint},
 };
 
@@ -19,16 +19,39 @@ pub trait Constraint: Send + Sync {
         Vec::new()
     }
 
-    /// Variant-specific candidate elimination. Peer elimination is handled
-    /// by the solver, so constraints only need this for other logic.
-    fn propagate(&self, _board: &mut Board) -> Vec<Deduction> {
-        Vec::new()
+    /// Variant-specific candidate elimination: remove the candidates this
+    /// constraint rules out, adding each (cell, digit) removed to `out`.
+    /// Peer elimination is handled by the solver, so constraints only need
+    /// this for other logic. Runs inside the brute-force search, so keep it
+    /// free of anything only a hint needs.
+    fn eliminate(&self, _board: &mut Board, _out: &mut Vec<(CellId, u8)>) {}
+
+    /// `eliminate`, explained as a deduction for hints.
+    fn propagate(&self, board: &mut Board) -> Vec<Deduction> {
+        let mut eliminations = Vec::new();
+        self.eliminate(board, &mut eliminations);
+        if eliminations.is_empty() {
+            return Vec::new();
+        }
+        vec![Deduction {
+            strategy: "constraint propagation",
+            difficulty: 0,
+            placements: vec![],
+            explanation: Explanation::variant_elimination(self.name(), &eliminations),
+            eliminations,
+        }]
     }
 
     /// Whether placing `digit` at `cell` is consistent with the digits already
     /// in `grid` (0 = empty). Used by the brute-force search. Repeats are
     /// already ruled out through `distinct_pairs`.
     fn allows(&self, _grid: &[u8; 81], _cell: CellId, _digit: u8) -> bool {
+        true
+    }
+
+    /// False when `allows` never rules anything out, so the solver can skip
+    /// calling it. Constraints made of only `distinct_pairs` return false.
+    fn checks_digits(&self) -> bool {
         true
     }
 }
@@ -106,6 +129,10 @@ impl Constraint for NoRepeatAtOffsets {
             }
         }
         pairs
+    }
+
+    fn checks_digits(&self) -> bool {
+        false
     }
 }
 

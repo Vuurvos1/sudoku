@@ -17,7 +17,8 @@ pub struct SolverContext {
     peers: Vec<Vec<CellId>>,
     /// Bit `b` of `peer_mask[a]` is set when cells `a` and `b` are peers.
     peer_mask: Vec<u128>,
-    /// Indices into `constraints` for every constraint touching a cell.
+    /// Indices into `constraints` for every constraint touching a cell whose
+    /// `allows` can rule a digit out.
     constraints_at: Vec<Vec<usize>>,
 }
 
@@ -72,6 +73,9 @@ impl SolverContext {
 
         let mut constraints_at = vec![Vec::new(); 81];
         for (i, c) in constraints.iter().enumerate() {
+            if !c.checks_digits() {
+                continue;
+            }
             for &cell in c.cells() {
                 constraints_at[cell.0 as usize].push(i);
             }
@@ -121,6 +125,37 @@ impl SolverContext {
             }
         }
         legal
+    }
+
+    /// After `cell` is filled in `grid`, drop the digits the constraints on
+    /// it now rule out from their other empty cells. A constraint only reads
+    /// its own cells, so no other cell can be affected. Returns false when
+    /// that leaves a cell without candidates.
+    pub(crate) fn constrain_around(
+        &self,
+        board: &mut Board,
+        grid: &[u8; 81],
+        cell: CellId,
+    ) -> bool {
+        for &i in &self.constraints_at[cell.0 as usize] {
+            let constraint = &self.constraints[i];
+            for &other in constraint.cells() {
+                if grid[other.0 as usize] != 0 {
+                    continue;
+                }
+                let mut legal = board.candidates(other);
+                for d in legal.iter() {
+                    if !constraint.allows(grid, other, d) {
+                        legal.remove(d);
+                    }
+                }
+                if legal.count() == 0 {
+                    return false;
+                }
+                board.restrict(other, legal);
+            }
+        }
+        true
     }
 
     /// Filled cells in `grid` (0 = empty) that break a rule: they repeat a

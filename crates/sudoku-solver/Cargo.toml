@@ -19,6 +19,10 @@ rand = { version = "0.9", features = ["small_rng"] }
 
 [dev-dependencies]
 criterion = "0.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# the brute-force bench parses the app's puzzle files into ConstraintSpec
+sudoku-solver = { path = ".", features = ["serde"] }
 
 [[bench]]
 name = "solve"
@@ -26,4 +30,8 @@ harness = false
 
 [[bench]]
 name = "generate"
+harness = false
+
+[[bench]]
+name = "brute"
 harness = false

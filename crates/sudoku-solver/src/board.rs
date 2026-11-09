@@ -31,6 +31,10 @@ impl Candidates {
     pub fn intersect(self, other: Self) -> Self {
         Candidates(self.0 & other.0)
     }
+    /// The digits in `self` that aren't in `other`.
+    pub fn without(self, other: Self) -> Self {
+        Candidates(self.0 & !other.0)
+    }
     pub fn is_subset_of(self, other: Self) -> bool {
         self.0 & other.0 == self.0
     }
@@ -156,6 +160,12 @@ impl Board {
 
     pub fn remove_candidate(&mut self, id: CellId, digit: u8) {
         self.cells[id.0 as usize].candidates.remove(digit);
+    }
+
+    /// Keep only the candidates of `id` that are also in `keep`.
+    pub(crate) fn restrict(&mut self, id: CellId, keep: Candidates) {
+        let cell = &mut self.cells[id.0 as usize];
+        cell.candidates = cell.candidates.intersect(keep);
     }
 
     pub fn candidates(&self, id: CellId) -> Candidates {

@@ -84,7 +84,8 @@ impl Generator {
     /// Fill an empty grid that satisfies all of `ctx`'s rules.
     pub fn fill_grid_for(&mut self, ctx: &SolverContext) -> [u8; 81] {
         let rng = &mut self.rng;
-        first_solution(ctx, &Partial::empty(), &mut |d| d.shuffle(rng))
+        Partial::empty(ctx)
+            .and_then(|partial| first_solution(ctx, partial, &mut |d| d.shuffle(rng)))
             .expect("rules admit no complete grid")
     }
 
@@ -237,9 +238,10 @@ fn given_cells(givens: &[Option<u8>]) -> Vec<(CellId, u8)> {
         .collect()
 }
 
-/// A grid being filled in by the search: the digits placed so far, and the
-/// candidates left once those are removed from their peers. `grid` repeats
-/// the board's placed digits because `Constraint::allows` reads a plain grid.
+/// A grid being filled in by the search: the digits placed so far, and for
+/// every empty cell the digits that can still go there, with both peers and
+/// constraints taken into account. `grid` repeats the board's placed digits
+/// because `Constraint::allows` reads a plain grid.
 #[derive(Clone)]
 struct Partial {
     board: Board,
@@ -247,18 +249,30 @@ struct Partial {
 }
 
 impl Partial {
-    fn empty() -> Self {
-        Partial {
+    /// An empty grid, or `None` if the rules leave some cell without a digit.
+    fn empty(ctx: &SolverContext) -> Option<Self> {
+        let mut partial = Partial {
             board: Board::new(&[]),
             grid: [0; 81],
+        };
+        // Some rules rule digits out before anything is placed (a 3 cage
+        // can't hold a 9); placing only updates the cells around it.
+        for i in 0..81 {
+            let cell = CellId(i);
+            let legal = ctx.constrain(&partial.grid, cell, partial.board.candidates(cell));
+            if legal.count() == 0 {
+                return None;
+            }
+            partial.board.restrict(cell, legal);
         }
+        Some(partial)
     }
 
     /// Place the givens on an empty grid, or `None` if they break a rule.
     fn from_givens(ctx: &SolverContext, givens: &[(CellId, u8)]) -> Option<Self> {
-        let mut partial = Self::empty();
+        let mut partial = Self::empty(ctx)?;
         for &(cell, digit) in givens {
-            if !partial.legal(ctx, cell).contains(digit) || !partial.place(ctx, cell, digit) {
+            if !partial.force(ctx, cell, digit) {
                 return None;
             }
         }
@@ -266,48 +280,149 @@ impl Partial {
     }
 
     /// Digits that can still go in an empty cell.
-    fn legal(&self, ctx: &SolverContext, cell: CellId) -> Candidates {
-        ctx.constrain(&self.grid, cell, self.board.candidates(cell))
+    fn legal(&self, cell: CellId) -> Candidates {
+        self.board.candidates(cell)
     }
 
-    /// Place `digit` at `cell` and remove it from the cell's peers. Returns
-    /// false when that leaves a peer without candidates.
+    /// Place `digit` at `cell`, then remove the digits that rules out from
+    /// its peers and from the cells it shares a constraint with. Returns
+    /// false when that leaves a cell without candidates.
     fn place(&mut self, ctx: &SolverContext, cell: CellId, digit: u8) -> bool {
         self.grid[cell.0 as usize] = digit;
         ctx.place(&mut self.board, cell, digit)
+            && ctx.constrain_around(&mut self.board, &self.grid, cell)
     }
-}
 
-/// Depth-first search, always branching on the empty cell with the fewest
-/// legal digits. `order` arranges each cell's digits before trying them;
-/// `on_solution` sees every complete grid and returns true to stop.
-/// Returns true if the search was stopped.
-fn search<O, F>(ctx: &SolverContext, partial: &Partial, order: &mut O, on_solution: &mut F) -> bool
-where
-    O: FnMut(&mut [u8]),
-    F: FnMut(&[u8; 81]) -> bool,
-{
-    let mut best: Option<(CellId, Candidates)> = None;
-    for i in 0..81 {
-        if partial.grid[i] != 0 {
-            continue;
-        }
-        let cell = CellId(i as u8);
-        let legal = partial.legal(ctx, cell);
-        if legal.count() == 0 {
-            return false;
-        }
-        if best.is_none_or(|(_, b)| legal.count() < b.count()) {
-            best = Some((cell, legal));
-            if legal.count() == 1 {
-                break;
+    /// Place a digit that has to go at `cell`. Returns false when it can't:
+    /// the cell has been filled since, or the digit is no longer legal there.
+    fn force(&mut self, ctx: &SolverContext, cell: CellId, digit: u8) -> bool {
+        self.grid[cell.0 as usize] == 0
+            && self.legal(cell).contains(digit)
+            && self.place(ctx, cell, digit)
+    }
+
+    /// Run every constraint's own elimination (thermo order, cage sums and
+    /// so on) until none removes anything. This reasons about the candidates
+    /// of empty cells, which `place` doesn't. Returns false when that leaves
+    /// a cell without candidates.
+    fn eliminate(&mut self, ctx: &SolverContext, removed: &mut Vec<(CellId, u8)>) -> bool {
+        loop {
+            removed.clear();
+            for constraint in &ctx.constraints {
+                constraint.eliminate(&mut self.board, removed);
+            }
+            if removed.is_empty() {
+                return true;
+            }
+            if removed
+                .iter()
+                .any(|&(cell, _)| self.board.candidates(cell).count() == 0)
+            {
+                return false;
             }
         }
     }
 
-    let Some((cell, legal)) = best else {
+    /// Narrow the candidates with the constraints, then place every forced
+    /// digit, repeating until there are none left: cells with one legal digit
+    /// (naked singles), and digits with one cell left in a house (hidden
+    /// singles). Returns the legal digits of every empty cell once nothing is
+    /// forced, or `None` if the grid can't be completed.
+    ///
+    /// Within one pass `legal` goes stale as digits are placed, but placing
+    /// only takes digits away, so a stale set still holds every digit that is
+    /// really possible. Deductions from it stay sound as long as each forced
+    /// digit is checked against the grid as it is now, which `force` does.
+    fn fill_forced(&mut self, ctx: &SolverContext) -> Option<[Candidates; 81]> {
+        let mut removed = Vec::new();
+        loop {
+            if !self.eliminate(ctx, &mut removed) {
+                return None;
+            }
+            let mut legal = [Candidates::EMPTY; 81];
+            for (i, slot) in legal.iter_mut().enumerate() {
+                if self.grid[i] == 0 {
+                    *slot = self.legal(CellId(i as u8));
+                    if slot.count() == 0 {
+                        return None;
+                    }
+                }
+            }
+            let mut placed_any = false;
+
+            for (i, &l) in legal.iter().enumerate() {
+                if self.grid[i] == 0 && l.count() == 1 {
+                    let digit = l.iter().next().unwrap();
+                    if !self.force(ctx, CellId(i as u8), digit) {
+                        return None;
+                    }
+                    placed_any = true;
+                }
+            }
+
+            for house in &ctx.houses {
+                let mut placed = Candidates::EMPTY;
+                let mut once = Candidates::EMPTY;
+                let mut twice = Candidates::EMPTY;
+                for &c in &house.cells {
+                    match self.grid[c.0 as usize] {
+                        0 => {
+                            let l = legal[c.0 as usize];
+                            twice = twice.union(once.intersect(l));
+                            once = once.union(l);
+                        }
+                        d => placed.insert(d),
+                    }
+                }
+                if placed.union(once) != Candidates::ALL {
+                    return None; // a digit has nowhere to go
+                }
+                for digit in once.without(twice).without(placed).iter() {
+                    // Skip cells filled earlier in this pass, as above. No
+                    // cell left means two digits had only the same cell.
+                    let cell = house.cells.iter().find(|c| {
+                        self.grid[c.0 as usize] == 0 && legal[c.0 as usize].contains(digit)
+                    })?;
+                    if !self.force(ctx, *cell, digit) {
+                        return None;
+                    }
+                    placed_any = true;
+                }
+            }
+
+            if !placed_any {
+                return Some(legal);
+            }
+        }
+    }
+}
+
+/// Depth-first search: narrow the candidates and fill in the forced digits,
+/// then branch on the empty cell with the fewest legal digits. `order`
+/// arranges each cell's digits before trying them; `on_solution` sees every
+/// complete grid and returns true to stop. Returns true if the search was
+/// stopped.
+fn search<O, F>(
+    ctx: &SolverContext,
+    mut partial: Partial,
+    order: &mut O,
+    on_solution: &mut F,
+) -> bool
+where
+    O: FnMut(&mut [u8]),
+    F: FnMut(&[u8; 81]) -> bool,
+{
+    let Some(legal) = partial.fill_forced(ctx) else {
+        return false;
+    };
+
+    let best = (0..81)
+        .filter(|&i| partial.grid[i] == 0)
+        .min_by_key(|&i| legal[i].count());
+    let Some(i) = best else {
         return on_solution(&partial.grid);
     };
+    let (cell, legal) = (CellId(i as u8), legal[i]);
 
     let mut digits = [0u8; 9];
     let n = legal.count() as usize;
@@ -317,7 +432,7 @@ where
     order(&mut digits[..n]);
     for &d in &digits[..n] {
         let mut next = partial.clone();
-        if next.place(ctx, cell, d) && search(ctx, &next, order, on_solution) {
+        if next.place(ctx, cell, d) && search(ctx, next, order, on_solution) {
             return true;
         }
     }
@@ -327,7 +442,7 @@ where
 /// First complete grid the search reaches from `partial`, if any.
 fn first_solution<O: FnMut(&mut [u8])>(
     ctx: &SolverContext,
-    partial: &Partial,
+    partial: Partial,
     order: &mut O,
 ) -> Option<[u8; 81]> {
     let mut solution = None;
@@ -349,7 +464,7 @@ fn has_solution_without(
         return false;
     };
     partial.board.remove_candidate(cell, digit);
-    search(ctx, &partial, &mut |_| {}, &mut |_| true)
+    search(ctx, partial, &mut |_| {}, &mut |_| true)
 }
 
 /// Count solutions of a standard puzzle, stopping once `limit` are found.
@@ -363,7 +478,7 @@ pub fn count_solutions_for(ctx: &SolverContext, givens: &[(CellId, u8)], limit: 
         return 0;
     };
     let mut count = 0;
-    search(ctx, &partial, &mut |_| {}, &mut |_| {
+    search(ctx, partial, &mut |_| {}, &mut |_| {
         count += 1;
         count >= limit
     });
@@ -372,5 +487,5 @@ pub fn count_solutions_for(ctx: &SolverContext, givens: &[(CellId, u8)], limit: 
 
 /// First solution under `ctx`'s rules found by brute force, if any.
 pub fn solve_brute(ctx: &SolverContext, givens: &[(CellId, u8)]) -> Option<[u8; 81]> {
-    first_solution(ctx, &Partial::from_givens(ctx, givens)?, &mut |_| {})
+    first_solution(ctx, Partial::from_givens(ctx, givens)?, &mut |_| {})
 }

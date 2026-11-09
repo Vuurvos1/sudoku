@@ -1,7 +1,6 @@
 use crate::{
     board::{Board, Candidates, CellId},
     constraint::Constraint,
-    strategy::{Deduction, Explanation},
 };
 
 /// A rule between two cells `a` and `b`.
@@ -119,35 +118,19 @@ impl Constraint for RelationConstraint {
 
     /// Arc consistency: drop any digit with no partner across one of its edges,
     /// repeating until nothing changes.
-    fn propagate(&self, board: &mut Board) -> Vec<Deduction> {
-        let mut eliminations = Vec::new();
+    fn eliminate(&self, board: &mut Board, eliminations: &mut Vec<(CellId, u8)>) {
         loop {
             let before = eliminations.len();
             for &(a, b, rel) in &self.edges {
                 let (ca, cb) = (board.candidates(a), board.candidates(b));
-                restrict(board, a, supported(rel, ca, cb), &mut eliminations);
+                restrict(board, a, supported(rel, ca, cb), eliminations);
                 let ca = board.candidates(a);
-                restrict(
-                    board,
-                    b,
-                    supported(rel.flipped(), cb, ca),
-                    &mut eliminations,
-                );
+                restrict(board, b, supported(rel.flipped(), cb, ca), eliminations);
             }
             if eliminations.len() == before {
                 break;
             }
         }
-        if eliminations.is_empty() {
-            return Vec::new();
-        }
-        vec![Deduction {
-            strategy: "constraint propagation",
-            difficulty: 0,
-            placements: vec![],
-            explanation: Explanation::variant_elimination(&self.name, &eliminations),
-            eliminations,
-        }]
     }
 
     fn allows(&self, grid: &[u8; 81], cell: CellId, digit: u8) -> bool {
@@ -210,29 +193,18 @@ impl Constraint for Cage {
 
     /// Keep only digits that appear in some way of filling the whole cage
     /// with different digits that add up to the sum.
-    fn propagate(&self, board: &mut Board) -> Vec<Deduction> {
+    fn eliminate(&self, board: &mut Board, eliminations: &mut Vec<(CellId, u8)>) {
         let Some(sum) = self.sum else {
-            return Vec::new();
+            return;
         };
         let cands: Vec<Candidates> = self.cells.iter().map(|&c| board.candidates(c)).collect();
         let mut possible = vec![Candidates::EMPTY; self.cells.len()];
         let mut chosen = Vec::with_capacity(self.cells.len());
         fill_cage(&cands, sum, &mut chosen, &mut possible);
 
-        let mut eliminations = Vec::new();
         for (&cell, &keep) in self.cells.iter().zip(&possible) {
-            restrict(board, cell, keep, &mut eliminations);
+            restrict(board, cell, keep, eliminations);
         }
-        if eliminations.is_empty() {
-            return Vec::new();
-        }
-        vec![Deduction {
-            strategy: "constraint propagation",
-            difficulty: 0,
-            placements: vec![],
-            explanation: Explanation::variant_elimination(&self.name, &eliminations),
-            eliminations,
-        }]
     }
 
     fn allows(&self, grid: &[u8; 81], cell: CellId, digit: u8) -> bool {
@@ -316,7 +288,7 @@ impl Constraint for Arrow {
 
     /// Keep circle digits some shaft total can reach, and shaft digits that
     /// fit in such a total together with some choice for the rest of the shaft.
-    fn propagate(&self, board: &mut Board) -> Vec<Deduction> {
+    fn eliminate(&self, board: &mut Board, eliminations: &mut Vec<(CellId, u8)>) {
         let circle = board.candidates(self.cells[0]);
         let shaft: Vec<Candidates> = self.cells[1..]
             .iter()
@@ -328,7 +300,6 @@ impl Constraint for Arrow {
             circle_sums |= 1 << d;
         }
 
-        let mut eliminations = Vec::new();
         let mut keep_circle = Candidates::EMPTY;
         let totals = reachable_sums(&shaft);
         for d in circle.iter() {
@@ -336,7 +307,7 @@ impl Constraint for Arrow {
                 keep_circle.insert(d);
             }
         }
-        restrict(board, self.cells[0], keep_circle, &mut eliminations);
+        restrict(board, self.cells[0], keep_circle, eliminations);
 
         for (i, &cell) in self.cells[1..].iter().enumerate() {
             let others: Vec<Candidates> = shaft
@@ -351,19 +322,8 @@ impl Constraint for Arrow {
                     keep.insert(d);
                 }
             }
-            restrict(board, cell, keep, &mut eliminations);
+            restrict(board, cell, keep, eliminations);
         }
-
-        if eliminations.is_empty() {
-            return Vec::new();
-        }
-        vec![Deduction {
-            strategy: "constraint propagation",
-            difficulty: 0,
-            placements: vec![],
-            explanation: Explanation::variant_elimination(&self.name, &eliminations),
-            eliminations,
-        }]
     }
 
     fn allows(&self, grid: &[u8; 81], cell: CellId, digit: u8) -> bool {
