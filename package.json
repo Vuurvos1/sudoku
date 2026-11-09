@@ -22,7 +22,7 @@
 		"tauri": "tauri",
 		"test": "vitest run",
 		"screenshots": "pnpm --filter @one-sudoku/scripts screenshots",
-		"gen:icon": "tauri icon ./app-icon.png"
+		"gen:icon": "tauri icon ./app-icon.json"
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^2.12.4",

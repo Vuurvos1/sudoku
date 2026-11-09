@@ -1,0 +1,7 @@
+<!-- Android adaptive icon foreground: 108dp canvas at 10 units/dp. The grid
+     spans 46dp, well inside the 66dp safe zone that every launcher mask keeps. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <g stroke="#fff" stroke-width="25" stroke-linecap="round">
+    <path d="M463 322.5V757.5M617 322.5V757.5M322.5 463H757.5M322.5 617H757.5"/>
+  </g>
+</svg>
