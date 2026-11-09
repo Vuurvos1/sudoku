@@ -1378,6 +1378,337 @@
 					"cells": [68, 67]
 				}
 			]
+		},
+		{
+			"id": "variants-24",
+			"title": "Kyoto",
+			"author": "Florian Wortmann",
+			"difficulty": "expert",
+			"givens": ".................................................................................",
+			"solution": "249356187713298465865741932487639251326415879591872346158964723974523618632187594",
+			"constraints": [
+				{
+					"type": "cage",
+					"cells": [4, 13],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [5, 14],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [7, 8],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [10, 11, 19, 20],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [15, 24],
+					"sum": 13
+				},
+				{
+					"type": "cage",
+					"cells": [30, 31, 39, 40],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [36, 37],
+					"sum": 5
+				},
+				{
+					"type": "cage",
+					"cells": [44, 53],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [45, 46],
+					"sum": 14
+				},
+				{
+					"type": "cage",
+					"cells": [51, 52],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [55, 56],
+					"sum": 13
+				},
+				{
+					"type": "cage",
+					"cells": [59, 68],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [60, 61, 69, 70],
+					"sum": 16
+				},
+				{
+					"type": "cage",
+					"cells": [63, 72],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [76, 77],
+					"sum": 15
+				}
+			]
+		},
+		{
+			"id": "variants-25",
+			"title": "Border Arrows",
+			"author": "Aad van de Wetering",
+			"difficulty": "expert",
+			"givens": ".............1.....5.....2.....9..................................7.8............",
+			"solution": "698275314237914658451863729164592837972386145385147296743629581519738462826451973",
+			"constraints": [
+				{
+					"type": "antiKing"
+				},
+				{
+					"type": "arrow",
+					"cells": [0, 9, 18]
+				},
+				{
+					"type": "arrow",
+					"cells": [2, 11, 20]
+				},
+				{
+					"type": "arrow",
+					"cells": [4, 13, 22]
+				},
+				{
+					"type": "arrow",
+					"cells": [8, 7, 6]
+				},
+				{
+					"type": "arrow",
+					"cells": [26, 25, 24]
+				},
+				{
+					"type": "arrow",
+					"cells": [36, 37, 38]
+				},
+				{
+					"type": "arrow",
+					"cells": [44, 43, 42]
+				},
+				{
+					"type": "arrow",
+					"cells": [54, 55, 56]
+				},
+				{
+					"type": "arrow",
+					"cells": [72, 73, 74]
+				},
+				{
+					"type": "arrow",
+					"cells": [76, 67, 58]
+				},
+				{
+					"type": "arrow",
+					"cells": [78, 69, 60]
+				},
+				{
+					"type": "arrow",
+					"cells": [80, 71, 62]
+				}
+			]
+		},
+		{
+			"id": "variants-26",
+			"title": "R is for arrows",
+			"author": "Chameleon",
+			"difficulty": "expert",
+			"givens": ".................................................................................",
+			"solution": "215643789894752361637189425371596842528437196469821537746918253182365974953274618",
+			"constraints": [
+				{
+					"type": "arrow",
+					"cells": [3, 4, 14]
+				},
+				{
+					"type": "arrow",
+					"cells": [16, 15, 5]
+				},
+				{
+					"type": "arrow",
+					"cells": [16, 25, 24]
+				},
+				{
+					"type": "arrow",
+					"cells": [16, 17, 26]
+				},
+				{
+					"type": "arrow",
+					"cells": [20, 12]
+				},
+				{
+					"type": "arrow",
+					"cells": [20, 28]
+				},
+				{
+					"type": "arrow",
+					"cells": [20, 29, 30, 21]
+				},
+				{
+					"type": "arrow",
+					"cells": [43, 42, 41, 50]
+				},
+				{
+					"type": "arrow",
+					"cells": [67, 58, 49, 40]
+				},
+				{
+					"type": "arrow",
+					"cells": [64, 55, 45]
+				},
+				{
+					"type": "arrow",
+					"cells": [64, 65, 56]
+				},
+				{
+					"type": "arrow",
+					"cells": [64, 73, 74]
+				},
+				{
+					"type": "arrow",
+					"cells": [70, 60, 68]
+				},
+				{
+					"type": "arrow",
+					"cells": [70, 71, 62]
+				},
+				{
+					"type": "arrow",
+					"cells": [70, 79, 78]
+				}
+			]
+		},
+		{
+			"id": "variants-27",
+			"title": "HI",
+			"author": "DocLogic",
+			"difficulty": "expert",
+			"givens": ".................................................................................",
+			"solution": "756128349149537268283496571492315786865742193317869425934281657671954832528673914",
+			"constraints": [
+				{
+					"type": "cage",
+					"cells": [0, 1, 9, 18],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [2, 3, 4],
+					"sum": 9
+				},
+				{
+					"type": "cage",
+					"cells": [5, 6],
+					"sum": 11
+				},
+				{
+					"type": "cage",
+					"cells": [7, 8, 17],
+					"sum": 21
+				},
+				{
+					"type": "cage",
+					"cells": [26, 35, 44],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [53, 62],
+					"sum": 12
+				},
+				{
+					"type": "cage",
+					"cells": [71, 79, 80],
+					"sum": 7
+				},
+				{
+					"type": "cage",
+					"cells": [77, 78],
+					"sum": 12
+				},
+				{
+					"type": "cage",
+					"cells": [74, 75, 76],
+					"sum": 21
+				},
+				{
+					"type": "cage",
+					"cells": [63, 72, 73],
+					"sum": 13
+				},
+				{
+					"type": "cage",
+					"cells": [54],
+					"sum": null
+				},
+				{
+					"type": "cage",
+					"cells": [27, 36, 45],
+					"sum": 15
+				},
+				{
+					"type": "cage",
+					"cells": [20, 29],
+					"sum": 5
+				},
+				{
+					"type": "cage",
+					"cells": [22, 31],
+					"sum": 10
+				},
+				{
+					"type": "cage",
+					"cells": [24, 33],
+					"sum": 12
+				},
+				{
+					"type": "cage",
+					"cells": [38, 39, 40],
+					"sum": 16
+				},
+				{
+					"type": "cage",
+					"cells": [42, 51, 60],
+					"sum": 11
+				},
+				{
+					"type": "cage",
+					"cells": [47, 56],
+					"sum": 11
+				},
+				{
+					"type": "cage",
+					"cells": [49, 58],
+					"sum": 14
+				},
+				{
+					"type": "marker",
+					"kind": "white",
+					"cells": [25, 34]
+				},
+				{
+					"type": "marker",
+					"kind": "white",
+					"cells": [41, 42]
+				}
+			]
 		}
 	]
 }
