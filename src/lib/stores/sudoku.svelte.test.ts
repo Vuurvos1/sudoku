@@ -7,10 +7,11 @@ vi.mock('@tauri-apps/plugin-store', () => ({
 		entries = async () => [];
 		get = async () => undefined;
 		set = async () => {};
+		save = async () => {};
 	}
 }));
 
-const { givenCells, withGivens } = await import('./sudoku.svelte');
+const { givenCells, withGivens, SudokuStore } = await import('./sudoku.svelte');
 
 const givens = '1' + '.'.repeat(80);
 
@@ -41,5 +42,37 @@ describe('withGivens', () => {
 		const board = withGivens(givens, saved);
 		expect(board[0][0]).toMatchObject({ value: 1, notes: [], colors: [], fixed: true });
 		expect(board[0][1]).toMatchObject({ value: 0, notes: [], colors: [], fixed: false });
+	});
+});
+
+describe('the clock', () => {
+	it("doesn't count the time the game was paused", () => {
+		vi.useFakeTimers({ now: new Date(2026, 0, 1) });
+		const store = new SudokuStore();
+		store.startTime = Date.now();
+
+		vi.advanceTimersByTime(60_000);
+		store.pause();
+		vi.advanceTimersByTime(3_600_000);
+		expect(store.elapsed()).toBe(60_000);
+
+		store.unpause();
+		vi.advanceTimersByTime(30_000);
+		expect(store.elapsed()).toBe(90_000);
+		vi.useRealTimers();
+	});
+
+	it('stays stopped once the puzzle is solved', () => {
+		vi.useFakeTimers({ now: new Date(2026, 0, 1) });
+		const store = new SudokuStore();
+		store.startTime = Date.now();
+		vi.advanceTimersByTime(60_000);
+		store.endTime = Date.now();
+
+		store.pause();
+		vi.advanceTimersByTime(60_000);
+		store.unpause();
+		expect(store.elapsed()).toBe(60_000);
+		vi.useRealTimers();
 	});
 });

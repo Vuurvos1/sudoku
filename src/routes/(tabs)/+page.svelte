@@ -13,8 +13,7 @@
 	// the game in progress, e.g. "12:40 · Knight's move"; time first, a long rule list gets cut off
 	const continueDetail = $derived.by(() => {
 		const kind = puzzleRules(sudokuStore.puzzle?.constraints ?? []).join(', ');
-		const { startTime } = sudokuStore;
-		return startTime ? `${formatTime(Date.now() - startTime)} · ${kind}` : kind;
+		return sudokuStore.startTime ? `${formatTime(sudokuStore.elapsed())} · ${kind}` : kind;
 	});
 
 	// the generated game waits in its own slot while a ready-made puzzle is on the board

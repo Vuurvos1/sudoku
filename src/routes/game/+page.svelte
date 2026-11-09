@@ -26,6 +26,7 @@
 	import { ruleLabels } from '#lib/variants/index.ts';
 	import { CellSelection } from '#lib/selection.svelte.ts';
 	import { Game } from '#lib/game.svelte.ts';
+	import { onMount } from 'svelte';
 
 	const selection = new CellSelection();
 	const game = new Game(sudokuStore, selection, () => settingsStore.settings);
@@ -69,6 +70,20 @@
 
 	let now = $state(Date.now());
 
+	// the clock only runs while the game is open and on screen
+	onMount(() => {
+		sudokuStore.unpause();
+		return () => sudokuStore.pause();
+	});
+
+	function handleVisibilityChange() {
+		if (document.hidden) sudokuStore.pause();
+		else {
+			sudokuStore.unpause();
+			now = Date.now();
+		}
+	}
+
 	$effect(() => {
 		if (sudokuStore.isSolved || !sudokuStore.startTime) return;
 
@@ -88,8 +103,7 @@
 
 	const elapsedDisplay = $derived.by(() => {
 		if (!sudokuStore.startTime) return '';
-		const end = sudokuStore.endTime ?? now;
-		return formatTime(end - sudokuStore.startTime);
+		return formatTime(sudokuStore.elapsed(now));
 	});
 
 	function handleKeydown(ev: KeyboardEvent) {
@@ -133,6 +147,7 @@
 </script>
 
 <svelte:window onpointerup={() => selection.pointerUp()} onkeydown={handleKeydown} />
+<svelte:document onvisibilitychange={handleVisibilityChange} />
 
 <div class="flex h-full max-h-full flex-col">
 	<header class="py-3">

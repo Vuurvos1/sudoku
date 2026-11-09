@@ -117,6 +117,8 @@ export class SudokuStore {
 	peerMap = $state<number[][] | null>(null);
 	startTime = $state<number | null>(null);
 	endTime = $state<number | null>(null);
+	/** when the clock was stopped because the game was put away; null while it runs */
+	pausedAt = $state<number | null>(null);
 	/** ready-made puzzles by id, kept across games */
 	progress = $state<Record<string, Progress>>({});
 	/** the generated game in progress, if any; there's only room for one */
@@ -128,6 +130,27 @@ export class SudokuStore {
 		const { sudoku, solved } = this;
 		if (!sudoku || !solved) return false;
 		return sudoku.every((row, i) => row.every((cell, j) => cell.value === solved[i][j]));
+	}
+
+	/** Time spent on the game so far, leaving out the time it was paused. */
+	elapsed(now = Date.now()): number {
+		const { startTime, endTime, pausedAt } = this;
+		return startTime ? (endTime ?? pausedAt ?? now) - startTime : 0;
+	}
+
+	/** Stop the clock while the game is out of sight, so time away doesn't count. */
+	pause() {
+		if (!this.startTime || this.endTime || this.pausedAt) return;
+		this.pausedAt = Date.now();
+		this.save();
+	}
+
+	/** Start the clock again where it was paused. */
+	unpause() {
+		if (!this.startTime || !this.pausedAt) return;
+		// moving the start forward by the pause keeps the elapsed time where it stopped
+		this.startTime += Date.now() - this.pausedAt;
+		this.pausedAt = null;
 	}
 
 	/** A generated game in progress, which is lost when another one is generated. */
@@ -177,6 +200,7 @@ export class SudokuStore {
 		this.sudoku = withGivens(puzzle.givens, $state.snapshot(saved.sudoku));
 		// the clock carries on from where it stopped, not from when the puzzle was first opened
 		this.startTime = Date.now() - saved.elapsed;
+		this.pausedAt = null;
 		this.save();
 		return this.sudoku;
 	}
@@ -187,6 +211,7 @@ export class SudokuStore {
 		this.solved = null;
 		this.startTime = Date.now();
 		this.endTime = null;
+		this.pausedAt = null;
 	}
 
 	private async start(puzzle: Puzzle) {
@@ -226,12 +251,15 @@ export class SudokuStore {
 	}
 
 	async save() {
-		const { puzzle, sudoku, startTime, endTime } = this;
+		const { puzzle, sudoku, startTime, endTime, pausedAt } = this;
 		const writes = [
 			this.#store.set('puzzle', puzzle),
 			this.#store.set('sudoku', sudoku),
 			this.#store.set('startTime', startTime),
-			this.#store.set('endTime', endTime)
+			this.#store.set('endTime', endTime),
+			// a running clock is saved as paused now, so if the app is closed without
+			// pausing it, it picks up from the last save rather than counting the time away
+			this.#store.set('pausedAt', pausedAt ?? (startTime && !endTime ? Date.now() : null))
 		];
 
 		// a ready-made puzzle also keeps its own entry, so it survives starting another game
@@ -239,7 +267,7 @@ export class SudokuStore {
 			const completed = this.isSolved;
 			const progress: Progress = {
 				sudoku: $state.snapshot(sudoku),
-				elapsed: (endTime ?? Date.now()) - startTime,
+				elapsed: this.elapsed(),
 				completed,
 				solved: completed || this.progress[puzzle.id]?.solved === true
 			};
@@ -252,7 +280,7 @@ export class SudokuStore {
 				: {
 						puzzle: $state.snapshot(puzzle),
 						sudoku: $state.snapshot(sudoku),
-						elapsed: (endTime ?? Date.now()) - startTime
+						elapsed: this.elapsed()
 					};
 			writes.push(this.#store.set('generated', this.generated));
 		}
@@ -280,6 +308,10 @@ export class SudokuStore {
 		this.sudoku = sudoku;
 		this.startTime = (await this.#store.get<number>('startTime')) ?? null;
 		this.endTime = (await this.#store.get<number>('endTime')) ?? null;
+		// saves from before pausing have none; the clock starts out stopped until the game is opened
+		this.pausedAt = this.endTime
+			? null
+			: ((await this.#store.get<number>('pausedAt')) ?? (this.startTime ? Date.now() : null));
 
 		if (!sudoku) return;
 
@@ -356,6 +388,7 @@ export class SudokuStore {
 		this.sudoku = givenCells(this.puzzle.givens);
 		this.startTime = Date.now();
 		this.endTime = null;
+		this.pausedAt = null;
 		this.save();
 	}
 }
