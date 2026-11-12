@@ -13,7 +13,8 @@ export type Cell = {
 
 export type Sudoku = Cell[][];
 
-export type LineKind = 'germanWhisper' | 'dutchWhisper' | 'thermo';
+/** `renban`: different digits forming a run of consecutive digits, in any order */
+export type LineKind = 'germanWhisper' | 'dutchWhisper' | 'thermo' | 'renban';
 /** `chevron`: the first cell is greater, the chevron points at the second */
 export type MarkerKind = 'white' | 'black' | 'x' | 'chevron';
 

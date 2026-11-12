@@ -17,6 +17,7 @@ describe('findTechnique', () => {
 describe('findRule', () => {
 	it('finds a rule by its label', () => {
 		expect(findRule("Knight's move")?.slug).toBe('knights-move');
+		expect(findRule('Renban')?.slug).toBe('renban');
 		expect(findRule('Nonsense')).toBeUndefined();
 	});
 

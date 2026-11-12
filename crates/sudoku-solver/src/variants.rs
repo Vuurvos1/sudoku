@@ -63,6 +63,17 @@ fn restrict(board: &mut Board, cell: CellId, keep: Candidates, out: &mut Vec<(Ce
     }
 }
 
+/// Every unordered pair of `cells`.
+fn all_pairs(cells: &[CellId]) -> Vec<(CellId, CellId)> {
+    let mut pairs = Vec::new();
+    for (i, &a) in cells.iter().enumerate() {
+        for &b in &cells[i + 1..] {
+            pairs.push((a, b));
+        }
+    }
+    pairs
+}
+
 /// Pairwise relations between cells: dots, X, chevrons, whispers, thermos.
 pub struct RelationConstraint {
     name: String,
@@ -107,13 +118,7 @@ impl Constraint for RelationConstraint {
         if !self.distinct {
             return Vec::new();
         }
-        let mut pairs = Vec::new();
-        for (i, &a) in self.cells.iter().enumerate() {
-            for &b in &self.cells[i + 1..] {
-                pairs.push((a, b));
-            }
-        }
-        pairs
+        all_pairs(&self.cells)
     }
 
     /// Arc consistency: drop any digit with no partner across one of its edges,
@@ -182,13 +187,7 @@ impl Constraint for Cage {
     }
 
     fn distinct_pairs(&self) -> Vec<(CellId, CellId)> {
-        let mut pairs = Vec::new();
-        for (i, &a) in self.cells.iter().enumerate() {
-            for &b in &self.cells[i + 1..] {
-                pairs.push((a, b));
-            }
-        }
-        pairs
+        all_pairs(&self.cells)
     }
 
     /// Keep only digits that appear in some way of filling the whole cage
@@ -344,5 +343,81 @@ impl Constraint for Arrow {
         } else {
             min <= circle && circle <= max
         }
+    }
+}
+
+/// Renban line: different digits that form a run of consecutive digits,
+/// in any order.
+pub struct Renban {
+    name: String,
+    cells: Vec<CellId>,
+}
+
+impl Renban {
+    pub fn new(cells: Vec<CellId>) -> Self {
+        let name = format!("renban at {}", cells[0]);
+        Renban { name, cells }
+    }
+
+    /// The runs `lo..lo + n` of digits the line could hold, as candidate sets.
+    fn windows(&self) -> impl Iterator<Item = Candidates> {
+        let n = self.cells.len() as u8;
+        (1..=10u8.saturating_sub(n)).map(move |lo| {
+            let mut window = Candidates::EMPTY;
+            for d in lo..lo + n {
+                window.insert(d);
+            }
+            window
+        })
+    }
+}
+
+impl Constraint for Renban {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn cells(&self) -> &[CellId] {
+        &self.cells
+    }
+
+    fn distinct_pairs(&self) -> Vec<(CellId, CellId)> {
+        all_pairs(&self.cells)
+    }
+
+    /// Keep a digit only if it lies in a run the whole line can still fill:
+    /// every cell has a candidate in the run, and together they cover it.
+    fn eliminate(&self, board: &mut Board, eliminations: &mut Vec<(CellId, u8)>) {
+        let cands: Vec<Candidates> = self.cells.iter().map(|&c| board.candidates(c)).collect();
+        let mut keep = vec![Candidates::EMPTY; self.cells.len()];
+        for window in self.windows() {
+            let inside: Vec<Candidates> = cands.iter().map(|c| c.intersect(window)).collect();
+            let covered = inside
+                .iter()
+                .fold(Candidates::EMPTY, |acc, &c| acc.union(c));
+            if inside.iter().all(|c| c.count() > 0) && covered == window {
+                for (k, c) in keep.iter_mut().zip(&inside) {
+                    *k = k.union(*c);
+                }
+            }
+        }
+        for (&cell, &keep) in self.cells.iter().zip(&keep) {
+            restrict(board, cell, keep, eliminations);
+        }
+    }
+
+    fn allows(&self, grid: &[u8; 81], cell: CellId, digit: u8) -> bool {
+        let (mut min, mut max) = (digit, digit);
+        for &c in &self.cells {
+            match grid[c.0 as usize] {
+                _ if c == cell => {}
+                0 => {}
+                d => {
+                    min = min.min(d);
+                    max = max.max(d);
+                }
+            }
+        }
+        usize::from(max - min) < self.cells.len()
     }
 }
