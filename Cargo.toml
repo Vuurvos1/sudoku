@@ -5,3 +5,13 @@ resolver = "2"
 # The generator is too slow unoptimized; keep debug builds (`tauri dev`) usable
 [profile.dev.package.sudoku-solver]
 opt-level = 3
+
+# Production builds: fast, and as small as fast allows. Debug info is stripped
+# (most of the Android library was symbols) and panics abort instead of
+# unwinding, which drops the unwind tables.
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true
+panic = "abort"
