@@ -108,7 +108,9 @@
 		<ul class="mt-4 grid grid-cols-2 gap-x-4 gap-y-6">
 			{#each section.entries as { puzzle, n } (puzzle.id)}
 				{@const progress = sudokuStore.progress[puzzle.id]}
-				<li>
+				<!-- off-screen cards skip layout and paint; the size is a guess
+				     until a card has rendered once, then its real size is kept -->
+				<li class="[contain-intrinsic-size:auto_15rem] [content-visibility:auto]">
 					<button
 						class="block w-full text-left transition hover:opacity-80"
 						onclick={() => play(puzzle)}
