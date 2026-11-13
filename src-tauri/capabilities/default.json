@@ -7,7 +7,6 @@
   ],
   "permissions": [
     "core:app:default",
-    "shell:allow-open",
     "store:default"
   ]
 }
