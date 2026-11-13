@@ -47,10 +47,15 @@
 		stroke-dasharray: 0.2 0.35;
 	}
 
-	/* thick where the whispers are thin, so it stands apart without color too */
 	.renban {
 		stroke: var(--renban);
 		opacity: 0.45;
+	}
+
+	/* thick like a thermo, so without color it's told apart by a long dash, then a dot;
+	   the round caps grow each by half the stroke width, so the gaps are wide enough to stay open */
+	:global(:root[data-color-blind]) .renban {
+		stroke-dasharray: 0.45 0.45 0.001 0.45;
 	}
 
 	.thermo {
