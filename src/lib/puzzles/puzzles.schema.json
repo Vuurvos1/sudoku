@@ -80,12 +80,12 @@
 					}
 				},
 				{
-					"description": "A line through adjacent cells, in order. Thermos start at the bulb.",
+					"description": "A line through adjacent cells, in order. Thermos start at the bulb. Renban lines hold different, consecutive digits in any order.",
 					"required": ["kind", "cells"],
 					"additionalProperties": false,
 					"properties": {
 						"type": { "const": "line" },
-						"kind": { "enum": ["germanWhisper", "dutchWhisper", "thermo"] },
+						"kind": { "enum": ["germanWhisper", "dutchWhisper", "thermo", "renban"] },
 						"cells": { "$ref": "#/definitions/cells" }
 					}
 				},

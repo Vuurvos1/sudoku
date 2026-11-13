@@ -36,6 +36,8 @@
 			<path d="M9 15 19 5M13 5h6v6" />
 		{:else if glyph === 'whisper'}
 			<path d="M3 16 9 8l6 8 6-8" stroke-width="3" />
+		{:else if glyph === 'renban'}
+			<path d="M4 18 10 6h4l6 12" stroke-width="4" />
 		{:else if glyph === 'kropki'}
 			<circle cx="7" cy="12" r="3.5" />
 			<circle cx="17" cy="12" r="3.5" fill="currentColor" />

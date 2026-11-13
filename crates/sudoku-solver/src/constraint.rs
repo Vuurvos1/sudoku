@@ -2,7 +2,7 @@ use crate::{
     board::{Board, CellId},
     house::House,
     strategy::{Deduction, Explanation},
-    variants::{Arrow, Cage, Relation, RelationConstraint},
+    variants::{Arrow, Cage, Relation, RelationConstraint, Renban},
 };
 
 /// A rule on top of the houses. Houses already cover "each digit once per
@@ -182,6 +182,8 @@ pub enum LineKind {
     GermanWhisper,
     DutchWhisper,
     Thermo,
+    /// different digits forming a run of consecutive digits, in any order
+    Renban,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -236,6 +238,13 @@ impl ConstraintSpec {
             ConstraintSpec::Line { .. } if ids.len() < 2 || !connected => {
                 return Err("a line needs 2+ cells, each touching the next".into());
             }
+            // its digits are all different, so at most 1 to 9
+            ConstraintSpec::Line {
+                kind: LineKind::Renban,
+                ..
+            } if ids.len() > 9 => {
+                return Err("a renban line holds at most 9 cells".into());
+            }
             // the shaft can hold at most nine 1s, and the circle at most 9
             ConstraintSpec::Arrow { .. } if !(2..=10).contains(&ids.len()) || !connected => {
                 return Err(
@@ -266,27 +275,28 @@ pub(crate) fn build(spec: &ConstraintSpec, houses: &mut Vec<House>) -> Option<Bo
         ConstraintSpec::Cage { cells, sum } => Some(Box::new(Cage::new(ids(cells), *sum))),
         ConstraintSpec::Line { kind, cells } => {
             let cells = ids(cells);
-            let line = match kind {
-                LineKind::GermanWhisper => RelationConstraint::line(
+            let line: Box<dyn Constraint> = match kind {
+                LineKind::GermanWhisper => Box::new(RelationConstraint::line(
                     &format!("German whisper at {}", cells[0]),
                     cells,
                     Relation::DiffAtLeast(5),
                     false,
-                ),
-                LineKind::DutchWhisper => RelationConstraint::line(
+                )),
+                LineKind::DutchWhisper => Box::new(RelationConstraint::line(
                     &format!("Dutch whisper at {}", cells[0]),
                     cells,
                     Relation::DiffAtLeast(4),
                     false,
-                ),
-                LineKind::Thermo => RelationConstraint::line(
+                )),
+                LineKind::Thermo => Box::new(RelationConstraint::line(
                     &format!("thermo at {}", cells[0]),
                     cells,
                     Relation::Less,
                     true,
-                ),
+                )),
+                LineKind::Renban => Box::new(Renban::new(cells)),
             };
-            Some(Box::new(line))
+            Some(line)
         }
         ConstraintSpec::Arrow { cells } => Some(Box::new(Arrow::new(ids(cells)))),
         ConstraintSpec::Marker { kind, cells } => {
