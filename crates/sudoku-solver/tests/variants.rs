@@ -169,6 +169,75 @@ fn thermo_bounds_by_position() {
     assert_eq!(digits(3), vec![4, 5, 6, 7, 8, 9]);
 }
 
+fn digits_of(board: &Board, c: u8) -> Vec<u8> {
+    board.candidates(CellId(c)).iter().collect()
+}
+
+fn renban(cells: Vec<u8>) -> ConstraintSpec {
+    ConstraintSpec::Line {
+        kind: LineKind::Renban,
+        cells,
+    }
+}
+
+#[test]
+fn renban_keeps_runs_through_placed_digits() {
+    // a 5 on a 3-cell line leaves the runs 3-5, 4-6 and 5-7
+    let ctx = SolverContext::new(&[renban(vec![0, 10, 20])]);
+    let mut board = Board::new(&[(CellId(0), 5)]);
+    ctx.propagate(&mut board);
+    assert_eq!(digits_of(&board, 10), vec![3, 4, 6, 7]);
+    assert_eq!(digits_of(&board, 20), vec![3, 4, 6, 7]);
+
+    // 1 and 4 on a 4-cell line pin it to 1-4
+    let ctx = SolverContext::new(&[renban(vec![0, 1, 2, 3])]);
+    let mut board = Board::new(&[(CellId(0), 1), (CellId(3), 4)]);
+    ctx.propagate(&mut board);
+    assert_eq!(digits_of(&board, 1), vec![2, 3]);
+    assert_eq!(digits_of(&board, 2), vec![2, 3]);
+}
+
+#[test]
+fn renban_needs_every_digit_of_its_run() {
+    // the 4 in R1C9 can't be on the line, so a 4-cell line in row 1 can't
+    // hold a run through 4, even though each cell alone could take 1, 2 or 3
+    let ctx = SolverContext::new(&[renban(vec![0, 1, 2, 3])]);
+    let mut board = Board::new(&[(CellId(8), 4)]);
+    ctx.propagate(&mut board);
+    for cell in 0..4 {
+        assert_eq!(digits_of(&board, cell), vec![5, 6, 7, 8, 9]);
+    }
+
+    // an empty 5-cell line rules nothing out: every digit is in some run
+    let ctx = SolverContext::new(&[renban(vec![0, 1, 2, 3, 4])]);
+    let mut board = Board::new(&[]);
+    ctx.propagate(&mut board);
+    assert_eq!(digits_of(&board, 0), (1..=9).collect::<Vec<_>>());
+}
+
+#[test]
+fn renban_holds_in_search_and_conflicts() {
+    // bending through two boxes, so the houses alone don't keep it distinct
+    let cells = vec![18, 19, 29, 30, 31, 40];
+    let ctx = SolverContext::new(&[renban(cells.clone())]);
+    let grid = solve_brute(&ctx, &[(CellId(18), 7)]).unwrap();
+    assert_valid(&ctx, &grid);
+    let mut digits: Vec<u8> = cells.iter().map(|&c| grid[c as usize]).collect();
+    digits.sort();
+    assert!(digits.windows(2).all(|w| w[1] == w[0] + 1), "{:?}", digits);
+    assert!(digits.contains(&7));
+
+    let ctx = SolverContext::new(&[renban(vec![0, 10, 20])]);
+    let mut grid = [0u8; 81];
+    grid[0] = 2;
+    grid[10] = 4;
+    assert!(ctx.conflicts(&grid).is_empty());
+    // 2 and 5 are too far apart for three cells
+    grid[10] = 5;
+    let cells = ctx.conflicts(&grid).iter().map(|c| c.0).collect::<Vec<_>>();
+    assert_eq!(cells, vec![0, 10]);
+}
+
 #[test]
 fn cage_keeps_only_combination_digits() {
     // 3-cell 7 cage can only be {1, 2, 4}
@@ -284,6 +353,9 @@ fn invalid_specs_are_rejected() {
     assert!(arrow(vec![0, 10]).validate().is_ok());
     assert!(arrow(vec![0]).validate().is_err());
     assert!(arrow(vec![0, 2]).validate().is_err());
+    // ten different digits can't be consecutive
+    assert!(renban((0..9).collect()).validate().is_ok());
+    assert!(renban((0..9).chain([17]).collect()).validate().is_err());
 }
 
 #[test]

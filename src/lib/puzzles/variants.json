@@ -1709,6 +1709,76 @@
 					"cells": [41, 42]
 				}
 			]
+		},
+		{
+			"id": "variants-28",
+			"title": "Spinning Top",
+			"author": "Phistomefel",
+			"difficulty": "expert",
+			"givens": "................1...............................................8.....6..........",
+			"solution": "796431258835267419142895637629318574513749826478526391364972185287154963951683742",
+			"constraints": [
+				{
+					"type": "line",
+					"kind": "renban",
+					"cells": [4, 5, 6, 15]
+				},
+				{
+					"type": "line",
+					"kind": "renban",
+					"cells": [10, 20]
+				},
+				{
+					"type": "line",
+					"kind": "renban",
+					"cells": [33, 25, 35, 44]
+				},
+				{
+					"type": "line",
+					"kind": "renban",
+					"cells": [30, 40]
+				},
+				{
+					"type": "line",
+					"kind": "renban",
+					"cells": [36, 45, 54, 55]
+				},
+				{
+					"type": "line",
+					"kind": "renban",
+					"cells": [42, 50, 58]
+				},
+				{
+					"type": "line",
+					"kind": "renban",
+					"cells": [57, 65, 75, 76]
+				},
+				{
+					"type": "line",
+					"kind": "renban",
+					"cells": [71, 79]
+				},
+				{
+					"type": "line",
+					"kind": "germanWhisper",
+					"cells": [12, 21, 30, 29, 28]
+				},
+				{
+					"type": "line",
+					"kind": "germanWhisper",
+					"cells": [31, 41, 49, 39, 31]
+				},
+				{
+					"type": "line",
+					"kind": "germanWhisper",
+					"cells": [42, 51, 61, 53]
+				},
+				{
+					"type": "line",
+					"kind": "germanWhisper",
+					"cells": [58, 59, 69, 77]
+				}
+			]
 		}
 	]
 }

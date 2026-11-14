@@ -55,6 +55,11 @@ pub fn constraints() -> Vec<ConstraintSpec> {
             kind: LineKind::Thermo,
             cells: vec![at(8, 6), at(7, 7), at(7, 8), at(8, 8)],
         },
+        // 1, 2, 4, 3
+        Line {
+            kind: LineKind::Renban,
+            cells: vec![at(0, 7), at(0, 8), at(1, 7), at(1, 6)],
+        },
         // 9 = 3 + 4 + 2, bending so the renderer has corners to draw
         Arrow {
             cells: vec![at(5, 3), at(6, 4), at(7, 3), at(8, 3)],
@@ -74,7 +79,7 @@ pub fn constraints() -> Vec<ConstraintSpec> {
 /// uniqueness search per cell and takes seconds, so they're stored here; a
 /// test checks they still match when the constraints or solver change.
 pub const GIVENS: &str =
-    "....78........5.....8................2....7...1..............8.....1...5.........";
+    "....7...2.....5.....8..................8.37.1......................1...5.........";
 
 /// Givens as an 81-char line, `.` for empty. Removes digits from the full
 /// solution in a fixed order for as long as the puzzle stays unique and

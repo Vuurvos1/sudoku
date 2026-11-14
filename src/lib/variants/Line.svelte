@@ -14,6 +14,7 @@
 	);
 	const bulb = $derived(cellCenter(constraint.cells[0]));
 	const isThermo = $derived(constraint.kind === 'thermo');
+	const isThick = $derived(constraint.kind === 'thermo' || constraint.kind === 'renban');
 </script>
 
 <!-- shapes are opaque and the group is faded as one, so the bulb and line don't double up -->
@@ -24,7 +25,7 @@
 	<polyline
 		{points}
 		fill="none"
-		stroke-width={isThermo ? 0.26 : 0.16}
+		stroke-width={isThick ? 0.26 : 0.16}
 		stroke-linecap="round"
 		stroke-linejoin="round"
 	/>
@@ -44,6 +45,17 @@
 	/* the two whispers also differ in shape, not just color */
 	:global(:root[data-color-blind]) .dutchWhisper {
 		stroke-dasharray: 0.2 0.35;
+	}
+
+	.renban {
+		stroke: var(--renban);
+		opacity: 0.45;
+	}
+
+	/* thick like a thermo, so without color it's told apart by a long dash, then a dot;
+	   the round caps grow each by half the stroke width, so the gaps are wide enough to stay open */
+	:global(:root[data-color-blind]) .renban {
+		stroke-dasharray: 0.45 0.45 0.001 0.45;
 	}
 
 	.thermo {

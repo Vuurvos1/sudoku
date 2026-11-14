@@ -94,7 +94,7 @@
 		<div class="divide-y divide-text/10">
 			<Switch
 				label="Color-blind friendly"
-				hint="Colors that stay apart with color blindness. Dutch whispers are dashed, mistakes underlined and color buttons numbered."
+				hint="Colors that stay apart with color blindness. Dutch whispers are dashed, renban lines dash-dotted, mistakes underlined and color buttons numbered."
 				bind:checked={settingsStore.settings.colorBlindFriendly}
 			/>
 			<Switch

@@ -69,7 +69,8 @@ export function ruleLabel(constraint: ConstraintSpec): string {
 			return {
 				germanWhisper: 'German whispers',
 				dutchWhisper: 'Dutch whispers',
-				thermo: 'Thermo'
+				thermo: 'Thermo',
+				renban: 'Renban'
 			}[constraint.kind];
 		case 'arrow':
 			return 'Arrow';
@@ -94,7 +95,12 @@ export function puzzleRules(constraints: ConstraintSpec[]): string[] {
 export function ruleGlyph(constraint: ConstraintSpec): RuleGlyph {
 	switch (constraint.type) {
 		case 'line':
-			return constraint.kind === 'thermo' ? 'thermo' : 'whisper';
+			return {
+				germanWhisper: 'whisper',
+				dutchWhisper: 'whisper',
+				thermo: 'thermo',
+				renban: 'renban'
+			}[constraint.kind] as RuleGlyph;
 		case 'marker':
 			return { white: 'kropki', black: 'kropki', x: 'xv', chevron: 'chevron' }[
 				constraint.kind

@@ -9,6 +9,7 @@ export type RuleGlyph =
 	| 'thermo'
 	| 'arrow'
 	| 'whisper'
+	| 'renban'
 	| 'kropki'
 	| 'xv'
 	| 'chevron';
@@ -165,6 +166,23 @@ export const rules: Rule[] = [
 			digits: { 9: 1, 10: 5, 11: 9, 12: 4 },
 			rows: 3,
 			caption: 'Each step along the line jumps by 4 or more.'
+		}
+	},
+	{
+		slug: 'renban',
+		glyph: 'renban',
+		name: 'Renban',
+		summary: "The line's digits don't repeat and form a run of consecutive digits, in any order.",
+		tips: [
+			'A line of n cells spans exactly n digits, so its biggest and smallest digits differ by n − 1.',
+			'Long lines must cover the middle: a 5-cell line always holds a 5.',
+			"A digit that can't be on the line splits it: a 4-cell line without 5 is all 1–4 or all 6–9."
+		],
+		example: {
+			constraints: [{ type: 'line', kind: 'renban', cells: [9, 10, 19, 20] }],
+			digits: { 9: 5, 10: 3, 19: 6, 20: 4 },
+			rows: 3,
+			caption: '3, 4, 5 and 6 are consecutive, even out of order.'
 		}
 	},
 	{
