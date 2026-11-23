@@ -192,3 +192,32 @@ fn generate_medium_requires_at_least_difficulty_3() {
         ),
     }
 }
+
+/// The hardest strategy rating the default solver needs for `board`'s givens.
+fn required_difficulty(board: &Board) -> u8 {
+    let givens: Vec<(CellId, u8)> = (0..81)
+        .map(CellId)
+        .filter(|&id| board.is_given(id))
+        .map(|id| (id, board.value(id).unwrap()))
+        .collect();
+    assert_eq!(count_solutions(&givens, 2), 1);
+
+    match Solver::default().solve(&mut Board::new(&givens), &SolverContext::standard()) {
+        SolveResult::Solved(deductions) => {
+            deductions.iter().map(|d| d.difficulty).max().unwrap_or(0)
+        }
+        _ => panic!("generated puzzle is not solvable by the solver"),
+    }
+}
+
+#[test]
+fn generate_expert_requires_difficulty_6() {
+    let board = Generator::seeded(300).generate(Difficulty::Expert);
+    assert_eq!(required_difficulty(&board), 6);
+}
+
+#[test]
+fn generate_extreme_requires_at_least_difficulty_7() {
+    let board = Generator::seeded(400).generate(Difficulty::Extreme);
+    assert!((7..=9).contains(&required_difficulty(&board)));
+}

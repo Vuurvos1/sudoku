@@ -24,7 +24,7 @@
 			aria-checked={active}
 			onclick={() => (value = option.value)}
 			class={[
-				'flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition',
+				'flex items-center justify-center gap-1.5 rounded-full px-1.5 py-1.5 text-sm font-medium transition sm:px-3',
 				active ? 'bg-accent text-background shadow' : 'opacity-70 hover:opacity-100'
 			]}
 		>

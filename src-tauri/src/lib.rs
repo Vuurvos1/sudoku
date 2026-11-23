@@ -39,6 +39,7 @@ async fn generate_sudoku(
         2 => Difficulty::Medium,
         3 => Difficulty::Hard,
         4 => Difficulty::Expert,
+        5 => Difficulty::Extreme,
         _ => return Err(format!("Invalid difficulty: {}", difficulty)),
     };
 

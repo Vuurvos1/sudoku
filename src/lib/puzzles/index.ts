@@ -6,7 +6,8 @@ export const difficulties = {
 	easy: 'Easy',
 	medium: 'Medium',
 	hard: 'Hard',
-	expert: 'Expert'
+	expert: 'Expert',
+	extreme: 'Extreme'
 } as const;
 
 export type Difficulty = keyof typeof difficulties;
