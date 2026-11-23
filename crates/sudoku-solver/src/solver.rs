@@ -1,6 +1,6 @@
 use crate::strategies::{
     BoxLineReduction, Fish, HiddenSingle, HiddenSubset, NakedSingle, NakedSubset, PointingPairs,
-    YWing,
+    SimpleColoring, XCycle, XyChain, XyzWing, YWing,
 };
 use crate::{
     board::{Board, Candidates, CellId},
@@ -264,8 +264,18 @@ pub struct Solver {
 }
 
 impl Solver {
-    pub fn new(strategies: Vec<Box<dyn Strategy>>) -> Self {
+    /// Strategies are tried easiest first, so a puzzle is rated by the
+    /// easiest strategy that cracks each step.
+    pub fn new(mut strategies: Vec<Box<dyn Strategy>>) -> Self {
+        strategies.sort_by_key(|s| s.difficulty());
         Solver { strategies }
+    }
+
+    /// The default strategies rated at most `max`.
+    pub fn up_to(max: u8) -> Self {
+        let mut solver = Solver::default();
+        solver.strategies.retain(|s| s.difficulty() <= max);
+        solver
     }
 
     /// Find the next deduction without applying it.
@@ -340,8 +350,13 @@ impl Default for Solver {
             Box::new(NakedSubset::<3>),
             Box::new(HiddenSubset::<3>),
             Box::new(Fish::<2>),
-            Box::new(Fish::<3>),
             Box::new(YWing),
+            Box::new(SimpleColoring),
+            Box::new(Fish::<3>),
+            Box::new(XyzWing),
+            Box::new(XCycle),
+            Box::new(XyChain),
+            Box::new(Fish::<4>),
         ])
     }
 }

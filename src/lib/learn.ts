@@ -235,7 +235,7 @@ export const rules: Rule[] = [
 export type Technique = {
 	slug: string;
 	name: string;
-	/** the solver's rating, 1 (easiest) to 7 */
+	/** the solver's rating, 1 (easiest) to 9 */
 	difficulty: number;
 	summary: string;
 	steps: string[];
@@ -355,6 +355,65 @@ export const techniques: Technique[] = [
 			'Find three rows where a digit can only go in the same three columns.',
 			'Remove the digit from the rest of those columns.'
 		]
+	},
+	{
+		slug: 'simple-coloring',
+		name: 'Simple coloring',
+		difficulty: 7,
+		summary: "A chain of a digit's two-spot houses, split into two colors.",
+		steps: [
+			'Pick a digit and find houses where it has only two spots: one of the two must hold it.',
+			'Link those pairs into a chain and color its cells in two alternating colors. Either every cell of one color holds the digit, or every cell of the other does.',
+			'If two cells of the same color see each other, that color is wrong: remove the digit from all of its cells.',
+			'Any other cell that sees both colors cannot hold the digit.'
+		]
+	},
+	{
+		slug: 'xyz-wing',
+		name: 'XYZ-wing',
+		difficulty: 8,
+		summary: 'A Y-wing whose pivot can also be the shared digit.',
+		steps: [
+			'Find a pivot with candidates XYZ that sees a cell with XZ and a cell with YZ.',
+			'Whatever the pivot is, the pivot or one of the wings is Z.',
+			'So any cell that sees the pivot and both wings cannot be Z.'
+		]
+	},
+	{
+		slug: 'x-cycle',
+		name: 'X-cycle',
+		difficulty: 9,
+		summary:
+			'A chain on one digit, alternating between two-spot houses and cells that see each other.',
+		steps: [
+			'Pick a digit and a cell that could hold it, and suppose it does not.',
+			'Where the digit has only two spots in a house, ruling one out turns the other on.',
+			'A cell that is on rules the digit out of every cell it sees. Keep alternating.',
+			'When the chain reaches a cell that is on, the first cell or that one holds the digit, so no cell that sees both can.'
+		]
+	},
+	{
+		slug: 'xy-chain',
+		name: 'XY-chain',
+		difficulty: 9,
+		summary: 'A longer Y-wing: a chain of two-candidate cells that ends where it began.',
+		steps: [
+			'Start at a cell with two candidates, say Z and A, and suppose it is not Z, so it is A.',
+			'A cell it sees with candidates A and B must then be B. Keep following cells with two candidates.',
+			'When a cell in the chain is forced to Z, either the first cell or that one is Z.',
+			'Remove Z from every cell that sees both ends.'
+		]
+	},
+	{
+		slug: 'jellyfish',
+		name: 'Jellyfish',
+		difficulty: 9,
+		summary: 'An X-wing over four rows and four columns.',
+		steps: [
+			'Find four rows where a digit can only go in the same four columns.',
+			'Remove the digit from the rest of those columns.',
+			'The same works with rows and columns swapped.'
+		]
 	}
 ];
 
@@ -368,12 +427,13 @@ export function findTechnique(strategy: string): Technique | undefined {
 	return techniques.find(({ name }) => name.toLowerCase() === strategy.toLowerCase());
 }
 
-/** Easy to Expert, from the solver's 1–7 rating. */
+/** Easy to Extreme, from the solver's 1–9 rating. */
 export function techniqueLevel(difficulty: number): string {
 	if (difficulty <= 2) return 'Easy';
 	if (difficulty <= 3) return 'Medium';
 	if (difficulty <= 5) return 'Hard';
-	return 'Expert';
+	if (difficulty <= 6) return 'Expert';
+	return 'Extreme';
 }
 
 /** A board with just the given digits, for examples. */

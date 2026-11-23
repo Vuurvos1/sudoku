@@ -1,8 +1,9 @@
 use crate::{
-    board::{Board, CellId},
+    board::{Board, Candidates, CellId},
     solver::SolverContext,
 };
 
+#[derive(Clone, Copy)]
 pub enum HighlightRole {
     Focus,
     Supporting,
@@ -280,6 +281,7 @@ impl Explanation {
         let kind = match bases.len() {
             2 => "X-Wing",
             3 => "Swordfish",
+            4 => "Jellyfish",
             _ => "Fish",
         };
         Explanation {
@@ -371,10 +373,138 @@ impl Explanation {
             }],
         }
     }
+
+    /// `on` and `off` are the chain's two colors. With `wrap`, `on` sees
+    /// itself and is removed; otherwise cells seeing both colors are.
+    pub fn simple_coloring(digit: u8, on: &[CellId], off: &[CellId], wrap: bool) -> Self {
+        let (summary, conclusion) = if wrap {
+            (
+                format!("Simple Coloring: {} can't be in {}", digit, cell_list(on)),
+                format!(
+                    "Two cells of the first color see each other, so that color can't be {}.",
+                    digit
+                ),
+            )
+        } else {
+            (
+                format!("Simple Coloring on {}", digit),
+                format!("A cell that sees both colors can't be {}.", digit),
+            )
+        };
+        Explanation {
+            summary,
+            detail: format!(
+                "Following the cells where {} has only two spots in a house splits them \
+                 into two colors, {} and {}, and exactly one color holds {}. {}",
+                digit,
+                cell_list(on),
+                cell_list(off),
+                digit,
+                conclusion
+            ),
+            highlights: vec![marked(
+                digit,
+                on.iter()
+                    .map(|&c| (c, HighlightRole::Focus))
+                    .chain(off.iter().map(|&c| (c, HighlightRole::Supporting))),
+            )],
+        }
+    }
+
+    /// `chain` alternates off and on cells, from the cell assumed off to
+    /// the cell that ends up on.
+    pub fn x_cycle(digit: u8, chain: &[CellId]) -> Self {
+        let (start, end) = (chain[0], chain[chain.len() - 1]);
+        let steps: Vec<String> = chain
+            .iter()
+            .enumerate()
+            .map(|(i, c)| format!("{} {}", c, if i % 2 == 0 { "off" } else { "on" }))
+            .collect();
+        Explanation {
+            summary: format!(
+                "X-Cycle: {} or {} is {}, eliminating {}",
+                start, end, digit, digit
+            ),
+            detail: format!(
+                "Follow {} through houses where it has only two spots and cells that see each \
+                 other: {}. If {} isn't {}, {} is, so one of them holds it. \
+                 {} can be eliminated from cells seeing both.",
+                digit,
+                steps.join(" → "),
+                start,
+                digit,
+                end,
+                digit
+            ),
+            highlights: vec![chain_highlights(chain, digit)],
+        }
+    }
+
+    /// `chain` runs from the cell assumed not to be `z` to the cell forced to `z`.
+    pub fn xy_chain(z: u8, chain: &[CellId]) -> Self {
+        let (start, end) = (chain[0], chain[chain.len() - 1]);
+        let path: Vec<String> = chain.iter().map(|c| c.to_string()).collect();
+        Explanation {
+            summary: format!("XY-Chain: {} or {} is {}, eliminating {}", start, end, z, z),
+            detail: format!(
+                "Each cell in {} has two candidates and sees the next. If {} isn't {}, \
+                 every cell along the chain is forced in turn until {} is {}. \
+                 {} can be eliminated from cells seeing both ends.",
+                path.join(" → "),
+                start,
+                z,
+                end,
+                z,
+                z
+            ),
+            highlights: vec![chain_highlights(chain, z)],
+        }
+    }
+
+    pub fn xyz_wing(
+        pivot: CellId,
+        wing1: CellId,
+        wing2: CellId,
+        pivot_digits: Candidates,
+        z: u8,
+    ) -> Self {
+        let digits: Vec<String> = pivot_digits.iter().map(|d| d.to_string()).collect();
+        Explanation {
+            summary: format!(
+                "XYZ-Wing: pivot {} {{{}}}, wings {} and {} eliminate {}",
+                pivot,
+                digits.join(", "),
+                wing1,
+                wing2,
+                z
+            ),
+            detail: format!(
+                "{} must be {}. Whichever it is, {}, {} or {} is {}. \
+                 {} can be eliminated from cells seeing all three.",
+                pivot,
+                digits.join(", "),
+                pivot,
+                wing1,
+                wing2,
+                z,
+                z
+            ),
+            highlights: vec![marked(
+                z,
+                [
+                    (pivot, HighlightRole::Focus),
+                    (wing1, HighlightRole::Supporting),
+                    (wing2, HighlightRole::Supporting),
+                ],
+            )],
+        }
+    }
 }
 
 pub trait Strategy {
     fn name(&self) -> &'static str;
+    /// 1 (easiest) and up; the solver tries strategies in this order.
+    fn difficulty(&self) -> u8;
     fn find(&self, board: &Board, ctx: &SolverContext) -> Option<Deduction>;
 }
 
@@ -384,4 +514,43 @@ pub struct Deduction {
     pub placements: Vec<(CellId, u8)>,
     pub eliminations: Vec<(CellId, u8)>,
     pub explanation: Explanation,
+}
+
+/// The chain's ends as focus, the cells between as supporting.
+fn chain_highlights(chain: &[CellId], digit: u8) -> Highlights {
+    let last = chain.len() - 1;
+    marked(
+        digit,
+        chain.iter().enumerate().map(|(i, &cell)| {
+            let role = if i == 0 || i == last {
+                HighlightRole::Focus
+            } else {
+                HighlightRole::Supporting
+            };
+            (cell, role)
+        }),
+    )
+}
+
+/// Each cell, and its `digit` candidate, highlighted with its role.
+fn marked(digit: u8, cells: impl IntoIterator<Item = (CellId, HighlightRole)>) -> Highlights {
+    let (cells, candidates) = cells
+        .into_iter()
+        .map(|(cell, role)| {
+            (
+                CellHighlight { cell, role },
+                CandidateHighlight { cell, digit, role },
+            )
+        })
+        .unzip();
+    Highlights { cells, candidates }
+}
+
+/// "R1C1, R2C5, ..."
+fn cell_list(cells: &[CellId]) -> String {
+    cells
+        .iter()
+        .map(|c| c.to_string())
+        .collect::<Vec<_>>()
+        .join(", ")
 }

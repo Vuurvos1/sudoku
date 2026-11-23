@@ -17,7 +17,8 @@ pub enum Difficulty {
     Easy,   // max strategy difficulty 1-2 (naked + hidden singles)
     Medium, // requires difficulty 3 (pointing pairs, box/line reduction)
     Hard,   // requires difficulty 4-5 (naked/hidden pairs + triples)
-    Expert, // requires difficulty 6-7 (x-wing, swordfish, y-wing)
+    Expert,  // requires difficulty 6 (x-wing, y-wing)
+    Extreme, // requires difficulty 7-9 (simple coloring, swordfish, xyz-wing, chains, jellyfish)
 }
 
 impl Difficulty {
@@ -27,7 +28,8 @@ impl Difficulty {
             Difficulty::Easy => 2,
             Difficulty::Medium => 3,
             Difficulty::Hard => 5,
-            Difficulty::Expert => 7,
+            Difficulty::Expert => 6,
+            Difficulty::Extreme => 9,
         }
     }
 
@@ -36,7 +38,7 @@ impl Difficulty {
     fn pool_size(self) -> usize {
         match self {
             Difficulty::Easy | Difficulty::Medium => 4,
-            Difficulty::Hard | Difficulty::Expert => 8,
+            Difficulty::Hard | Difficulty::Expert | Difficulty::Extreme => 8,
         }
     }
 
@@ -48,6 +50,7 @@ impl Difficulty {
             Difficulty::Medium => 3,
             Difficulty::Hard => 4,
             Difficulty::Expert => 6,
+            Difficulty::Extreme => 7,
         }
     }
 }
@@ -121,7 +124,8 @@ impl Generator {
         ctx: &SolverContext,
         cancelled: impl Fn() -> bool,
     ) -> Option<ScoredPuzzle> {
-        let solver = Solver::default();
+        // only strategies up to the ceiling, so getting stuck means too hard
+        let solver = Solver::up_to(difficulty.ceiling());
         let mut givens: Vec<Option<u8>> = self.fill_grid_for(ctx).map(Some).to_vec();
         let mut order: Vec<usize> = (0..81).collect();
         order.shuffle(&mut self.rng);
@@ -141,7 +145,7 @@ impl Generator {
                 None
             } else {
                 match solver.solve_quietly(&mut Board::new(&current), ctx) {
-                    SolveResult::Solved(s) if hardest(&s) <= difficulty.ceiling() => Some(s),
+                    SolveResult::Solved(s) => Some(s),
                     _ => None,
                 }
             };

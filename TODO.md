@@ -1,32 +1,33 @@
 App features
 
 - Settings
-  - Toggle remaining digit amount in settings
+  - [x] Toggle remaining digit amount in settings
 - Daily puzzle (medium-hard) show difficulty?
-  - streaks
+  - [ ] streaks
 - Hints
-  - tiered hints: nudge (look at box 5) -> technique (there's a pointing pair) -> cells -> answer
-  - variant techniques as named strategies with difficulty (cage combinations, thermo bounds, whisper logic), now silent propagation at difficulty 0
-  - technique library, linked from each hint, with HintGrid examples
-  - handle combined techinques and display their deduction as good as possible
-- Timer
+  - [ ] tiered hints: nudge (look at box 5) -> technique (there's a pointing pair) -> cells -> answer
+  - [ ] variant techniques as named strategies with difficulty (cage combinations, thermo bounds, whisper logic), now silent propagation at difficulty 0
+  - [x] technique library, linked from each hint
+    - [ ] HintGrid examples on each technique page
+  - [ ] handle combined techinques and display their deduction as good as possible
+- [x] Timer
 - Board
   - Notes
-    - Corner notes
-    - center notes
-    - option to auto-fill notes / auto-clean notes
+    - [x] Corner notes
+    - [x] center notes
+    - [x] option to auto-fill notes / auto-clean notes
   - [x] rule-aware conflict checking (repeated digit, broken thermo, cage over sum) instead of comparing with the solution
-  - setting to turn mistake highlighting off
+  - [x] setting to turn mistake highlighting off
   - digit-first input (pick a digit, tap cells) next to cell-first
-  - haptics
-  - [ ] Coloring
+  - [x] ~~haptics~~
+  - [x] Coloring
   - [x] Eraser
   - [x] Undo/Redo
-  - [ ] Hint button
+  - [x] Hint button
 - sudoku variants
   - [x] killer/cages
-    - show a list of possible cage digit combinations
-  - [ ] x sudoku
+    - [ ] show a list of possible cage digit combinations
+  - [x] x sudoku
   - [x] knights move
   - [x] kings move
   - [x] thermo
@@ -35,64 +36,66 @@ App features
   - [x] german whispers
   - [x] double dot
   - [x] consecutive dot
-  - generator for cages, lines and dots (now only global rules are generated)
-  - [ ] tap rule label to explain the rule with a mini example
-  - double-click actions on variant elements (e.g. select all cells of a cage, line or arrow)
-  - import SudokuPad / f-puzzles links
-  - difficulty rating that counts variant logic
-- [ ] Button to fill all notes (would reset all notes?)
+  - [x] ~~generator for cages, lines and dots (now only global rules are generated)~~
+  - [x] tap rule label to explain the rule with a mini example
+  - [ ] double-click actions on variant elements (e.g. select all cells of a cage, line or arrow)
+  - [ ] import SudokuPad / f-puzzles links
+  - [ ] difficulty rating that counts variant logic
+- [x] Button to fill all notes (asks before replacing existing notes)
 - improve cell highlighting
-  - selected cell row,column,3x3 cell semi highlighting
-  - selected Cell outlining and bg
-  - note outline and bg highlighting
-  - filled outline highlighting
+  - [ ] selected cell row,column,3x3 cell semi highlighting
+  - [ ] selected Cell outlining and bg
+  - [ ] note outline and bg highlighting
+  - [ ] filled outline highlighting
 - Stats page
-  - all, daily, weekly, monthly, yearly
-  - filter per difficulty beginner, easy, medium, hard, expert, master sudoku
-  - best times
-  - average time
-  - total completed
+  - [ ] all, daily, weekly, monthly, yearly
+  - [ ] filter per difficulty beginner, easy, medium, hard, expert, master sudoku
+  - [ ] best times
+  - [ ] average time
+  - [ ] total completed
 - [ ] better visualize hints
 
 - mobile layout
-  - make the board as large as possible, remove empty space below it
+  - [ ] make the board as large as possible, remove empty space below it
   - [ ] tablet / landscape layout (right side options if space is tight)
 
 - accessibility
-  - [ ] colorblind-safe highlight palettes
-  - digit size setting
+  - [x] colorblind-safe highlight palettes
+  - [x] reduce motion setting
+  - [ ] digit size setting
 
 - themes
   - [ ] option for custom themes
   - [ ] option for custom highlight/coloring colors
-- difficulty
-  - Easy
-  - Medium
-  - Hard
-  - Extreme
-- continue button
-- tips section?
-- link to github? link to support?
+- [x] difficulty
+  - [x] Easy
+  - [x] Medium
+  - [x] Hard
+  - [x] Expert
+  - [x] Extreme
+- [x] continue button
+- [ ] tips section?
+- [ ] link to github? link to support?
 
-- rules library: page that lists every constraint and how it works
-  - [ ] short rule text + small example board drawn with the real variant renderers
-  - common deductions per rule (e.g. 5 can't go on a German whisper, thermo bulb limits)
-  - interactive mini puzzle per rule to try it out
-  - tapping a rule label in a game opens its page (see variants)
-  - shares examples with the hints technique library
-  - [ ] icon per rule
+- [x] rules library: page that lists every constraint and how it works
+  - [x] short rule text + small example board drawn with the real variant renderers
+  - [ ] common deductions per rule (e.g. 5 can't go on a German whisper, thermo bulb limits)
+  - [ ] interactive mini puzzle per rule to try it out
+  - [x] tapping a rule label in a game opens its page (see variants)
+  - [ ] shares examples with the hints technique library
+  - [x] icon per rule
 
 - constructed puzzles
-  - start with SudokuPad / f-puzzles link import (players bring the puzzle, no permission needed)
-  - curated packs with setter permission, credit setter + link to original on every puzzle
-  - openly licensed collections (CC-BY / public domain), check the license per source before bundling
-  - own starter pack (hand-tuned generated or self-constructed)
-  - puzzle metadata: title, setter, source link, rules text, difficulty
-  - bundle puzzles as data (JSON in repo) so new packs need no code changes
-  - browse screen: packs, filter by variant and difficulty, solved state per puzzle
-  - show unsupported rules on import (arrows, renban, sandwich...) instead of dropping them
-  - featured puzzle of the week
+  - [ ] start with SudokuPad / f-puzzles link import (players bring the puzzle, no permission needed)
+  - [ ] curated packs with setter permission, credit setter + link to original on every puzzle
+  - [ ] openly licensed collections (CC-BY / public domain), check the license per source before bundling
+  - [ ] own starter pack (hand-tuned generated or self-constructed)
+  - [x] puzzle metadata: title, setter, source link, rules text, difficulty
+  - [x] bundle puzzles as data (JSON in repo) so new packs need no code changes
+  - [ ] browse screen: packs, filter by variant and difficulty, solved state per puzzle
+  - [ ] show unsupported rules on import (arrows, renban, sandwich...) instead of dropping them
+  - [ ] featured puzzle of the week
 
-- sudoku builder?
-  - variant support
-  - share sudoku through link/code?
+- sudoku builder
+  - [ ] variant support
+  - [ ] share sudoku through link/code?
